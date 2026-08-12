@@ -1,130 +1,97 @@
 # ==========================
-# Build
+# Flutter / Dart
 # ==========================
-[Bb]in/
-[Oo]bj/
-[Ll]og/
-[Ll]ogs/
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+
+# Generated files
+*.g.dart
+*.freezed.dart
+
+# Flutter generated files
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
 
 # ==========================
-# Visual Studio
+# Android
 # ==========================
-.vs/
-*.user
-*.userosscache
-*.suo
-*.rsuser
-*.userprefs
-*.sln.docstates
+android/.gradle/
+android/local.properties
+android/**/build/
+android/app/debug/
+android/app/profile/
+android/app/release/
+
+# Android signing keys / certificates
+*.jks
+*.keystore
 
 # ==========================
-# Rider / VS Code
+# iOS / macOS
+# ==========================
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Runner/GeneratedPluginRegistrant.*
+ios/Runner.xcworkspace/
+
+macos/Pods/
+macos/.symlinks/
+macos/Flutter/ephemeral/
+macos/Runner/GeneratedPluginRegistrant.*
+
+# Xcode
+DerivedData/
+*.xcuserstate
+*.xcuserdata/
+*.moved-aside
+*.xccheckout
+*.xcscmblueprint
+
+# iOS signing / provisioning
+*.p12
+*.mobileprovision
+*.cer
+*.provisionprofile
+
+# ==========================
+# Windows
+# ==========================
+windows/flutter/ephemeral/
+windows/**/GeneratedPluginRegistrant.*
+
+# ==========================
+# Linux
+# ==========================
+linux/flutter/ephemeral/
+linux/**/GeneratedPluginRegistrant.*
+
+# ==========================
+# Web
+# ==========================
+web/.dart_tool/
+
+# ==========================
+# IDEs
 # ==========================
 .idea/
 .vscode/
 
-# ==========================
-# NuGet
-# ==========================
-*.nupkg
-*.snupkg
-packages/
-!**/packages/build/
-*.nuget.props
-*.nuget.targets
+# VS Code
+*.code-workspace
+
+# JetBrains
+*.iml
+*.ipr
+*.iws
 
 # ==========================
-# Test Results
-# ==========================
-TestResults/
-*.trx
-*.coverage
-*.coveragexml
-
-# ==========================
-# Publish
-# ==========================
-publish/
-artifacts/
-
-# ==========================
-# .NET MAUI
-# ==========================
-
-# Android
-**/android/bin/
-**/android/obj/
-
-# Android signing keys
-*.keystore
-*.jks
-
-# iOS
-**/ios/bin/
-**/ios/obj/
-
-# Mac Catalyst
-**/maccatalyst/bin/
-**/maccatalyst/obj/
-
-# Windows
-**/win10-x64/
-**/win10-x86/
-**/win10-arm64/
-
-# Tizen
-**/tizen/bin/
-**/tizen/obj/
-
-# ==========================
-# Certificates & Provisioning
-# ==========================
-*.p12
-*.pfx
-*.mobileprovision
-*.cer
-
-# ==========================
-# Generated files
-# ==========================
-GeneratedMSBuildEditorConfig.editorconfig
-
-# ==========================
-# Resharper
-# ==========================
-_ReSharper*/
-*.DotSettings.user
-
-# ==========================
-# JetBrains Rider
-# ==========================
-.idea/
-
-# ==========================
-# OS files
-# ==========================
-.DS_Store
-Thumbs.db
-Desktop.ini
-
-# ==========================
-# Temporary files
-# ==========================
-*.tmp
-*.temp
-*.cache
-*.bak
-*.orig
-
-# ==========================
-# Xamarin / MAUI generated
-# ==========================
-*.pidb
-*.svclog
-*.scc
-
-# ==========================
-# Local environment
+# Environment / Local config
 # ==========================
 .env
 .env.*
@@ -134,4 +101,35 @@ Desktop.ini
 # Secrets
 # ==========================
 secrets.json
-appsettings.Development.json
+google-services.json
+GoogleService-Info.plist
+
+# ==========================
+# Logs / Temporary files
+# ==========================
+*.log
+*.tmp
+*.temp
+*.cache
+*.bak
+*.swp
+*.swo
+
+# ==========================
+# OS files
+# ==========================
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ==========================
+# Coverage / Testing
+# ==========================
+coverage/
+*.lcov
+
+# ==========================
+# Firebase / FlutterFire
+# ==========================
+firebase-debug.log
+flutterfire-debug.log
