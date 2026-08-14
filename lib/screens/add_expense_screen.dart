@@ -98,16 +98,73 @@ class AddExpenseScreen extends StatelessWidget {
                     spacing: 5,
                     children: [
                       const FieldLabel('Cuenta'),
+                      // Sin cuentas no se puede guardar nada: explicarlo y dar
+                      // la salida, en vez de dejar un hueco vacío y un botón
+                      // deshabilitado sin motivo aparente.
+                      if (state.accounts.isEmpty)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          spacing: 8,
+                          children: [
+                            const Text(
+                              'Necesitas una cuenta para registrar el gasto.',
+                              style: TextStyle(
+                                  fontSize: 12, color: Nocturne.neutral500),
+                            ),
+                            SecondaryButton(
+                              label: 'Crear cuenta',
+                              onTap: () => state.goTo(Screen.accounts),
+                            ),
+                          ],
+                        )
+                      else
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            for (final a in state.accounts)
+                              NChip(
+                                label: a.name,
+                                active: state.addAccountId == a.id,
+                                onTap: () => state.pickAddAcct(a.id),
+                              ),
+                          ],
+                        ),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    spacing: 5,
+                    children: [
+                      const FieldLabel('Fecha'),
                       Wrap(
                         spacing: 6,
                         runSpacing: 6,
                         children: [
-                          for (final a in state.accounts)
-                            NChip(
-                              label: a.name,
-                              active: state.addAcct == a.name,
-                              onTap: () => state.pickAddAcct(a.name),
-                            ),
+                          NChip(
+                            label: 'Hoy',
+                            active: state.addDateIsToday,
+                            onTap: state.setAddDateToday,
+                          ),
+                          NChip(
+                            label: 'Ayer',
+                            active: state.addDateIsYesterday,
+                            onTap: state.setAddDateYesterday,
+                          ),
+                          NChip(
+                            label: state.addDateLabel,
+                            active: !state.addDateIsPreset,
+                            onTap: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: state.addDate,
+                                firstDate: DateTime(2020),
+                                // No tiene sentido registrar gastos futuros.
+                                lastDate: state.today,
+                              );
+                              if (picked != null) state.setAddDate(picked);
+                            },
+                          ),
                         ],
                       ),
                     ],

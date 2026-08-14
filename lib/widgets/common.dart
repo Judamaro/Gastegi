@@ -215,15 +215,22 @@ class NInput extends StatelessWidget {
     required this.hint,
     required this.onChanged,
     this.keyboardType,
+    this.initialValue,
   });
 
   final String hint;
   final ValueChanged<String> onChanged;
   final TextInputType? keyboardType;
 
+  /// Valor de partida al editar. Usa `TextFormField`, que gestiona su propio
+  /// controlador; para que se repueble al cambiar de registro, el llamante debe
+  /// pasar una `key` que dependa del registro editado.
+  final String? initialValue;
+
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return TextFormField(
+      initialValue: initialValue,
       onChanged: onChanged,
       keyboardType: keyboardType,
       cursorColor: Nocturne.accent,

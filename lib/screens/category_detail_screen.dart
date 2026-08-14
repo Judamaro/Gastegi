@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../theme/phosphor_icons.dart';
 
 import '../state/app_state.dart';
 import '../theme/nocturne.dart';
+import '../theme/phosphor_icons.dart';
 import '../widgets/charts.dart';
 import '../widgets/common.dart';
 
@@ -15,7 +15,11 @@ class CategoryDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cat = state.selCategory;
+    // La categoría puede haber desaparecido bajo los pies de la pantalla.
+    if (cat == null) return const SizedBox.shrink();
+
     final catTotal = state.selCatTotal;
+    final expenses = state.selCatExpenses;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
@@ -58,7 +62,8 @@ class CategoryDetailScreen extends StatelessWidget {
                   ),
                   Flexible(
                     child: Text(
-                      'en julio · ${(catTotal / state.total * 100).round()}% del total',
+                      'en ${state.currentMonthName.toLowerCase()}'
+                      ' · ${state.pct(catTotal, state.total)}% del total',
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 13, color: Nocturne.neutral500),
                     ),
@@ -70,7 +75,12 @@ class CategoryDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 spacing: 4,
                 children: [
-                  ProgressBar(fraction: catTotal / cat.budget, color: cat.color),
+                  ProgressBar(
+                    // Un presupuesto a 0 daría una fracción NaN y reventaría el
+                    // layout del FractionallySizedBox.
+                    fraction: cat.budget > 0 ? catTotal / cat.budget : 0,
+                    color: cat.color,
+                  ),
                   Text(
                     'Presupuesto: ${state.fmt(catTotal)} de ${state.fmt(cat.budget)}',
                     style: const TextStyle(fontSize: 11, color: Nocturne.neutral500),
@@ -85,7 +95,8 @@ class CategoryDetailScreen extends StatelessWidget {
               const Kicker('Por semana'),
               BarChart(
                 bars: [
-                  for (final (label, value) in state.selCatWeeks) (label, value, cat.color),
+                  for (final (label, value) in state.selCatWeeks)
+                    (label, value, cat.color),
                 ],
                 height: 96,
                 maxBarHeight: 64,
@@ -94,16 +105,27 @@ class CategoryDetailScreen extends StatelessWidget {
               ),
             ],
           ),
-          Column(
-            children: [
-              for (final e in state.selCatExpenses)
-                ExpenseTile(
-                  title: e.desc,
-                  subtitle: '${e.day == 31 ? 'Hoy' : '${e.day} jul'} · ${e.acct}',
-                  amount: state.fmt(e.val),
-                ),
-            ],
-          ),
+          if (expenses.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Text(
+                'Sin gastos de ${cat.name.toLowerCase()} en '
+                '${state.currentMonthName.toLowerCase()}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 13, color: Nocturne.neutral600),
+              ),
+            )
+          else
+            Column(
+              children: [
+                for (final e in expenses)
+                  ExpenseTile(
+                    title: e.desc,
+                    subtitle: '${state.dayLabelShortOf(e.date)} · ${e.acct}',
+                    amount: state.fmt(e.val),
+                  ),
+              ],
+            ),
         ],
       ),
     );
