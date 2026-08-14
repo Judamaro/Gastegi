@@ -3,13 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gastegi/app/router/app_screen.dart';
 import 'package:gastegi/app/state/app_data.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
-import 'package:gastegi/core/utils/date_utils.dart';
 import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/features/accounts/domain/entities/account.dart';
 import 'package:gastegi/features/budgets/presentation/models/budget_row.dart';
 import 'package:gastegi/features/categories/domain/entities/category.dart';
 import 'package:gastegi/features/expenses/domain/entities/expense.dart';
-import 'package:gastegi/features/expenses/presentation/models/history_range.dart';
 
 /// Estado de la interfaz: navegación, formularios, filtros y selecciones.
 ///
@@ -35,10 +33,6 @@ class AppState extends ChangeNotifier {
 
   Screen screen = Screen.home;
   String? selCatName;
-  String search = '';
-  String filterCat = 'Todas';
-  HistoryRange filterRange = HistoryRange.month;
-
   // Delegados a `core/utils/formatters.dart`. Siguen aquí porque las pantallas
   // todavía llaman `state.fmt(...)`; desaparecen cuando dejen de recibir el
   // estado por constructor.
@@ -53,9 +47,6 @@ class AppState extends ChangeNotifier {
   void _normalizeSelections() {
     final names = categories.map((c) => c.name).toSet();
     if (selCatName != null && !names.contains(selCatName)) selCatName = null;
-    if (filterCat != 'Todas' && !names.contains(filterCat)) {
-      filterCat = 'Todas';
-    }
   }
 
   // ── Delegados al almacén de datos ──────────────────────────────────────
@@ -90,34 +81,6 @@ class AppState extends ChangeNotifier {
   bool get canTransfer => _data.canTransfer;
   double get totalBudget => _data.totalBudget;
   List<BudgetRow> get budgetRows => _data.budgetRows;
-
-  // ── Historial ──────────────────────────────────────────────────────────
-
-  /// Recorre la ventana entera, no solo el mes: los rangos por días deben poder
-  /// alcanzar el mes anterior cuando estamos a principios de mes.
-  List<Expense> get filteredExpenses {
-    final q = search.trim().toLowerCase();
-    return _data.window
-        .where(
-          (e) =>
-              filterRange.includes(e.date, today, _data.monthAnchor) &&
-              (filterCat == 'Todas' || e.categoryName == filterCat) &&
-              (q.isEmpty ||
-                  e.desc.toLowerCase().contains(q) ||
-                  e.categoryName.toLowerCase().contains(q)),
-        )
-        .toList();
-  }
-
-  /// Grupos por día, del más reciente al más antiguo.
-  List<(String, List<Expense>)> get historyGroups {
-    final byDay = <DateTime, List<Expense>>{};
-    for (final e in filteredExpenses) {
-      byDay.putIfAbsent(dateOnly(e.date), () => []).add(e);
-    }
-    final days = byDay.keys.toList()..sort((a, b) => b.compareTo(a));
-    return [for (final d in days) (dayLabel(d, today), byDay[d]!)];
-  }
 
   // ── Detalle de categoría ───────────────────────────────────────────────
 
@@ -164,21 +127,6 @@ class AppState extends ChangeNotifier {
   void openCategory(String name) {
     selCatName = name;
     screen = Screen.catDetail;
-    notifyListeners();
-  }
-
-  void setSearch(String value) {
-    search = value;
-    notifyListeners();
-  }
-
-  void setFilterCat(String name) {
-    filterCat = name;
-    notifyListeners();
-  }
-
-  void setFilterRange(HistoryRange range) {
-    filterRange = range;
     notifyListeners();
   }
 }

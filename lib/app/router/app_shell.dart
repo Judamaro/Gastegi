@@ -21,7 +21,7 @@ class Shell extends ConsumerWidget {
     final state = ref.watch(appStateProvider);
     final body = switch (state.screen) {
       Screen.home => HomePage(state: state),
-      Screen.history => HistoryPage(state: state),
+      Screen.history => const HistoryPage(),
       Screen.catDetail => CategoryDetailPage(state: state),
       Screen.accounts => const AccountsPage(),
       Screen.budgets => BudgetsPage(state: state),

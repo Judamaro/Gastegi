@@ -5,7 +5,6 @@ import 'package:gastegi/features/accounts/presentation/providers/account_form_no
 import 'package:gastegi/features/accounts/presentation/providers/transfer_form_notifier.dart';
 import 'package:gastegi/features/categories/data/repositories/category_repository_impl.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
-import 'package:gastegi/features/expenses/presentation/models/history_range.dart';
 import 'package:gastegi/features/expenses/presentation/providers/add_expense_notifier.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -54,7 +53,6 @@ void main() {
       expect(state.canCompare, isFalse);
       expect(state.deltaLabel, '');
       expect(state.hasNoExpensesAtAll, isTrue);
-      expect(state.historyGroups, isEmpty);
 
       // Todas las categorías a 0 y sin alertas, no "excedido" por dividir mal.
       for (final row in state.budgetRows) {
@@ -94,33 +92,6 @@ void main() {
     // La última barra de los 6 meses es el mes en curso.
     expect(state.monthTotals.last, ('Ago', 150.0));
     expect(state.monthTotals, hasLength(6));
-  });
-
-  test('historyGroups etiqueta y ordena por fecha real', () async {
-    await addExpense(DateTime(2026, 8, 12), 10);
-    await addExpense(DateTime(2026, 8, 11), 20);
-    await addExpense(DateTime(2026, 8, 3), 30);
-
-    final state = await buildState(db);
-    expect(state.historyGroups.map((g) => g.$1), [
-      'Hoy',
-      'Ayer',
-      '3 de agosto',
-    ]);
-  });
-
-  test('los rangos del historial alcanzan el mes anterior', () async {
-    // A 3 de agosto, "últimos 7 días" debe incluir el 28 de julio.
-    await addExpense(DateTime(2026, 7, 28), 40);
-    await addExpense(DateTime(2026, 8, 2), 10);
-
-    final state = await buildState(db, now: DateTime(2026, 8, 3));
-
-    state.setFilterRange(HistoryRange.month);
-    expect(state.filteredExpenses, hasLength(1));
-
-    state.setFilterRange(HistoryRange.last7);
-    expect(state.filteredExpenses, hasLength(2));
   });
 
   test('selCatWeeks reparte hasta el último día real del mes', () async {

@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:gastegi/app/state/app_state.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
+import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/core/widgets/amount_tile.dart';
 import 'package:gastegi/core/widgets/app_chip.dart';
 import 'package:gastegi/core/widgets/app_input.dart';
 import 'package:gastegi/features/expenses/presentation/models/history_range.dart';
+import 'package:gastegi/features/expenses/presentation/providers/history_notifier.dart';
 
 /// Historial: búsqueda, filtros por rango y categoría, gastos agrupados por día.
-class HistoryPage extends StatelessWidget {
-  const HistoryPage({super.key, required this.state});
-
-  final AppState state;
+class HistoryPage extends ConsumerWidget {
+  const HistoryPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final groups = state.historyGroups;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final data = ref.watch(appDataProvider);
+    final filter = ref.watch(historyFilterProvider);
+    final filters = ref.read(historyFilterProvider.notifier);
+    final groups = ref.watch(historyGroupsProvider);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
@@ -27,7 +31,7 @@ class HistoryPage extends StatelessWidget {
             'Historial',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
           ),
-          AppInput(hint: 'Buscar gasto…', onChanged: state.setSearch),
+          AppInput(hint: 'Buscar gasto…', onChanged: filters.setSearch),
           Wrap(
             spacing: 6,
             runSpacing: 6,
@@ -35,8 +39,8 @@ class HistoryPage extends StatelessWidget {
               for (final range in HistoryRange.values)
                 AppChip(
                   label: range.label,
-                  active: state.filterRange == range,
-                  onTap: () => state.setFilterRange(range),
+                  active: filter.range == range,
+                  onTap: () => filters.setRange(range),
                 ),
             ],
           ),
@@ -44,14 +48,16 @@ class HistoryPage extends StatelessWidget {
             spacing: 6,
             runSpacing: 6,
             children: [
-              for (final name in [
-                'Todas',
-                ...state.categories.map((c) => c.name),
+              // `null` es "todas": el chip lleva etiqueta, pero el filtro no
+              // guarda texto de interfaz.
+              for (final name in <String?>[
+                null,
+                ...data.categories.map((c) => c.name),
               ])
                 AppChip(
-                  label: name,
-                  active: state.filterCat == name,
-                  onTap: () => state.setFilterCat(name),
+                  label: name ?? 'Todas',
+                  active: filter.categoryName == name,
+                  onTap: () => filters.setCategory(name),
                 ),
             ],
           ),
@@ -74,9 +80,9 @@ class HistoryPage extends StatelessWidget {
                   AmountTile(
                     title: e.desc,
                     subtitle: '${e.categoryName} · ${e.accountName}',
-                    amount: state.fmt(e.val),
-                    icon: state.categoryOf(e.categoryName)?.icon,
-                    iconColor: state.categoryOf(e.categoryName)?.color,
+                    amount: formatAmount(e.val),
+                    icon: data.categoryOf(e.categoryName)?.icon,
+                    iconColor: data.categoryOf(e.categoryName)?.color,
                   ),
               ],
             ),
@@ -86,7 +92,7 @@ class HistoryPage extends StatelessWidget {
               child: Text(
                 // Distinguir "no hay nada" de "los filtros no encuentran nada":
                 // en una app recién instalada el segundo mensaje despista.
-                state.hasNoExpensesAtAll
+                data.hasNoExpensesAtAll
                     ? 'Todavía no hay gastos registrados'
                     : 'Sin resultados para esta búsqueda',
                 textAlign: TextAlign.center,
