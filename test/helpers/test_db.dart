@@ -1,5 +1,5 @@
+import 'package:gastegi/core/storage/app_database.dart';
 import 'package:gastegi/data/account_repository.dart';
-import 'package:gastegi/data/app_database.dart';
 import 'package:gastegi/data/category_repository.dart';
 import 'package:gastegi/data/expense_repository.dart';
 import 'package:gastegi/state/app_state.dart';

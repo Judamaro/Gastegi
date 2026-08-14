@@ -1,5 +1,5 @@
+import 'package:gastegi/core/storage/balances.dart';
 import 'package:gastegi/core/utils/date_utils.dart';
-import 'package:gastegi/data/balances.dart';
 import 'package:gastegi/models/models.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';

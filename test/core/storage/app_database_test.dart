@@ -1,16 +1,16 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gastegi/core/storage/app_database.dart';
+import 'package:gastegi/core/storage/seed.dart';
 import 'package:gastegi/data/account_repository.dart';
-import 'package:gastegi/data/app_database.dart';
 import 'package:gastegi/data/category_repository.dart';
-import 'package:gastegi/data/seed.dart';
 import 'package:path/path.dart' as p;
 // `Sqflite` (con sus helpers estáticos) solo lo expone el paquete sqflite.
 import 'package:sqflite/sqflite.dart' show Sqflite;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-import '../helpers/test_db.dart';
+import '../../helpers/test_db.dart';
 
 void main() {
   late Database db;

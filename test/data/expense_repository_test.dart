@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gastegi/core/storage/balances.dart';
 import 'package:gastegi/data/account_repository.dart';
-import 'package:gastegi/data/balances.dart';
 import 'package:gastegi/data/category_repository.dart';
 import 'package:gastegi/data/expense_repository.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';

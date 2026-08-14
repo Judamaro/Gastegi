@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 
-import 'package:gastegi/data/seed.dart';
+import 'package:gastegi/core/errors/exceptions.dart';
+import 'package:gastegi/core/storage/seed.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 // Con prefijo: ambos paquetes exportan `databaseFactory`, `Database` y
@@ -67,7 +68,7 @@ abstract final class AppDatabase {
     for (var v = from + 1; v <= to; v++) {
       final step = _migrations[v];
       if (step == null) {
-        throw StateError('Falta la migración a la versión $v del esquema');
+        throw MissingMigrationException(v);
       }
       await step(db);
     }
