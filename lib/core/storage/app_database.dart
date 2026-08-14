@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 
+import 'package:gastegi/app/config/app_config.dart';
 import 'package:gastegi/core/errors/exceptions.dart';
 import 'package:gastegi/core/storage/seed.dart';
 import 'package:path/path.dart' as p;
@@ -17,13 +18,13 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart' as ffi;
 /// en un teléfono sería invisible para el servidor y el otro dispositivo
 /// resucitaría la fila al sincronizar.
 abstract final class AppDatabase {
-  static const String fileName = 'gastegi.db';
   static const int schemaVersion = 1;
 
-  /// Abre la BD del dispositivo.
+  /// Abre la BD del dispositivo. El nombre del fichero depende del entorno,
+  /// para que una compilación de desarrollo no escriba sobre datos reales.
   static Future<Database> open() async {
     ensureFactory();
-    return openAt(p.join(await getDatabasesPath(), fileName));
+    return openAt(p.join(await getDatabasesPath(), AppConfig.databaseFileName));
   }
 
   /// Registra el motor SQLite para escritorio.
