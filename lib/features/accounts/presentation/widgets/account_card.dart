@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gastegi/app/state/app_state.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_elevation.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
@@ -6,7 +7,6 @@ import 'package:gastegi/app/theme/app_spacing.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/widgets/app_icon_button.dart';
 import 'package:gastegi/features/accounts/domain/entities/account.dart';
-import 'package:gastegi/state/app_state.dart';
 
 class AccountCard extends StatelessWidget {
   const AccountCard({super.key, required this.state, required this.account});

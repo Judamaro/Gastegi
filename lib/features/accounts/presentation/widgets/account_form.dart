@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gastegi/app/state/app_state.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
@@ -9,7 +10,6 @@ import 'package:gastegi/core/widgets/kicker.dart';
 import 'package:gastegi/core/widgets/primary_button.dart';
 import 'package:gastegi/core/widgets/secondary_button.dart';
 import 'package:gastegi/features/accounts/presentation/account_failure_message.dart';
-import 'package:gastegi/state/app_state.dart';
 
 class AccountForm extends StatelessWidget {
   const AccountForm({super.key, required this.state});

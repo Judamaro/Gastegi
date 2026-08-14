@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:gastegi/app/state/app_state.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/widgets/amount_tile.dart';
 import 'package:gastegi/core/widgets/app_chip.dart';
 import 'package:gastegi/core/widgets/app_input.dart';
-import 'package:gastegi/state/app_state.dart';
+import 'package:gastegi/features/expenses/presentation/models/history_range.dart';
 
 /// Historial: búsqueda, filtros por rango y categoría, gastos agrupados por día.
 class HistoryPage extends StatelessWidget {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gastegi/app/state/app_state.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
@@ -9,7 +10,6 @@ import 'package:gastegi/features/accounts/presentation/widgets/account_card.dart
 import 'package:gastegi/features/accounts/presentation/widgets/account_form.dart';
 import 'package:gastegi/features/accounts/presentation/widgets/delete_account_confirm.dart';
 import 'package:gastegi/features/accounts/presentation/widgets/transfer_form.dart';
-import 'package:gastegi/state/app_state.dart';
 
 /// Cuentas: saldo total, alta y edición de cuentas, y transferencias.
 class AccountsPage extends StatelessWidget {

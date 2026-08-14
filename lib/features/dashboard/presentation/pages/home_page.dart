@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:gastegi/app/router/app_screen.dart';
+import 'package:gastegi/app/state/app_state.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
@@ -9,7 +11,6 @@ import 'package:gastegi/core/widgets/charts/trend_chart.dart';
 import 'package:gastegi/core/widgets/color_dot.dart';
 import 'package:gastegi/core/widgets/kicker.dart';
 import 'package:gastegi/core/widgets/primary_button.dart';
-import 'package:gastegi/state/app_state.dart';
 
 /// Inicio: total del mes, comparación con el mes anterior, dona por categoría,
 /// tendencia diaria y últimos 6 meses.

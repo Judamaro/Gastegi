@@ -1,9 +1,6 @@
-import 'dart:math' as math;
-import 'dart:ui' show Color;
-
 import 'package:flutter/foundation.dart' hide Category;
-import 'package:gastegi/app/theme/app_colors.dart';
-import 'package:gastegi/app/theme/entity_visuals.dart';
+import 'package:gastegi/app/router/app_screen.dart';
+import 'package:gastegi/app/state/app_data_store.dart';
 import 'package:gastegi/core/utils/date_utils.dart';
 import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/features/accounts/domain/entities/account.dart';
@@ -11,105 +8,55 @@ import 'package:gastegi/features/accounts/domain/failures.dart';
 import 'package:gastegi/features/accounts/domain/repositories/account_repository.dart';
 import 'package:gastegi/features/accounts/domain/usecases/save_account.dart';
 import 'package:gastegi/features/accounts/domain/usecases/transfer_between_accounts.dart';
+import 'package:gastegi/features/budgets/presentation/models/budget_row.dart';
 import 'package:gastegi/features/categories/domain/entities/category.dart';
 import 'package:gastegi/features/categories/domain/repositories/category_repository.dart';
 import 'package:gastegi/features/expenses/domain/entities/expense.dart';
 import 'package:gastegi/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:gastegi/features/expenses/domain/usecases/save_expense.dart';
+import 'package:gastegi/features/expenses/presentation/models/history_range.dart';
 
-enum Screen { home, history, catDetail, accounts, budgets, add }
-
-enum HistoryRange {
-  month('Todo el mes'),
-  last15('Últimos 15 días'),
-  last7('Últimos 7 días');
-
-  const HistoryRange(this.label);
-  final String label;
-
-  bool includes(DateTime d, DateTime today, DateTime monthAnchor) =>
-      switch (this) {
-        month => sameMonth(d, monthAnchor),
-        last15 => !d.isBefore(daysBefore(today, 14)),
-        last7 => !d.isBefore(daysBefore(today, 6)),
-      };
-}
-
-/// Fila derivada para la pantalla de presupuestos.
-class BudgetRow {
-  const BudgetRow({
-    required this.category,
-    required this.spent,
-    required this.ratio,
-    required this.alert,
-    required this.over,
-  });
-
-  final Category category;
-  final double spent;
-  final double ratio;
-  final bool alert;
-  final bool over;
-}
-
-/// Estado central de la app.
+/// Estado de la interfaz: navegación, formularios, filtros y selecciones.
 ///
-/// Los datos viven en SQLite; aquí solo hay una caché en memoria del mes en
-/// curso que se repuebla entera tras cada escritura ([_write]). Eso mantiene
-/// todos los getters derivados **síncronos**, que es lo que permite que las
-/// pantallas sigan siendo `StatelessWidget` sin `FutureBuilder`.
+/// Los datos son de [AppDataStore]; aquí solo se delegan. Es una clase de
+/// transición: cada funcionalidad se irá llevando su trozo a
+/// `features/*/presentation/providers/` hasta que no quede nada.
 class AppState extends ChangeNotifier {
   AppState({
-    required this.categoryRepo,
-    required this.accountRepo,
-    required this.expenseRepo,
+    required CategoryRepository categoryRepo,
+    required AccountRepository accountRepo,
+    required ExpenseRepository expenseRepo,
     DateTime Function()? clock,
-  }) : _clock = clock ?? DateTime.now,
+  }) : _data = AppDataStore(
+         categoryRepo: categoryRepo,
+         accountRepo: accountRepo,
+         expenseRepo: expenseRepo,
+         clock: clock,
+       ),
+       _accountRepo = accountRepo,
        _saveAccount = SaveAccount(accountRepo),
        _saveExpense = SaveExpense(expenseRepo),
        _transfer = TransferBetweenAccounts(accountRepo) {
-    final now = _clock();
-    _today = dateOnly(now);
-    _monthAnchor = monthStart(now);
-    addDate = _today;
+    // Al recargar hay que corregir las selecciones antes de que nadie repinte:
+    // una cuenta o una categoría puede haber desaparecido.
+    _data.onReloaded = _normalizeSelections;
+    _data.addListener(notifyListeners);
+    addDate = _data.today;
   }
 
-  final CategoryRepository categoryRepo;
-  final AccountRepository accountRepo;
-  final ExpenseRepository expenseRepo;
-
+  final AppDataStore _data;
+  final AccountRepository _accountRepo;
   final SaveAccount _saveAccount;
   final SaveExpense _saveExpense;
   final TransferBetweenAccounts _transfer;
 
-  /// Inyectable para que los tests no dependan del día real.
-  final DateTime Function() _clock;
-
-  /// Umbral de alerta de presupuesto.
-  static const double umbralAlerta = 0.90;
-
-  /// Cuántos meses hacia atrás cubre la gráfica de barras.
-  static const int _monthsBack = 5;
-
-  /// Días previos al mes que se cargan, para que "últimos 7/15 días" siga
-  /// funcionando durante los primeros días de mes.
-  static const int _windowPadDays = 14;
-
-  List<Category> categories = const [];
-  List<Account> accounts = const [];
-
-  /// Gastos del mes en curso más [_windowPadDays] días previos.
-  List<Expense> _window = const [];
-
-  /// Los del mes en curso, ya filtrados: base de casi todos los getters.
-  List<Expense> _monthExpenses = const [];
-
-  Map<String, double> _monthlySums = const {};
-  int _expenseCount = 0;
-
-  late DateTime _today;
-  late DateTime _monthAnchor;
-  bool _busy = false;
+  @override
+  void dispose() {
+    _data
+      ..removeListener(notifyListeners)
+      ..dispose();
+    super.dispose();
+  }
 
   // ── Estado de UI ───────────────────────────────────────────────────────
 
@@ -152,46 +99,9 @@ class AppState extends ChangeNotifier {
 
   // ── Carga ──────────────────────────────────────────────────────────────
 
-  /// Repuebla la caché desde la BD. Es también lo que habrá que llamar al
-  /// terminar un pull cuando exista sincronización con la nube.
-  Future<void> load() async {
-    final now = _clock();
-    _today = dateOnly(now);
-    _monthAnchor = monthStart(now);
+  Future<void> load() => _data.load();
 
-    final windowStart = earliest(
-      _monthAnchor,
-      daysBefore(_today, _windowPadDays),
-    );
-
-    categories = await categoryRepo.all();
-    accounts = await accountRepo.all();
-    _window = await expenseRepo.since(windowStart);
-    _monthExpenses = _window
-        .where((e) => sameMonth(e.date, _monthAnchor))
-        .toList();
-    _monthlySums = await expenseRepo.monthlyTotals(
-      from: addMonths(_monthAnchor, -_monthsBack),
-    );
-    _expenseCount = await expenseRepo.count();
-
-    // Las cuentas pueden haber cambiado bajo los pies de los selectores.
-    _normalizeSelections();
-    notifyListeners();
-  }
-
-  /// Escritura: opera y recarga. Recargar entero cuesta microsegundos con estos
-  /// volúmenes y elimina toda una clase de bugs de desincronización RAM↔disco.
-  Future<void> _write(Future<void> Function() op) async {
-    if (_busy) return; // evita el doble toque en "Guardar"
-    _busy = true;
-    try {
-      await op();
-      await load();
-    } finally {
-      _busy = false;
-    }
-  }
+  Future<void> _write(Future<void> Function() op) => _data.write(op);
 
   void _normalizeSelections() {
     final ids = accounts.map((a) => a.id).toSet();
@@ -214,100 +124,49 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // ── Etiquetas del mes ──────────────────────────────────────────────────
+  // ── Delegados al almacén de datos ──────────────────────────────────────
 
-  DateTime get today => _today;
+  List<Category> get categories => _data.categories;
+  List<Account> get accounts => _data.accounts;
+  List<Expense> get expenses => _data.expenses;
 
-  /// `Agosto 2026`.
-  String get currentMonthTitle => monthTitle(_monthAnchor);
+  DateTime get today => _data.today;
+  String get currentMonthTitle => _data.currentMonthTitle;
+  String get currentMonthName => _data.currentMonthName;
+  String get currentMonthAbbr => _data.currentMonthAbbr;
+  String get prevMonthName => _data.prevMonthName;
+  int get daysInCurrentMonth => _data.daysInCurrentMonth;
+  String dayLabelShortOf(DateTime d) => _data.dayLabelShortOf(d);
 
-  /// `Agosto`.
-  String get currentMonthName => monthName(_monthAnchor);
+  bool get hasNoExpensesAtAll => _data.hasNoExpensesAtAll;
+  double get total => _data.total;
+  Map<String, double> get catTotals => _data.catTotals;
+  List<double> get dailyTotals => _data.dailyTotals;
+  List<(String, double)> get monthTotals => _data.monthTotals;
+  double get prevTotal => _data.prevTotal;
+  String get deltaLabel => _data.deltaLabel;
+  bool get canCompare => _data.canCompare;
+  double get cmpNowFrac => _data.cmpNowFrac;
+  double get cmpPrevFrac => _data.cmpPrevFrac;
 
-  /// `Ago`.
-  String get currentMonthAbbr => monthAbbr(_monthAnchor);
+  Category? categoryOf(String name) => _data.categoryOf(name);
+  Account? accountById(String? id) => _data.accountById(id);
 
-  String get prevMonthName => monthName(addMonths(_monthAnchor, -1));
-
-  int get daysInCurrentMonth => daysInMonth(_monthAnchor);
-
-  String dayLabelShortOf(DateTime d) => dayLabelShort(d, _today);
-
-  // ── Totales del mes ────────────────────────────────────────────────────
-
-  List<Expense> get expenses => _monthExpenses;
-
-  /// Si el usuario no ha registrado nunca nada, en cualquier fecha.
-  bool get hasNoExpensesAtAll => _expenseCount == 0;
-
-  double get total => _monthExpenses.fold(0, (a, e) => a + e.val);
-
-  Map<String, double> get catTotals {
-    final totals = {for (final c in categories) c.name: 0.0};
-    for (final e in _monthExpenses) {
-      totals[e.categoryName] = (totals[e.categoryName] ?? 0) + e.val;
-    }
-    return totals;
-  }
-
-  /// Gasto por día del mes (índice 0 = día 1).
-  List<double> get dailyTotals => List.generate(
-    daysInCurrentMonth,
-    (i) => _monthExpenses
-        .where((e) => e.day == i + 1)
-        .fold(0.0, (a, e) => a + e.val),
-  );
-
-  /// Barras de los últimos 6 meses; el mes en curso usa el total en vivo.
-  List<(String, double)> get monthTotals => [
-    for (var i = _monthsBack; i > 0; i--)
-      () {
-        final m = addMonths(_monthAnchor, -i);
-        return (monthAbbr(m), _monthlySums[monthKey(m)] ?? 0.0);
-      }(),
-    (currentMonthAbbr, total),
-  ];
-
-  /// Total del mes anterior, para la comparación del inicio.
-  double get prevTotal =>
-      _monthlySums[monthKey(addMonths(_monthAnchor, -1))] ?? 0;
-
-  /// Vacío cuando no hay mes anterior con el que comparar.
-  String get deltaLabel {
-    if (prevTotal <= 0) return '';
-    final pctChange = ((total - prevTotal).abs() / prevTotal * 100)
-        .toStringAsFixed(1)
-        .replaceAll('.', ',');
-    return '${total < prevTotal ? '−' : '+'}$pctChange%';
-  }
-
-  bool get canCompare => prevTotal > 0;
-
-  double get cmpNowFrac => _cmpFrac(total);
-  double get cmpPrevFrac => _cmpFrac(prevTotal);
-
-  double _cmpFrac(double value) {
-    final denominator = math.max(total, prevTotal);
-    return denominator <= 0 ? 0 : value / denominator;
-  }
+  double get patrimonio => _data.patrimonio;
+  bool get canTransfer => _data.canTransfer;
+  double get totalBudget => _data.totalBudget;
+  List<BudgetRow> get budgetRows => _data.budgetRows;
 
   // ── Historial ──────────────────────────────────────────────────────────
-
-  Category? categoryOf(String name) {
-    for (final c in categories) {
-      if (c.name == name) return c;
-    }
-    return null;
-  }
 
   /// Recorre la ventana entera, no solo el mes: los rangos por días deben poder
   /// alcanzar el mes anterior cuando estamos a principios de mes.
   List<Expense> get filteredExpenses {
     final q = search.trim().toLowerCase();
-    return _window
+    return _data.window
         .where(
           (e) =>
-              filterRange.includes(e.date, _today, _monthAnchor) &&
+              filterRange.includes(e.date, today, _data.monthAnchor) &&
               (filterCat == 'Todas' || e.categoryName == filterCat) &&
               (q.isEmpty ||
                   e.desc.toLowerCase().contains(q) ||
@@ -323,7 +182,7 @@ class AppState extends ChangeNotifier {
       byDay.putIfAbsent(dateOnly(e.date), () => []).add(e);
     }
     final days = byDay.keys.toList()..sort((a, b) => b.compareTo(a));
-    return [for (final d in days) (dayLabel(d, _today), byDay[d]!)];
+    return [for (final d in days) (dayLabel(d, today), byDay[d]!)];
   }
 
   // ── Detalle de categoría ───────────────────────────────────────────────
@@ -334,7 +193,7 @@ class AppState extends ChangeNotifier {
   List<Expense> get selCatExpenses {
     final cat = selCategory;
     if (cat == null) return const [];
-    return _monthExpenses.where((e) => e.categoryName == cat.name).toList()
+    return expenses.where((e) => e.categoryName == cat.name).toList()
       ..sort((a, b) => b.date.compareTo(a.date));
   }
 
@@ -361,43 +220,9 @@ class AppState extends ChangeNotifier {
     ];
   }
 
-  // ── Cuentas ────────────────────────────────────────────────────────────
-
-  double get patrimonio => accounts.fold(0, (a, c) => a + c.balance);
+  // ── Transferencias ─────────────────────────────────────────────────────
 
   double get trAmtValue => _parseAmount(trAmt);
-
-  bool get canTransfer => accounts.length > 1;
-
-  Account? accountById(String? id) {
-    if (id == null) return null;
-    for (final a in accounts) {
-      if (a.id == id) return a;
-    }
-    return null;
-  }
-
-  // ── Presupuestos ───────────────────────────────────────────────────────
-
-  double get totalBudget => categories.fold(0, (a, c) => a + c.budget);
-
-  List<BudgetRow> get budgetRows {
-    final totals = catTotals;
-    return [
-      for (final c in categories)
-        () {
-          final spent = totals[c.name] ?? 0;
-          final r = c.budget > 0 ? spent / c.budget : 0.0;
-          return BudgetRow(
-            category: c,
-            spent: spent,
-            ratio: r,
-            alert: c.budget > 0 && r >= umbralAlerta,
-            over: c.budget > 0 && r >= 1,
-          );
-        }(),
-    ];
-  }
 
   // ── Nuevo gasto ────────────────────────────────────────────────────────
 
@@ -408,17 +233,17 @@ class AppState extends ChangeNotifier {
 
   /// Etiqueta del chip que abre el calendario.
   String get addDateLabel =>
-      addDateIsPreset ? 'Otra fecha…' : dayLabelShort(addDate, _today);
+      addDateIsPreset ? 'Otra fecha…' : dayLabelShort(addDate, today);
 
   bool get addDateIsPreset => addDateIsToday || addDateIsYesterday;
 
-  bool get addDateIsToday => sameDay(addDate, _today);
+  bool get addDateIsToday => sameDay(addDate, today);
 
-  bool get addDateIsYesterday => sameDay(addDate, daysBefore(_today, 1));
+  bool get addDateIsYesterday => sameDay(addDate, daysBefore(today, 1));
 
-  void setAddDateToday() => setAddDate(_today);
+  void setAddDateToday() => setAddDate(today);
 
-  void setAddDateYesterday() => setAddDate(daysBefore(_today, 1));
+  void setAddDateYesterday() => setAddDate(daysBefore(today, 1));
 
   double _parseAmount(String raw) =>
       double.tryParse(raw.replaceAll(',', '.')) ?? 0;
@@ -486,7 +311,7 @@ class AppState extends ChangeNotifier {
         fromId: trFromId,
         toId: trToId,
         amount: trAmtValue,
-        date: _today,
+        date: today,
       );
     });
     if (!done) return;
@@ -551,7 +376,7 @@ class AppState extends ChangeNotifier {
     addCat = null;
     addAccountId = null;
     addDesc = '';
-    addDate = _today;
+    addDate = today;
     screen = Screen.history;
     notifyListeners();
   }
@@ -624,7 +449,7 @@ class AppState extends ChangeNotifier {
   Future<void> askDeleteAccount(String id) async {
     pendingDeleteId = id;
     accountFormOpen = false;
-    pendingDeleteExpenses = await accountRepo.expenseCount(id);
+    pendingDeleteExpenses = await _accountRepo.expenseCount(id);
     notifyListeners();
   }
 
@@ -637,7 +462,7 @@ class AppState extends ChangeNotifier {
   Future<void> confirmDeleteAccount() async {
     final id = pendingDeleteId;
     if (id == null) return;
-    await _write(() => accountRepo.softDelete(id));
+    await _write(() => _accountRepo.softDelete(id));
     pendingDeleteId = null;
     pendingDeleteExpenses = 0;
     notifyListeners();
@@ -646,7 +471,7 @@ class AppState extends ChangeNotifier {
   Future<void> archivePendingAccount() async {
     final id = pendingDeleteId;
     if (id == null) return;
-    await _write(() => accountRepo.setArchived(id, true));
+    await _write(() => _accountRepo.setArchived(id, true));
     pendingDeleteId = null;
     pendingDeleteExpenses = 0;
     notifyListeners();
@@ -655,15 +480,4 @@ class AppState extends ChangeNotifier {
   /// Saldo sin separadores de miles, para prellenar el campo editable.
   String _plain(double n) =>
       n == n.roundToDouble() ? n.round().toString() : n.toString();
-}
-
-/// Colores auxiliares que el estado expone a las pantallas.
-extension BudgetRowColors on BudgetRow {
-  Color get barColor => over
-      ? AppColors.accent300
-      : alert
-      ? AppColors.accent
-      : category.color;
-
-  String get alertLabel => over ? 'Excedido' : 'Alerta';
 }

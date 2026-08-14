@@ -1,10 +1,10 @@
 import 'package:flutter/widgets.dart';
 import 'package:gastegi/app/config/app_config.dart';
+import 'package:gastegi/app/state/app_state.dart';
 import 'package:gastegi/core/storage/app_database.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:gastegi/features/categories/data/repositories/category_repository_impl.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
-import 'package:gastegi/state/app_state.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 

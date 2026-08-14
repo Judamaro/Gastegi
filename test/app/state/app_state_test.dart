@@ -1,11 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gastegi/app/router/app_screen.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:gastegi/features/categories/data/repositories/category_repository_impl.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
-import 'package:gastegi/state/app_state.dart';
+import 'package:gastegi/features/expenses/presentation/models/history_range.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-import '../helpers/test_db.dart';
+import '../../helpers/test_db.dart';
 
 void main() {
   setUpAll(initTestLocale);

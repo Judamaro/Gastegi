@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:gastegi/app/router/app_screen.dart';
+import 'package:gastegi/app/state/app_state.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
@@ -9,7 +11,6 @@ import 'package:gastegi/core/widgets/field_label.dart';
 import 'package:gastegi/core/widgets/primary_button.dart';
 import 'package:gastegi/core/widgets/secondary_button.dart';
 import 'package:gastegi/features/expenses/presentation/widgets/amount_keypad.dart';
-import 'package:gastegi/state/app_state.dart';
 
 /// Nuevo gasto: monto con teclado propio, categoría, cuenta y descripción.
 class AddExpensePage extends StatelessWidget {

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:gastegi/app/router/app_screen.dart';
+import 'package:gastegi/app/state/app_state.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
-import 'package:gastegi/state/app_state.dart';
 
 /// Barra de pestañas inferior.
 class AppTabBar extends StatelessWidget {

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:gastegi/app/state/app_state.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/kicker.dart';
 import 'package:gastegi/core/widgets/primary_button.dart';
 import 'package:gastegi/core/widgets/secondary_button.dart';
 import 'package:gastegi/features/accounts/domain/entities/account.dart';
-import 'package:gastegi/state/app_state.dart';
 
 /// Confirmación de borrado, en línea bajo la fila: la app no usa `Navigator`,
 /// así que un `showDialog` rompería el patrón.
