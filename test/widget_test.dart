@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gastegi/app/app.dart';
 import 'package:gastegi/data/account_repository.dart';
-import 'package:gastegi/main.dart';
 import 'package:gastegi/state/app_state.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
