@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:gastegi/app/theme/app_colors.dart';
+import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/screens/accounts_screen.dart';
 import 'package:gastegi/screens/add_expense_screen.dart';
 import 'package:gastegi/screens/budgets_screen.dart';
@@ -6,8 +8,6 @@ import 'package:gastegi/screens/category_detail_screen.dart';
 import 'package:gastegi/screens/history_screen.dart';
 import 'package:gastegi/screens/home_screen.dart';
 import 'package:gastegi/state/app_state.dart';
-import 'package:gastegi/theme/nocturne.dart';
-import 'package:gastegi/theme/phosphor_icons.dart';
 
 /// Scaffold raíz: muestra la pantalla activa según el enum del estado y la
 /// barra de pestañas inferior (oculta en "Nuevo gasto").
@@ -17,11 +17,11 @@ class Shell extends StatelessWidget {
   final AppState state;
 
   static const _tabs = [
-    (Screen.home, PhIcons.house, PhIcons.houseFill, 'Inicio'),
-    (Screen.history, PhIcons.receipt, PhIcons.receiptFill, 'Historial'),
-    (Screen.add, PhIcons.plusCircle, PhIcons.plusCircleFill, 'Agregar'),
-    (Screen.accounts, PhIcons.wallet, PhIcons.walletFill, 'Cuentas'),
-    (Screen.budgets, PhIcons.target, PhIcons.targetFill, 'Presupuesto'),
+    (Screen.home, AppIcons.house, AppIcons.houseFill, 'Inicio'),
+    (Screen.history, AppIcons.receipt, AppIcons.receiptFill, 'Historial'),
+    (Screen.add, AppIcons.plusCircle, AppIcons.plusCircleFill, 'Agregar'),
+    (Screen.accounts, AppIcons.wallet, AppIcons.walletFill, 'Cuentas'),
+    (Screen.budgets, AppIcons.target, AppIcons.targetFill, 'Presupuesto'),
   ];
 
   @override
@@ -38,7 +38,7 @@ class Shell extends StatelessWidget {
           Screen.add => AddExpenseScreen(state: state),
         };
         return Scaffold(
-          backgroundColor: Nocturne.bg,
+          backgroundColor: AppColors.bg,
           body: SafeArea(
             child: Column(
               children: [
@@ -63,8 +63,8 @@ class _TabBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
       decoration: const BoxDecoration(
-        color: Nocturne.bg,
-        border: Border(top: BorderSide(color: Nocturne.divider)),
+        color: AppColors.bg,
+        border: Border(top: BorderSide(color: AppColors.divider)),
       ),
       child: Row(
         children: [
@@ -102,7 +102,7 @@ class _TabItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? Nocturne.accent : Nocturne.neutral600;
+    final color = active ? AppColors.accent : AppColors.neutral600;
     return InkWell(
       onTap: onTap,
       child: Padding(

@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import 'package:gastegi/theme/nocturne.dart';
+import 'package:gastegi/app/theme/app_colors.dart';
 
 /// Dona de categorías: réplica del SVG del diseño (viewBox 160 renderizado a
 /// 128 px → radio 46.4, trazo 16, separación de 0.02 rad por lado).
@@ -39,7 +39,7 @@ class DonutChart extends StatelessWidget {
               ),
               Text(
                 centerSubtitle,
-                style: const TextStyle(fontSize: 9, color: Nocturne.neutral500),
+                style: const TextStyle(fontSize: 9, color: AppColors.neutral500),
               ),
             ],
           ),
@@ -128,7 +128,7 @@ class _TrendPainter extends CustomPainter {
       ..close();
     canvas.drawPath(
       area,
-      Paint()..color = Nocturne.accent900.withValues(alpha: 0.6),
+      Paint()..color = AppColors.accent900.withValues(alpha: 0.6),
     );
 
     final line = Path()..moveTo(points.first.dx, points.first.dy);
@@ -140,7 +140,7 @@ class _TrendPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2
-        ..color = Nocturne.accent,
+        ..color = AppColors.accent,
     );
   }
 
@@ -209,7 +209,7 @@ class _BarPainter extends CustomPainter {
       final tp = TextPainter(
         text: TextSpan(
           text: label,
-          style: const TextStyle(fontSize: 10, color: Nocturne.neutral500),
+          style: const TextStyle(fontSize: 10, color: AppColors.neutral500),
         ),
         textDirection: TextDirection.ltr,
       )..layout();

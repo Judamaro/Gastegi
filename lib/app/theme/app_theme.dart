@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gastegi/theme/nocturne.dart';
+import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// `ThemeData` de la aplicación, construido a partir de los tokens de Nocturne.
@@ -15,19 +15,19 @@ abstract final class AppTheme {
   static ThemeData get dark {
     final base = ThemeData(
       brightness: Brightness.dark,
-      scaffoldBackgroundColor: Nocturne.bg,
+      scaffoldBackgroundColor: AppColors.bg,
       colorScheme: const ColorScheme.dark(
-        primary: Nocturne.accent,
-        surface: Nocturne.surface,
-        onSurface: Nocturne.text,
+        primary: AppColors.accent,
+        surface: AppColors.surface,
+        onSurface: AppColors.text,
       ),
       splashFactory: NoSplash.splashFactory,
     );
 
     return base.copyWith(
       textTheme: GoogleFonts.interTextTheme(base.textTheme).apply(
-        bodyColor: Nocturne.text,
-        displayColor: Nocturne.text,
+        bodyColor: AppColors.text,
+        displayColor: AppColors.text,
       ),
     );
   }

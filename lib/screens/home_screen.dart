@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-
+import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/state/app_state.dart';
-import 'package:gastegi/theme/nocturne.dart';
 import 'package:gastegi/widgets/charts.dart';
 import 'package:gastegi/widgets/common.dart';
 
@@ -49,7 +48,7 @@ class HomeScreen extends StatelessWidget {
                     child: Text(
                       'gastado este mes',
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 13, color: Nocturne.neutral500),
+                      style: TextStyle(fontSize: 13, color: AppColors.neutral500),
                     ),
                   ),
                 ],
@@ -62,9 +61,9 @@ class HomeScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   spacing: 5,
                   children: [
-                    CompareBar(fraction: state.cmpNowFrac, color: Nocturne.accent),
+                    CompareBar(fraction: state.cmpNowFrac, color: AppColors.accent),
                     CompareBar(
-                        fraction: state.cmpPrevFrac, color: Nocturne.neutral800),
+                        fraction: state.cmpPrevFrac, color: AppColors.neutral800),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -74,7 +73,7 @@ class HomeScreen extends StatelessWidget {
                             ' · ${state.prevMonthName} ${state.fmt(state.prevTotal)}',
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                                fontSize: 11, color: Nocturne.neutral500),
+                                fontSize: 11, color: AppColors.neutral500),
                           ),
                         ),
                         Flexible(
@@ -82,7 +81,7 @@ class HomeScreen extends StatelessWidget {
                             '${state.deltaLabel} vs ${state.prevMonthName.toLowerCase()}',
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                                fontSize: 11, color: Nocturne.accent300),
+                                fontSize: 11, color: AppColors.accent300),
                           ),
                         ),
                       ],
@@ -102,7 +101,7 @@ class HomeScreen extends StatelessWidget {
                       ? 'Todavía no has registrado ningún gasto.'
                       : 'Aún no has registrado gastos en '
                           '${state.currentMonthName.toLowerCase()}.',
-                  style: const TextStyle(fontSize: 13, color: Nocturne.neutral500),
+                  style: const TextStyle(fontSize: 13, color: AppColors.neutral500),
                 ),
                 PrimaryButton(
                   label: 'Registrar el primero',
@@ -150,7 +149,7 @@ class HomeScreen extends StatelessWidget {
                                   Text(
                                     state.fmt(catTotals[c.name] ?? 0),
                                     style: const TextStyle(
-                                        fontSize: 12, color: Nocturne.neutral400),
+                                        fontSize: 12, color: AppColors.neutral400),
                                   ),
                                   SizedBox(
                                     width: 30,
@@ -159,7 +158,7 @@ class HomeScreen extends StatelessWidget {
                                       textAlign: TextAlign.right,
                                       style: const TextStyle(
                                           fontSize: 12,
-                                          color: Nocturne.neutral600),
+                                          color: AppColors.neutral600),
                                     ),
                                   ),
                                 ],
@@ -202,8 +201,8 @@ class HomeScreen extends StatelessWidget {
                         bars[i].$2,
                         // La última barra es siempre el mes en curso.
                         i == bars.length - 1
-                            ? Nocturne.accent
-                            : Nocturne.neutral800,
+                            ? AppColors.accent
+                            : AppColors.neutral800,
                       ),
                   ],
                   height: 112,
@@ -218,4 +217,4 @@ class HomeScreen extends StatelessWidget {
 }
 
 const TextStyle _axisStyle =
-    TextStyle(fontSize: 10, color: Nocturne.neutral600);
+    TextStyle(fontSize: 10, color: AppColors.neutral600);

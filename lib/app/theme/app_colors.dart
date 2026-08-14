@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
-/// Tokens del sistema de diseño Nocturne (tema oscuro), portados de styles.css.
-abstract final class Nocturne {
+/// Paleta del sistema de diseño Nocturne (tema oscuro), portada de styles.css.
+abstract final class AppColors {
   static const Color bg = Color(0xFF161826);
   static const Color surface = Color(0xFF232532);
   static const Color text = Color(0xFFE9E9ED);
@@ -27,26 +27,4 @@ abstract final class Nocturne {
   static const Color accent700 = Color(0xFF5D5294);
   static const Color accent800 = Color(0xFF423A6A);
   static const Color accent900 = Color(0xFF2B2741);
-
-  static const double space1 = 2.8;
-  static const double space2 = 5.6;
-  static const double space3 = 8.4;
-  static const double space4 = 11.2;
-  static const double space6 = 16.8;
-  static const double space8 = 22.4;
-
-  static const double radiusSm = 4;
-  static const double radiusMd = 8;
-  static const double radiusLg = 14;
-
-  /// shadow-sm: contorno fino de 1 px (neutral-800).
-  static const Color elevSmBorder = neutral800;
-
-  /// shadow-md: contorno neutral-700 + sombra ambiental.
-  static const Color elevMdBorder = neutral700;
-  static const BoxShadow elevMdShadow = BoxShadow(
-    color: Color(0x8C000000),
-    offset: Offset(0, 6),
-    blurRadius: 18,
-  );
 }

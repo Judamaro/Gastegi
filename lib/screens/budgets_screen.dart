@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:gastegi/app/theme/app_colors.dart';
+import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/state/app_state.dart';
-import 'package:gastegi/theme/nocturne.dart';
-import 'package:gastegi/theme/phosphor_icons.dart';
 import 'package:gastegi/widgets/common.dart';
 
 /// Presupuestos: progreso por categoría con alertas de umbral y exceso.
@@ -25,7 +25,7 @@ class BudgetsScreen extends StatelessWidget {
           Text(
             '${state.currentMonthName} · ${state.fmt(state.total)}'
             ' de ${state.fmt(state.totalBudget)} presupuestados',
-            style: const TextStyle(fontSize: 13, color: Nocturne.neutral500),
+            style: const TextStyle(fontSize: 13, color: AppColors.neutral500),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -48,19 +48,19 @@ class BudgetsScreen extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 3),
                             decoration: BoxDecoration(
-                              border: Border.all(color: Nocturne.accent),
+                              border: Border.all(color: AppColors.accent),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               spacing: 4,
                               children: [
-                                const Icon(PhIcons.warning,
-                                    size: 11, color: Nocturne.accent),
+                                const Icon(AppIcons.warning,
+                                    size: 11, color: AppColors.accent),
                                 Text(
                                   b.alertLabel,
                                   style: const TextStyle(
-                                      fontSize: 11, color: Nocturne.accent),
+                                      fontSize: 11, color: AppColors.accent),
                                 ),
                               ],
                             ),
@@ -68,7 +68,7 @@ class BudgetsScreen extends StatelessWidget {
                         Text(
                           '${state.fmt(b.spent)} / ${state.fmt(b.category.budget)}',
                           style: const TextStyle(
-                              fontSize: 12, color: Nocturne.neutral500),
+                              fontSize: 12, color: AppColors.neutral500),
                         ),
                       ],
                     ),
@@ -77,7 +77,7 @@ class BudgetsScreen extends StatelessWidget {
                       b.over
                           ? 'Excedido por ${state.fmt(b.spent - b.category.budget)}'
                           : 'Quedan ${state.fmt(b.category.budget - b.spent)} · ${(b.ratio * 100).round()}% usado',
-                      style: const TextStyle(fontSize: 11, color: Nocturne.neutral600),
+                      style: const TextStyle(fontSize: 11, color: AppColors.neutral600),
                     ),
                   ],
                 ),

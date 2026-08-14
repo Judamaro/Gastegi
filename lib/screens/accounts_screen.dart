@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-
+import 'package:gastegi/app/theme/app_colors.dart';
+import 'package:gastegi/app/theme/app_elevation.dart';
+import 'package:gastegi/app/theme/app_icons.dart';
+import 'package:gastegi/app/theme/app_spacing.dart';
 import 'package:gastegi/models/models.dart';
 import 'package:gastegi/state/app_state.dart';
-import 'package:gastegi/theme/nocturne.dart';
-import 'package:gastegi/theme/phosphor_icons.dart';
 import 'package:gastegi/widgets/common.dart';
 
 /// Cuentas: saldo total, alta y edición de cuentas, y transferencias.
@@ -29,7 +30,7 @@ class AccountsScreen extends StatelessWidget {
                 ),
               ),
               NIconButton(
-                icon: PhIcons.plusCircle,
+                icon: AppIcons.plusCircle,
                 onTap: state.openAccountForm,
               ),
             ],
@@ -57,7 +58,7 @@ class AccountsScreen extends StatelessWidget {
                 const Kicker('Sin cuentas'),
                 const Text(
                   'Crea una cuenta para poder registrar gastos y ver tu saldo.',
-                  style: TextStyle(fontSize: 13, color: Nocturne.neutral500),
+                  style: TextStyle(fontSize: 13, color: AppColors.neutral500),
                 ),
                 PrimaryButton(
                   label: 'Crear cuenta',
@@ -82,7 +83,7 @@ class AccountsScreen extends StatelessWidget {
           if (state.canTransfer)
             PrimaryButton(
               label: 'Transferir entre cuentas',
-              icon: PhIcons.arrowsLeftRight,
+              icon: AppIcons.arrowsLeftRight,
               onTap: state.openTransfer,
             ),
           if (state.transferOpen && state.canTransfer)
@@ -104,13 +105,13 @@ class _AccountCard extends StatelessWidget {
     final negative = account.balance < 0;
     return InkWell(
       onTap: () => state.openAccountForm(account),
-      borderRadius: BorderRadius.circular(Nocturne.radiusMd),
+      borderRadius: BorderRadius.circular(AppRadius.md),
       child: Container(
-        padding: const EdgeInsets.all(Nocturne.space3),
+        padding: const EdgeInsets.all(AppSpacing.space3),
         decoration: BoxDecoration(
-          color: Nocturne.surface,
-          borderRadius: BorderRadius.circular(Nocturne.radiusMd),
-          border: Border.all(color: Nocturne.elevSmBorder),
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppElevation.smBorder),
         ),
         child: Row(
           spacing: 12,
@@ -119,13 +120,13 @@ class _AccountCard extends StatelessWidget {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: Nocturne.neutral900,
-                borderRadius: BorderRadius.circular(Nocturne.radiusMd),
+                color: AppColors.neutral900,
+                borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: Icon(
                 account.icon,
                 size: 19,
-                color: negative ? Nocturne.neutral500 : Nocturne.accent300,
+                color: negative ? AppColors.neutral500 : AppColors.accent300,
               ),
             ),
             Expanded(
@@ -137,7 +138,7 @@ class _AccountCard extends StatelessWidget {
                     Text(
                       account.kind,
                       style: const TextStyle(
-                          fontSize: 11, color: Nocturne.neutral600),
+                          fontSize: 11, color: AppColors.neutral600),
                     ),
                 ],
               ),
@@ -147,11 +148,11 @@ class _AccountCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
-                color: negative ? Nocturne.neutral500 : Nocturne.text,
+                color: negative ? AppColors.neutral500 : AppColors.text,
               ),
             ),
             NIconButton(
-              icon: PhIcons.x,
+              icon: AppIcons.x,
               onTap: () => state.askDeleteAccount(account.id),
             ),
           ],
@@ -183,7 +184,7 @@ class _DeleteConfirm extends StatelessWidget {
               : 'Esta cuenta tiene $n ${n == 1 ? 'gasto' : 'gastos'}. '
                   'Si la eliminas, los gastos se conservan; si prefieres '
                   'ocultarla sin perderla de vista, archívala.',
-          style: const TextStyle(fontSize: 12, color: Nocturne.neutral500),
+          style: const TextStyle(fontSize: 12, color: AppColors.neutral500),
         ),
         if (n > 0)
           PrimaryButton(
@@ -264,10 +265,10 @@ class _AccountForm extends StatelessWidget {
               spacing: 6,
               runSpacing: 6,
               children: [
-                for (final key in PhIcons.accountIconKeys)
+                for (final key in AppIcons.accountIconKeys)
                   NChip(
                     label: _iconLabels[key] ?? key,
-                    icon: PhIcons.resolve(key),
+                    icon: AppIcons.resolve(key),
                     active: state.afIconKey == key,
                     onTap: () => state.pickAfIcon(key),
                   ),
@@ -295,7 +296,7 @@ class _AccountForm extends StatelessWidget {
         if (state.afError != null)
           Text(
             state.afError!,
-            style: const TextStyle(fontSize: 12, color: Nocturne.accent),
+            style: const TextStyle(fontSize: 12, color: AppColors.accent),
           ),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:gastegi/app/theme/app_colors.dart';
+import 'package:gastegi/app/theme/app_icons.dart';
+import 'package:gastegi/app/theme/app_spacing.dart';
 import 'package:gastegi/state/app_state.dart';
-import 'package:gastegi/theme/nocturne.dart';
-import 'package:gastegi/theme/phosphor_icons.dart';
 import 'package:gastegi/widgets/common.dart';
 
 /// Nuevo gasto: monto con teclado propio, categoría, cuenta y descripción.
@@ -52,7 +53,7 @@ class AddExpenseScreen extends StatelessWidget {
                         ),
                       ),
                       NIconButton(
-                        icon: PhIcons.x,
+                        icon: AppIcons.x,
                         onTap: () => state.goTo(Screen.home),
                       ),
                     ],
@@ -67,7 +68,7 @@ class AddExpenseScreen extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                         letterSpacing: -0.88,
                         height: 1,
-                        color: hasAmount ? Nocturne.text : Nocturne.neutral700,
+                        color: hasAmount ? AppColors.text : AppColors.neutral700,
                       ),
                     ),
                   ),
@@ -108,7 +109,7 @@ class AddExpenseScreen extends StatelessWidget {
                             const Text(
                               'Necesitas una cuenta para registrar el gasto.',
                               style: TextStyle(
-                                  fontSize: 12, color: Nocturne.neutral500),
+                                  fontSize: 12, color: AppColors.neutral500),
                             ),
                             SecondaryButton(
                               label: 'Crear cuenta',
@@ -185,19 +186,19 @@ class AddExpenseScreen extends StatelessWidget {
                                 child: InkWell(
                                   onTap: () => state.keypadTap(key),
                                   borderRadius: BorderRadius.circular(
-                                    Nocturne.radiusMd,
+                                    AppRadius.md,
                                   ),
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 12,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: Nocturne.surface,
+                                      color: AppColors.surface,
                                       border: Border.all(
-                                        color: Nocturne.divider,
+                                        color: AppColors.divider,
                                       ),
                                       borderRadius: BorderRadius.circular(
-                                        Nocturne.radiusMd,
+                                        AppRadius.md,
                                       ),
                                     ),
                                     alignment: Alignment.center,

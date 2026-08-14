@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
-import 'package:gastegi/theme/nocturne.dart';
+import 'package:gastegi/app/theme/app_colors.dart';
+import 'package:gastegi/app/theme/app_elevation.dart';
+import 'package:gastegi/app/theme/app_spacing.dart';
 
 /// Tarjeta Nocturne: superficie + borde fino (elev-sm) o borde y sombra (elev-md).
 class NCard extends StatelessWidget {
-  const NCard({super.key, required this.children, this.gap = Nocturne.space2, this.elevated = false});
+  const NCard({super.key, required this.children, this.gap = AppSpacing.space2, this.elevated = false});
 
   final List<Widget> children;
   final double gap;
@@ -14,12 +16,12 @@ class NCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(Nocturne.space3),
+      padding: const EdgeInsets.all(AppSpacing.space3),
       decoration: BoxDecoration(
-        color: Nocturne.surface,
-        borderRadius: BorderRadius.circular(Nocturne.radiusMd),
-        border: Border.all(color: elevated ? Nocturne.elevMdBorder : Nocturne.elevSmBorder),
-        boxShadow: elevated ? const [Nocturne.elevMdShadow] : null,
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: elevated ? AppElevation.mdBorder : AppElevation.smBorder),
+        boxShadow: elevated ? const [AppElevation.mdShadow] : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -32,7 +34,7 @@ class NCard extends StatelessWidget {
 
 /// Etiqueta kicker de tarjeta: mayúsculas pequeñas en acento.
 class Kicker extends StatelessWidget {
-  const Kicker(this.text, {super.key, this.color = Nocturne.accent, this.size = 10});
+  const Kicker(this.text, {super.key, this.color = AppColors.accent, this.size = 10});
 
   final String text;
   final Color color;
@@ -70,8 +72,8 @@ class NChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accentText = color ?? Nocturne.accent300;
-    final borderColor = color ?? Nocturne.accent;
+    final accentText = color ?? AppColors.accent300;
+    final borderColor = color ?? AppColors.accent;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(999),
@@ -79,21 +81,21 @@ class NChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
         decoration: BoxDecoration(
           color: active ? borderColor.withValues(alpha: 0.18) : Colors.transparent,
-          border: Border.all(color: active ? borderColor : Nocturne.divider),
+          border: Border.all(color: active ? borderColor : AppColors.divider),
           borderRadius: BorderRadius.circular(999),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 13, color: active ? accentText : Nocturne.neutral400),
+              Icon(icon, size: 13, color: active ? accentText : AppColors.neutral400),
               const SizedBox(width: 5),
             ],
             Text(
               label,
               style: TextStyle(
                 fontSize: 12,
-                color: active ? accentText : Nocturne.neutral400,
+                color: active ? accentText : AppColors.neutral400,
               ),
             ),
           ],
@@ -124,19 +126,19 @@ class PrimaryButton extends StatelessWidget {
       opacity: disabled ? 0.45 : 1,
       child: InkWell(
         onTap: disabled ? null : onTap,
-        borderRadius: BorderRadius.circular(Nocturne.radiusMd),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            border: Border.all(color: Nocturne.accent),
-            borderRadius: BorderRadius.circular(Nocturne.radiusMd),
+            border: Border.all(color: AppColors.accent),
+            borderRadius: BorderRadius.circular(AppRadius.md),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             spacing: 6,
             children: [
-              if (icon != null) Icon(icon, size: 16, color: Nocturne.accent),
+              if (icon != null) Icon(icon, size: 16, color: AppColors.accent),
               Flexible(
                 child: Text(
                   label,
@@ -144,7 +146,7 @@ class PrimaryButton extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: Nocturne.accent,
+                    color: AppColors.accent,
                   ),
                 ),
               ),
@@ -167,12 +169,12 @@ class SecondaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(Nocturne.radiusMd),
+      borderRadius: BorderRadius.circular(AppRadius.md),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          border: Border.all(color: Nocturne.divider),
-          borderRadius: BorderRadius.circular(Nocturne.radiusMd),
+          border: Border.all(color: AppColors.divider),
+          borderRadius: BorderRadius.circular(AppRadius.md),
         ),
         child: Text(
           label,
@@ -194,15 +196,15 @@ class NIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(Nocturne.radiusMd),
+      borderRadius: BorderRadius.circular(AppRadius.md),
       child: Container(
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          border: Border.all(color: Nocturne.divider),
-          borderRadius: BorderRadius.circular(Nocturne.radiusMd),
+          border: Border.all(color: AppColors.divider),
+          borderRadius: BorderRadius.circular(AppRadius.md),
         ),
-        child: Icon(icon, size: 16, color: Nocturne.text),
+        child: Icon(icon, size: 16, color: AppColors.text),
       ),
     );
   }
@@ -233,22 +235,22 @@ class NInput extends StatelessWidget {
       initialValue: initialValue,
       onChanged: onChanged,
       keyboardType: keyboardType,
-      cursorColor: Nocturne.accent,
-      style: const TextStyle(fontSize: 14, color: Nocturne.text),
+      cursorColor: AppColors.accent,
+      style: const TextStyle(fontSize: 14, color: AppColors.text),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(fontSize: 14, color: Nocturne.neutral600),
+        hintStyle: const TextStyle(fontSize: 14, color: AppColors.neutral600),
         isDense: true,
         filled: true,
-        fillColor: Nocturne.surface,
+        fillColor: AppColors.surface,
         contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(Nocturne.radiusMd),
-          borderSide: const BorderSide(color: Nocturne.divider),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: const BorderSide(color: AppColors.divider),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(Nocturne.radiusMd),
-          borderSide: const BorderSide(color: Nocturne.accent),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: const BorderSide(color: AppColors.accent),
         ),
       ),
     );
@@ -265,7 +267,7 @@ class FieldLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: TextStyle(fontSize: 12, color: Nocturne.text.withValues(alpha: 0.7)),
+      style: TextStyle(fontSize: 12, color: AppColors.text.withValues(alpha: 0.7)),
     );
   }
 }
@@ -286,7 +288,7 @@ class ProgressBar extends StatelessWidget {
         height: height,
         child: Stack(
           children: [
-            Container(color: Nocturne.neutral900),
+            Container(color: AppColors.neutral900),
             FractionallySizedBox(
               widthFactor: fraction.clamp(0.0, 1.0),
               child: Container(
@@ -349,7 +351,7 @@ class ExpenseTile extends StatelessWidget {
               width: 34,
               height: 34,
               decoration: const BoxDecoration(
-                color: Nocturne.neutral900,
+                color: AppColors.neutral900,
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, size: 17, color: iconColor),
@@ -366,7 +368,7 @@ class ExpenseTile extends StatelessWidget {
                 ),
                 Text(
                   subtitle,
-                  style: const TextStyle(fontSize: 11, color: Nocturne.neutral600),
+                  style: const TextStyle(fontSize: 11, color: AppColors.neutral600),
                 ),
               ],
             ),

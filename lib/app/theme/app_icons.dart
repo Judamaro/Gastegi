@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart';
 /// Iconos Phosphor usados por la app, servidos desde las fuentes en
 /// assets/fonts (el paquete phosphor_flutter no compila con Flutter ≥ 3.4x
 /// porque extiende IconData, ahora final). Codepoints de Phosphor 2.x.
-abstract final class PhIcons {
+abstract final class AppIcons {
   static const _family = 'Phosphor';
   static const _familyFill = 'PhosphorFill';
 

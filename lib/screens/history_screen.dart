@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-
+import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/state/app_state.dart';
-import 'package:gastegi/theme/nocturne.dart';
 import 'package:gastegi/widgets/common.dart';
 
 /// Historial: búsqueda, filtros por rango y categoría, gastos agrupados por día.
@@ -60,7 +59,7 @@ class HistoryScreen extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 11,
                       letterSpacing: 0.9,
-                      color: Nocturne.neutral500,
+                      color: AppColors.neutral500,
                     ),
                   ),
                 ),
@@ -84,7 +83,7 @@ class HistoryScreen extends StatelessWidget {
                     ? 'Todavía no hay gastos registrados'
                     : 'Sin resultados para esta búsqueda',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13, color: Nocturne.neutral600),
+                style: const TextStyle(fontSize: 13, color: AppColors.neutral600),
               ),
             ),
         ],

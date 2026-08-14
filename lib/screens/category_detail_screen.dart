@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-
+import 'package:gastegi/app/theme/app_colors.dart';
+import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/state/app_state.dart';
-import 'package:gastegi/theme/nocturne.dart';
-import 'package:gastegi/theme/phosphor_icons.dart';
 import 'package:gastegi/widgets/charts.dart';
 import 'package:gastegi/widgets/common.dart';
 
@@ -31,7 +30,7 @@ class CategoryDetailScreen extends StatelessWidget {
             spacing: 8,
             children: [
               NIconButton(
-                icon: PhIcons.caretLeft,
+                icon: AppIcons.caretLeft,
                 onTap: () => state.goTo(Screen.home),
               ),
               Expanded(
@@ -65,7 +64,7 @@ class CategoryDetailScreen extends StatelessWidget {
                       'en ${state.currentMonthName.toLowerCase()}'
                       ' · ${state.pct(catTotal, state.total)}% del total',
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 13, color: Nocturne.neutral500),
+                      style: const TextStyle(fontSize: 13, color: AppColors.neutral500),
                     ),
                   ),
                 ],
@@ -83,7 +82,7 @@ class CategoryDetailScreen extends StatelessWidget {
                   ),
                   Text(
                     'Presupuesto: ${state.fmt(catTotal)} de ${state.fmt(cat.budget)}',
-                    style: const TextStyle(fontSize: 11, color: Nocturne.neutral500),
+                    style: const TextStyle(fontSize: 11, color: AppColors.neutral500),
                   ),
                 ],
               ),
@@ -112,7 +111,7 @@ class CategoryDetailScreen extends StatelessWidget {
                 'Sin gastos de ${cat.name.toLowerCase()} en '
                 '${state.currentMonthName.toLowerCase()}',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13, color: Nocturne.neutral600),
+                style: const TextStyle(fontSize: 13, color: AppColors.neutral600),
               ),
             )
           else

@@ -2,12 +2,12 @@ import 'dart:math' as math;
 import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart' hide Category;
+import 'package:gastegi/app/theme/app_colors.dart';
+import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/data/account_repository.dart';
 import 'package:gastegi/data/category_repository.dart';
 import 'package:gastegi/data/expense_repository.dart';
 import 'package:gastegi/models/models.dart';
-import 'package:gastegi/theme/nocturne.dart';
-import 'package:gastegi/theme/phosphor_icons.dart';
 import 'package:gastegi/util/dates.dart';
 import 'package:intl/intl.dart';
 
@@ -552,7 +552,7 @@ class AppState extends ChangeNotifier {
     afName = account?.name ?? '';
     afKind = account?.kind ?? '';
     afBalance = account == null ? '' : _plain(account.balance);
-    afIconKey = account == null ? 'wallet' : PhIcons.keyOf(account.icon);
+    afIconKey = account == null ? 'wallet' : AppIcons.keyOf(account.icon);
     afError = null;
     notifyListeners();
   }
@@ -664,9 +664,9 @@ class AppState extends ChangeNotifier {
 /// Colores auxiliares que el estado expone a las pantallas.
 extension BudgetRowColors on BudgetRow {
   Color get barColor => over
-      ? Nocturne.accent300
+      ? AppColors.accent300
       : alert
-          ? Nocturne.accent
+          ? AppColors.accent
           : category.color;
 
   String get alertLabel => over ? 'Excedido' : 'Alerta';

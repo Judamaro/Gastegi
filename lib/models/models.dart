@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-import 'package:gastegi/theme/phosphor_icons.dart';
+import 'package:gastegi/app/theme/app_icons.dart';
 
 /// Modelos de dominio. Los ids son UUID de texto, no enteros autoincrementales:
 /// cuando la app sincronice con la nube, dos teléfonos generarían el mismo
@@ -13,7 +13,7 @@ class Category {
         id: r['id'] as String,
         name: r['name'] as String,
         color: Color(r['color'] as int),
-        icon: PhIcons.resolve(r['icon_key'] as String),
+        icon: AppIcons.resolve(r['icon_key'] as String),
         budget: (r['budget'] as num).toDouble(),
       );
   const Category({
@@ -42,7 +42,7 @@ class Account {
         id: r['id'] as String,
         name: r['name'] as String,
         kind: r['kind'] as String,
-        icon: PhIcons.resolve(r['icon_key'] as String),
+        icon: AppIcons.resolve(r['icon_key'] as String),
         balance: (r['balance'] as num).toDouble(),
         initialBalance: (r['initial_balance'] as num).toDouble(),
         archived: (r['archived'] as int) == 1,
