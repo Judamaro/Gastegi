@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gastegi/app/router/app_screen.dart';
-import 'package:gastegi/app/router/nav_notifier.dart';
+import 'package:gastegi/app/router/route_names.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
@@ -14,21 +13,25 @@ import 'package:gastegi/core/widgets/charts/bar_chart.dart';
 import 'package:gastegi/core/widgets/color_dot.dart';
 import 'package:gastegi/core/widgets/kicker.dart';
 import 'package:gastegi/core/widgets/progress_bar.dart';
-import 'package:gastegi/features/categories/presentation/providers/selected_category.dart';
+import 'package:gastegi/features/categories/presentation/providers/category_detail_providers.dart';
+import 'package:go_router/go_router.dart';
 
 /// Detalle de una categoría: total, presupuesto, barras semanales y gastos.
 class CategoryDetailPage extends ConsumerWidget {
-  const CategoryDetailPage({super.key});
+  const CategoryDetailPage({super.key, required this.categoryName});
+
+  /// Llega por la ruta.
+  final String categoryName;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cat = ref.watch(selectedCategoryProvider);
+    final cat = ref.watch(categoryByNameProvider(categoryName));
     // La categoría puede haber desaparecido bajo los pies de la pantalla.
     if (cat == null) return const SizedBox.shrink();
 
     final state = ref.watch(appDataProvider);
-    final catTotal = ref.watch(selectedCategoryTotalProvider);
-    final expenses = ref.watch(selectedCategoryExpensesProvider);
+    final catTotal = ref.watch(categoryTotalProvider(categoryName));
+    final expenses = ref.watch(categoryExpensesProvider(categoryName));
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
@@ -41,7 +44,7 @@ class CategoryDetailPage extends ConsumerWidget {
             children: [
               AppIconButton(
                 icon: AppIcons.caretLeft,
-                onTap: () => ref.read(navProvider.notifier).goTo(Screen.home),
+                onTap: () => context.go(RouteNames.home),
               ),
               Expanded(
                 child: Text(
@@ -114,7 +117,7 @@ class CategoryDetailPage extends ConsumerWidget {
               BarChart(
                 bars: [
                   for (final (label, value) in ref.watch(
-                    selectedCategoryWeeksProvider,
+                    categoryWeeksProvider(categoryName),
                   ))
                     (label, value, cat.color),
                 ],

@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gastegi/app/router/app_screen.dart';
-import 'package:gastegi/app/router/nav_notifier.dart';
+import 'package:gastegi/app/router/route_names.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
+import 'package:go_router/go_router.dart';
 
 /// Barra de pestañas inferior.
-class AppTabBar extends ConsumerWidget {
-  const AppTabBar({super.key});
+class AppTabBar extends StatelessWidget {
+  const AppTabBar({super.key, required this.navigationShell});
 
+  final StatefulNavigationShell navigationShell;
+
+  /// Las cinco entradas visibles. `branch` es el índice de la rama del shell, o
+  /// nulo para "Agregar", que no es una pestaña sino una pantalla que se abre
+  /// encima y oculta esta barra.
   static const _tabs = [
-    (Screen.home, AppIcons.house, AppIcons.houseFill, 'Inicio'),
-    (Screen.history, AppIcons.receipt, AppIcons.receiptFill, 'Historial'),
-    (Screen.add, AppIcons.plusCircle, AppIcons.plusCircleFill, 'Agregar'),
-    (Screen.accounts, AppIcons.wallet, AppIcons.walletFill, 'Cuentas'),
-    (Screen.budgets, AppIcons.target, AppIcons.targetFill, 'Presupuesto'),
+    (0, AppIcons.house, AppIcons.houseFill, 'Inicio'),
+    (1, AppIcons.receipt, AppIcons.receiptFill, 'Historial'),
+    (null, AppIcons.plusCircle, AppIcons.plusCircleFill, 'Agregar'),
+    (2, AppIcons.wallet, AppIcons.walletFill, 'Cuentas'),
+    (3, AppIcons.target, AppIcons.targetFill, 'Presupuesto'),
   ];
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final current = ref.watch(navProvider);
-    final nav = ref.read(navProvider.notifier);
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
       decoration: const BoxDecoration(
@@ -29,18 +31,23 @@ class AppTabBar extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          for (final (screen, icon, fillIcon, label) in _tabs)
+          for (final (branch, icon, fillIcon, label) in _tabs)
             Expanded(
               child: _TabItem(
                 icon: icon,
                 fillIcon: fillIcon,
                 label: label,
-                // El detalle de categoría se abre desde Inicio, así que esa
-                // pestaña se queda encendida mientras se está dentro.
                 active:
-                    current == screen ||
-                    (screen == Screen.home && current == Screen.catDetail),
-                onTap: () => nav.goTo(screen),
+                    branch != null && navigationShell.currentIndex == branch,
+                onTap: () => branch == null
+                    ? context.push(RouteNames.addExpense)
+                    // `initialLocation` en la pestaña ya activa vuelve a su
+                    // raíz: tocar Inicio desde el detalle de una categoría
+                    // sale del detalle, como espera cualquiera.
+                    : navigationShell.goBranch(
+                        branch,
+                        initialLocation: branch == navigationShell.currentIndex,
+                      ),
               ),
             ),
         ],

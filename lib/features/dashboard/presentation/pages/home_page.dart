@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gastegi/app/router/app_screen.dart';
-import 'package:gastegi/app/router/nav_notifier.dart';
+import 'package:gastegi/app/router/route_names.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
@@ -14,7 +13,7 @@ import 'package:gastegi/core/widgets/charts/trend_chart.dart';
 import 'package:gastegi/core/widgets/color_dot.dart';
 import 'package:gastegi/core/widgets/kicker.dart';
 import 'package:gastegi/core/widgets/primary_button.dart';
-import 'package:gastegi/features/categories/presentation/providers/selected_category.dart';
+import 'package:go_router/go_router.dart';
 
 /// Inicio: total del mes, comparación con el mes anterior, dona por categoría,
 /// tendencia diaria y últimos 6 meses.
@@ -131,7 +130,7 @@ class HomePage extends ConsumerWidget {
                 ),
                 PrimaryButton(
                   label: 'Registrar el primero',
-                  onTap: () => ref.read(navProvider.notifier).goTo(Screen.add),
+                  onTap: () => context.push(RouteNames.addExpense),
                 ),
               ],
             )
@@ -163,14 +162,9 @@ class HomePage extends ConsumerWidget {
                         children: [
                           for (final c in state.categories)
                             InkWell(
-                              onTap: () {
-                                ref
-                                    .read(selectedCategoryNameProvider.notifier)
-                                    .select(c.name);
-                                ref
-                                    .read(navProvider.notifier)
-                                    .goTo(Screen.catDetail);
-                              },
+                              onTap: () => context.go(
+                                RouteNames.categoryDetailOf(c.name),
+                              ),
                               child: Row(
                                 spacing: 7,
                                 children: [

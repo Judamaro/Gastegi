@@ -6,7 +6,7 @@ import 'package:gastegi/features/accounts/data/repositories/account_repository_i
 import 'package:gastegi/features/accounts/presentation/providers/account_form_notifier.dart';
 import 'package:gastegi/features/accounts/presentation/providers/transfer_form_notifier.dart';
 import 'package:gastegi/features/categories/data/repositories/category_repository_impl.dart';
-import 'package:gastegi/features/categories/presentation/providers/selected_category.dart';
+import 'package:gastegi/features/categories/presentation/providers/category_detail_providers.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
 import 'package:gastegi/features/expenses/presentation/providers/add_expense_notifier.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -106,11 +106,10 @@ void main() {
       db,
       now: DateTime(2026, 2, 10),
     );
-    container.read(selectedCategoryNameProvider.notifier).select('Comida');
 
     // Febrero acaba el 28: el día 25 cae en la cuarta semana. Con un corte
     // fijo en el 28 se perdería.
-    expect(container.read(selectedCategoryWeeksProvider).last.$2, 60);
+    expect(container.read(categoryWeeksProvider('Comida')).last.$2, 60);
   });
 
   test('las alertas de presupuesto usan el umbral del 90 %', () async {
