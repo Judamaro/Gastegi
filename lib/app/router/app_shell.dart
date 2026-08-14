@@ -25,7 +25,7 @@ class Shell extends ConsumerWidget {
       Screen.catDetail => CategoryDetailPage(state: state),
       Screen.accounts => const AccountsPage(),
       Screen.budgets => BudgetsPage(state: state),
-      Screen.add => AddExpensePage(state: state),
+      Screen.add => const AddExpensePage(),
     };
     return Scaffold(
       backgroundColor: AppColors.bg,

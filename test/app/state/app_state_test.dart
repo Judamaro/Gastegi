@@ -1,13 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gastegi/app/router/app_screen.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
-import 'package:gastegi/app/state/app_state.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:gastegi/features/accounts/presentation/providers/account_form_notifier.dart';
 import 'package:gastegi/features/accounts/presentation/providers/transfer_form_notifier.dart';
 import 'package:gastegi/features/categories/data/repositories/category_repository_impl.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
 import 'package:gastegi/features/expenses/presentation/models/history_range.dart';
+import 'package:gastegi/features/expenses/presentation/providers/add_expense_notifier.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../../helpers/test_db.dart';
@@ -70,7 +69,6 @@ void main() {
       expect(state.categories, hasLength(6));
       expect(state.accounts, isEmpty);
       expect(state.canTransfer, isFalse);
-      expect(state.saveDisabled, isTrue);
     });
   });
 
@@ -134,51 +132,6 @@ void main() {
     expect(state.selCatWeeks.last.$2, 60);
   });
 
-  test('guardar un gasto lo persiste y descuenta el saldo', () async {
-    final accountId = await accounts.create(
-      name: 'Efectivo',
-      kind: 'Dinero en mano',
-      iconKey: 'money',
-      initialBalance: 200,
-    );
-    final state = await buildState(db);
-
-    state.pickAddCat('Comida');
-    state.pickAddAcct(accountId);
-    state.keypadTap('5');
-    state.keypadTap('0');
-    expect(state.saveDisabled, isFalse);
-
-    await state.saveExpense();
-
-    expect(state.total, 50);
-    expect(state.patrimonio, 150);
-    expect(state.screen, Screen.history);
-    // El formulario queda limpio para el siguiente gasto.
-    expect(state.addAmount, '');
-    expect(state.addCat, isNull);
-
-    // Y está en disco, no solo en memoria.
-    expect(await expenses.count(), 1);
-  });
-
-  test('el teclado limita a una coma y 7 dígitos', () async {
-    final state = await buildState(db);
-
-    state.keypadTap(',');
-    expect(state.addAmount, '0,');
-    state.keypadTap(',');
-    expect(state.addAmount, '0,');
-
-    state.addAmount = '';
-    for (var i = 0; i < 10; i++) {
-      state.keypadTap('9');
-    }
-    expect(state.addAmount.length, 7);
-    state.keypadTap('⌫');
-    expect(state.addAmount.length, 6);
-  });
-
   test('las alertas de presupuesto usan el umbral del 90 %', () async {
     // Ocio tiene 200 de presupuesto; 182 son el 91 %.
     final ocio = (await CategoryRepositoryImpl(
@@ -213,8 +166,7 @@ void main() {
         initialBalance: 10,
       );
       final container = await buildLoadedContainer(db);
-      final state = container.read(appStateProvider);
-      state.pickAddAcct(id);
+      container.read(addExpenseProvider.notifier).pickAccount(id);
       // Fuerza la construcción del formulario de transferencia para que su
       // normalización quede suscrita antes del borrado.
       expect(container.read(transferFormProvider).fromId, id);
@@ -224,7 +176,7 @@ void main() {
       await form.confirmDelete();
 
       expect(container.read(appDataProvider).accounts, isEmpty);
-      expect(state.addAccountId, isNull);
+      expect(container.read(addExpenseProvider).accountId, isNull);
       expect(container.read(transferFormProvider).fromId, isNull);
     },
   );

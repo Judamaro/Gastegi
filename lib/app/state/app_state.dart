@@ -8,9 +8,7 @@ import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/features/accounts/domain/entities/account.dart';
 import 'package:gastegi/features/budgets/presentation/models/budget_row.dart';
 import 'package:gastegi/features/categories/domain/entities/category.dart';
-import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
 import 'package:gastegi/features/expenses/domain/entities/expense.dart';
-import 'package:gastegi/features/expenses/domain/usecases/save_expense.dart';
 import 'package:gastegi/features/expenses/presentation/models/history_range.dart';
 
 /// Estado de la interfaz: navegación, formularios, filtros y selecciones.
@@ -28,15 +26,11 @@ class AppState extends ChangeNotifier {
       _normalizeSelections();
       notifyListeners();
     });
-    addDate = _data.today;
   }
 
   final Ref _ref;
 
   AppData get _data => _ref.read(appDataProvider);
-  SaveExpense get _saveExpense =>
-      SaveExpense(_ref.read(expenseRepositoryProvider));
-
   // ── Estado de UI ───────────────────────────────────────────────────────
 
   Screen screen = Screen.home;
@@ -44,12 +38,6 @@ class AppState extends ChangeNotifier {
   String search = '';
   String filterCat = 'Todas';
   HistoryRange filterRange = HistoryRange.month;
-
-  String addAmount = '';
-  String? addCat;
-  String? addAccountId;
-  String addDesc = '';
-  late DateTime addDate;
 
   // Delegados a `core/utils/formatters.dart`. Siguen aquí porque las pantallas
   // todavía llaman `state.fmt(...)`; desaparecen cuando dejen de recibir el
@@ -62,17 +50,9 @@ class AppState extends ChangeNotifier {
 
   Future<void> load() => _ref.read(appDataProvider.notifier).load();
 
-  Future<void> _write(Future<void> Function() op) =>
-      _ref.read(appDataProvider.notifier).write(op);
-
   void _normalizeSelections() {
-    final ids = accounts.map((a) => a.id).toSet();
-    if (addAccountId != null && !ids.contains(addAccountId)) {
-      addAccountId = null;
-    }
     final names = categories.map((c) => c.name).toSet();
     if (selCatName != null && !names.contains(selCatName)) selCatName = null;
-    if (addCat != null && !names.contains(addCat)) addCat = null;
     if (filterCat != 'Todas' && !names.contains(filterCat)) {
       filterCat = 'Todas';
     }
@@ -174,27 +154,6 @@ class AppState extends ChangeNotifier {
     ];
   }
 
-  // ── Nuevo gasto ────────────────────────────────────────────────────────
-
-  double get addAmountValue => parseAmount(addAmount);
-
-  bool get saveDisabled =>
-      !(addAmountValue > 0 && addCat != null && addAccountId != null);
-
-  /// Etiqueta del chip que abre el calendario.
-  String get addDateLabel =>
-      addDateIsPreset ? 'Otra fecha…' : dayLabelShort(addDate, today);
-
-  bool get addDateIsPreset => addDateIsToday || addDateIsYesterday;
-
-  bool get addDateIsToday => sameDay(addDate, today);
-
-  bool get addDateIsYesterday => sameDay(addDate, daysBefore(today, 1));
-
-  void setAddDateToday() => setAddDate(today);
-
-  void setAddDateYesterday() => setAddDate(daysBefore(today, 1));
-
   // ── Acciones de navegación y filtros ───────────────────────────────────
 
   void goTo(Screen s) {
@@ -222,70 +181,9 @@ class AppState extends ChangeNotifier {
     filterRange = range;
     notifyListeners();
   }
-
-  // ── Nuevo gasto ────────────────────────────────────────────────────────
-
-  /// Teclado del nuevo gasto: dígitos, una sola coma decimal y borrado, con
-  /// máximo 7 dígitos.
-  void keypadTap(String key) {
-    var a = addAmount;
-    if (key == '⌫') {
-      a = a.isEmpty ? a : a.substring(0, a.length - 1);
-    } else if (key == ',') {
-      if (!a.contains(',')) a = '${a.isEmpty ? '0' : a},';
-    } else if (a.replaceAll(',', '').length < 7) {
-      a += key;
-    }
-    addAmount = a;
-    notifyListeners();
-  }
-
-  void pickAddCat(String name) {
-    addCat = name;
-    notifyListeners();
-  }
-
-  void pickAddAcct(String id) {
-    addAccountId = id;
-    notifyListeners();
-  }
-
-  void setAddDesc(String value) {
-    addDesc = value;
-    notifyListeners();
-  }
-
-  void setAddDate(DateTime date) {
-    addDate = dateOnly(date);
-    notifyListeners();
-  }
-
-  Future<void> saveExpense() async {
-    if (saveDisabled) return;
-    final category = categoryOf(addCat!);
-    if (category == null) return;
-
-    await _write(
-      () => _saveExpense(
-        date: addDate,
-        description: addDesc,
-        category: category,
-        accountId: addAccountId,
-        amount: addAmountValue,
-      ),
-    );
-
-    addAmount = '';
-    addCat = null;
-    addAccountId = null;
-    addDesc = '';
-    addDate = today;
-    screen = Screen.history;
-    notifyListeners();
-  }
 }
 
-/// El estado de interfaz de la app.
+/// El estado de interfaz que queda sin repartir.
 ///
 /// `ChangeNotifierProvider` es transitorio: existe mientras quede un objeto
 /// dios que notifique en bloque. Cada funcionalidad que se lleva su trozo a un

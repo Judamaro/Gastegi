@@ -1,26 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gastegi/app/router/app_screen.dart';
+import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/app/state/app_state.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
+import 'package:gastegi/core/utils/date_utils.dart';
 import 'package:gastegi/core/widgets/app_chip.dart';
 import 'package:gastegi/core/widgets/app_icon_button.dart';
 import 'package:gastegi/core/widgets/app_input.dart';
 import 'package:gastegi/core/widgets/field_label.dart';
 import 'package:gastegi/core/widgets/primary_button.dart';
 import 'package:gastegi/core/widgets/secondary_button.dart';
+import 'package:gastegi/features/expenses/presentation/providers/add_expense_notifier.dart';
 import 'package:gastegi/features/expenses/presentation/widgets/amount_keypad.dart';
 
 /// Nuevo gasto: monto con teclado propio, categoría, cuenta y descripción.
-class AddExpensePage extends StatelessWidget {
-  const AddExpensePage({super.key, required this.state});
-
-  final AppState state;
+class AddExpensePage extends ConsumerWidget {
+  const AddExpensePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final hasAmount = state.addAmountValue > 0;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final data = ref.watch(appDataProvider);
+    final state = ref.watch(addExpenseProvider);
+    final form = ref.read(addExpenseProvider.notifier);
+    final nav = ref.read(appStateProvider);
+
+    final today = data.today;
+    final isToday = sameDay(state.date, today);
+    final isYesterday = sameDay(state.date, daysBefore(today, 1));
+    final isPreset = isToday || isYesterday;
 
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
@@ -46,21 +56,21 @@ class AddExpensePage extends StatelessWidget {
                       ),
                       AppIconButton(
                         icon: AppIcons.x,
-                        onTap: () => state.goTo(Screen.home),
+                        onTap: () => nav.goTo(Screen.home),
                       ),
                     ],
                   ),
                   Padding(
                     padding: const EdgeInsets.only(top: 8, bottom: 4),
                     child: Text(
-                      state.addAmount.isEmpty ? '0' : state.addAmount,
+                      state.amount.isEmpty ? '0' : state.amount,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 44,
                         fontWeight: FontWeight.w500,
                         letterSpacing: -0.88,
                         height: 1,
-                        color: hasAmount
+                        color: state.amountValue > 0
                             ? AppColors.text
                             : AppColors.neutral700,
                       ),
@@ -75,13 +85,13 @@ class AddExpensePage extends StatelessWidget {
                         spacing: 6,
                         runSpacing: 6,
                         children: [
-                          for (final c in state.categories)
+                          for (final c in data.categories)
                             AppChip(
                               label: c.name,
                               icon: c.icon,
                               color: c.color,
-                              active: state.addCat == c.name,
-                              onTap: () => state.pickAddCat(c.name),
+                              active: state.categoryName == c.name,
+                              onTap: () => form.pickCategory(c.name),
                             ),
                         ],
                       ),
@@ -95,7 +105,7 @@ class AddExpensePage extends StatelessWidget {
                       // Sin cuentas no se puede guardar nada: explicarlo y dar
                       // la salida, en vez de dejar un hueco vacío y un botón
                       // deshabilitado sin motivo aparente.
-                      if (state.accounts.isEmpty)
+                      if (data.accounts.isEmpty)
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           spacing: 8,
@@ -109,7 +119,7 @@ class AddExpensePage extends StatelessWidget {
                             ),
                             SecondaryButton(
                               label: 'Crear cuenta',
-                              onTap: () => state.goTo(Screen.accounts),
+                              onTap: () => nav.goTo(Screen.accounts),
                             ),
                           ],
                         )
@@ -118,11 +128,11 @@ class AddExpensePage extends StatelessWidget {
                           spacing: 6,
                           runSpacing: 6,
                           children: [
-                            for (final a in state.accounts)
+                            for (final a in data.accounts)
                               AppChip(
                                 label: a.name,
-                                active: state.addAccountId == a.id,
-                                onTap: () => state.pickAddAcct(a.id),
+                                active: state.accountId == a.id,
+                                onTap: () => form.pickAccount(a.id),
                               ),
                           ],
                         ),
@@ -139,26 +149,28 @@ class AddExpensePage extends StatelessWidget {
                         children: [
                           AppChip(
                             label: 'Hoy',
-                            active: state.addDateIsToday,
-                            onTap: state.setAddDateToday,
+                            active: isToday,
+                            onTap: () => form.setDate(today),
                           ),
                           AppChip(
                             label: 'Ayer',
-                            active: state.addDateIsYesterday,
-                            onTap: state.setAddDateYesterday,
+                            active: isYesterday,
+                            onTap: () => form.setDate(daysBefore(today, 1)),
                           ),
                           AppChip(
-                            label: state.addDateLabel,
-                            active: !state.addDateIsPreset,
+                            label: isPreset
+                                ? 'Otra fecha…'
+                                : dayLabelShort(state.date, today),
+                            active: !isPreset,
                             onTap: () async {
                               final picked = await showDatePicker(
                                 context: context,
-                                initialDate: state.addDate,
+                                initialDate: state.date,
                                 firstDate: DateTime(2020),
                                 // No tiene sentido registrar gastos futuros.
-                                lastDate: state.today,
+                                lastDate: today,
                               );
-                              if (picked != null) state.setAddDate(picked);
+                              if (picked != null) form.setDate(picked);
                             },
                           ),
                         ],
@@ -167,14 +179,16 @@ class AddExpensePage extends StatelessWidget {
                   ),
                   AppInput(
                     hint: 'Descripción (opcional)',
-                    onChanged: state.setAddDesc,
+                    onChanged: form.setDescription,
                   ),
                   const Spacer(),
-                  AmountKeypad(onKey: state.keypadTap),
+                  AmountKeypad(onKey: form.keypadTap),
                   PrimaryButton(
                     label: 'Guardar gasto',
                     disabled: state.saveDisabled,
-                    onTap: state.saveExpense,
+                    onTap: () async {
+                      if (await form.save()) nav.goTo(Screen.history);
+                    },
                   ),
                 ],
               ),
