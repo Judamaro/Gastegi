@@ -4,6 +4,7 @@ import 'package:gastegi/app/config/app_config.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/core/storage/app_database.dart';
 import 'package:gastegi/core/storage/database_provider.dart';
+import 'package:gastegi/l10n/generated/app_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
@@ -18,10 +19,12 @@ Future<ProviderContainer> bootstrap() async {
   binding.ensureSemantics();
 
   // `DateFormat` con un locale distinto de en_US lanza LocaleDataException si
-  // no se inicializan antes los datos del idioma.
-  final locale = AppConfig.defaultLocale.languageCode;
-  await initializeDateFormatting(locale);
-  Intl.defaultLocale = locale;
+  // no se inicializan antes los datos del idioma. Se cargan todos los
+  // soportados porque el usuario puede cambiar el del sistema con la app viva.
+  for (final locale in AppLocalizations.supportedLocales) {
+    await initializeDateFormatting(locale.languageCode);
+  }
+  Intl.defaultLocale = AppConfig.fallbackLocale.languageCode;
 
   final db = await AppDatabase.open();
   final container = ProviderContainer(

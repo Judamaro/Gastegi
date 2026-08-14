@@ -71,22 +71,12 @@ class AppData {
       .where((e) => sameMonth(e.date, monthAnchor))
       .toList();
 
-  // ── Etiquetas del mes ──────────────────────────────────────────────────
-
-  /// `Agosto 2026`.
-  String get currentMonthTitle => monthTitle(monthAnchor);
-
-  /// `Agosto`.
-  String get currentMonthName => monthName(monthAnchor);
-
-  /// `Ago`.
-  String get currentMonthAbbr => monthAbbr(monthAnchor);
-
-  String get prevMonthName => monthName(addMonths(monthAnchor, -1));
+  // ── El mes ─────────────────────────────────────────────────────────────
 
   int get daysInCurrentMonth => daysInMonth(monthAnchor);
 
-  String dayLabelShortOf(DateTime d) => dayLabelShort(d, today);
+  /// Primer día del mes anterior.
+  DateTime get prevMonthAnchor => addMonths(monthAnchor, -1);
 
   // ── Totales del mes ────────────────────────────────────────────────────
 
@@ -110,18 +100,20 @@ class AppData {
   );
 
   /// Barras de los últimos 6 meses; el mes en curso usa el total en vivo.
-  late final List<(String, double)> monthTotals = [
+  ///
+  /// Devuelve el mes, no su nombre: poner aquí una etiqueta obligaría a este
+  /// archivo a conocer el idioma del usuario.
+  late final List<(DateTime, double)> monthTotals = [
     for (var i = monthsBack; i > 0; i--)
       () {
         final m = addMonths(monthAnchor, -i);
-        return (monthAbbr(m), monthlySums[monthKey(m)] ?? 0.0);
+        return (m, monthlySums[monthKey(m)] ?? 0.0);
       }(),
-    (currentMonthAbbr, total),
+    (monthAnchor, total),
   ];
 
   /// Total del mes anterior, para la comparación del inicio.
-  double get prevTotal =>
-      monthlySums[monthKey(addMonths(monthAnchor, -1))] ?? 0;
+  double get prevTotal => monthlySums[monthKey(prevMonthAnchor)] ?? 0;
 
   /// Vacío cuando no hay mes anterior con el que comparar.
   String get deltaLabel {

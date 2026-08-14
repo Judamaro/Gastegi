@@ -5,6 +5,7 @@ import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/utils/formatters.dart';
+import 'package:gastegi/core/utils/l10n_context.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/charts/bar_chart.dart';
 import 'package:gastegi/core/widgets/charts/compare_bar.dart';
@@ -27,7 +28,11 @@ class HomePage extends ConsumerWidget {
     final catTotals = state.catTotals;
     final bars = state.monthTotals;
     final hasHistory = bars.any((b) => b.$2 > 0);
-    final monthAbbr = state.currentMonthAbbr.toLowerCase();
+    final l10n = context.l10n;
+    final dates = context.dates;
+    final monthAbbr = dates.monthAbbr(state.monthAnchor).toLowerCase();
+    final monthName = dates.monthName(state.monthAnchor);
+    final prevMonthName = dates.monthName(state.prevMonthAnchor);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
@@ -38,7 +43,7 @@ class HomePage extends ConsumerWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Kicker(state.currentMonthTitle, size: 11),
+              Kicker(dates.monthTitle(state.monthAnchor), size: 11),
               const SizedBox(height: 4),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -54,11 +59,11 @@ class HomePage extends ConsumerWidget {
                       height: 1,
                     ),
                   ),
-                  const Flexible(
+                  Flexible(
                     child: Text(
-                      'gastado este mes',
+                      l10n.homeSpentThisMonth,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 13,
                         color: AppColors.neutral500,
                       ),
@@ -87,8 +92,12 @@ class HomePage extends ConsumerWidget {
                       children: [
                         Flexible(
                           child: Text(
-                            '${state.currentMonthName} ${formatAmount(total)}'
-                            ' · ${state.prevMonthName} ${formatAmount(state.prevTotal)}',
+                            l10n.homeMonthComparison(
+                              monthName,
+                              formatAmount(total),
+                              prevMonthName,
+                              formatAmount(state.prevTotal),
+                            ),
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontSize: 11,
@@ -98,7 +107,10 @@ class HomePage extends ConsumerWidget {
                         ),
                         Flexible(
                           child: Text(
-                            '${state.deltaLabel} vs ${state.prevMonthName.toLowerCase()}',
+                            l10n.homeDeltaVsPrevMonth(
+                              state.deltaLabel,
+                              prevMonthName.toLowerCase(),
+                            ),
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontSize: 11,
@@ -117,19 +129,18 @@ class HomePage extends ConsumerWidget {
             AppCard(
               gap: 10,
               children: [
-                const Kicker('Sin gastos'),
+                Kicker(l10n.homeNoExpensesKicker),
                 Text(
                   state.hasNoExpensesAtAll
-                      ? 'Todavía no has registrado ningún gasto.'
-                      : 'Aún no has registrado gastos en '
-                            '${state.currentMonthName.toLowerCase()}.',
+                      ? l10n.homeNeverAnyExpense
+                      : l10n.homeNoExpensesInMonth(monthName.toLowerCase()),
                   style: const TextStyle(
                     fontSize: 13,
                     color: AppColors.neutral500,
                   ),
                 ),
                 PrimaryButton(
-                  label: 'Registrar el primero',
+                  label: l10n.homeRegisterFirst,
                   onTap: () => context.push(RouteNames.addExpense),
                 ),
               ],
@@ -138,7 +149,7 @@ class HomePage extends ConsumerWidget {
             AppCard(
               gap: 10,
               children: [
-                const Kicker('Por categoría'),
+                Kicker(l10n.homeByCategory),
                 Row(
                   spacing: 16,
                   children: [
@@ -152,7 +163,7 @@ class HomePage extends ConsumerWidget {
                                 (catTotals[c.name]! / total, c.color),
                           ],
                           centerTitle: formatAmount(total),
-                          centerSubtitle: 'este mes',
+                          centerSubtitle: l10n.homeThisMonth,
                         ),
                       ),
                     ),
@@ -206,15 +217,15 @@ class HomePage extends ConsumerWidget {
             AppCard(
               gap: 8,
               children: [
-                const Kicker('Tendencia diaria'),
+                Kicker(l10n.homeDailyTrend),
                 TrendChart(values: state.dailyTotals),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('1 $monthAbbr', style: _axisStyle),
-                    Text('15 $monthAbbr', style: _axisStyle),
+                    Text(l10n.homeAxisDay(1, monthAbbr), style: _axisStyle),
+                    Text(l10n.homeAxisDay(15, monthAbbr), style: _axisStyle),
                     Text(
-                      '${state.daysInCurrentMonth} $monthAbbr',
+                      l10n.homeAxisDay(state.daysInCurrentMonth, monthAbbr),
                       style: _axisStyle,
                     ),
                   ],
@@ -226,12 +237,12 @@ class HomePage extends ConsumerWidget {
             AppCard(
               gap: 8,
               children: [
-                const Kicker('Últimos 6 meses'),
+                Kicker(l10n.homeLastSixMonths),
                 BarChart(
                   bars: [
                     for (var i = 0; i < bars.length; i++)
                       (
-                        bars[i].$1,
+                        dates.monthAbbr(bars[i].$1),
                         bars[i].$2,
                         // La última barra es siempre el mes en curso.
                         i == bars.length - 1

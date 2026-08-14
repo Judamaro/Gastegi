@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
+import 'package:gastegi/core/utils/l10n_context.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/app_chip.dart';
 import 'package:gastegi/core/widgets/app_input.dart';
@@ -19,17 +20,18 @@ class TransferForm extends ConsumerWidget {
     final accounts = ref.watch(appDataProvider.select((d) => d.accounts));
     final state = ref.watch(transferFormProvider);
     final form = ref.read(transferFormProvider.notifier);
+    final l10n = context.l10n;
 
     return AppCard(
       gap: 12,
       elevated: true,
       children: [
-        const Kicker('Nueva transferencia'),
+        Kicker(l10n.transferTitle),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: 5,
           children: [
-            const FieldLabel('Desde'),
+            FieldLabel(l10n.transferFrom),
             Wrap(
               spacing: 6,
               runSpacing: 6,
@@ -48,7 +50,7 @@ class TransferForm extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: 5,
           children: [
-            const FieldLabel('Hacia'),
+            FieldLabel(l10n.transferTo),
             Wrap(
               spacing: 6,
               runSpacing: 6,
@@ -67,9 +69,9 @@ class TransferForm extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: 5,
           children: [
-            const FieldLabel('Monto'),
+            FieldLabel(l10n.transferAmount),
             AppInput(
-              hint: '0',
+              hint: l10n.accountFormAmountHint,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
@@ -81,10 +83,13 @@ class TransferForm extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.end,
           spacing: 8,
           children: [
-            SecondaryButton(label: 'Cancelar', onTap: form.close),
+            SecondaryButton(label: l10n.commonCancel, onTap: form.close),
             SizedBox(
               width: 110,
-              child: PrimaryButton(label: 'Transferir', onTap: form.submit),
+              child: PrimaryButton(
+                label: l10n.transferSubmit,
+                onTap: form.submit,
+              ),
             ),
           ],
         ),

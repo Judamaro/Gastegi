@@ -27,25 +27,4 @@ void main() {
   test('daysBefore no se desplaza al cambiar de mes', () {
     expect(daysBefore(DateTime(2026, 8, 3), 6), DateTime(2026, 7, 28));
   });
-
-  test('dayLabel distingue hoy, ayer y el resto', () {
-    final today = DateTime(2026, 8, 12);
-    expect(dayLabel(today, today), 'Hoy');
-    expect(dayLabel(DateTime(2026, 8, 11), today), 'Ayer');
-    expect(dayLabel(DateTime(2026, 8, 3), today), '3 de agosto');
-    expect(dayLabelShort(DateTime(2026, 8, 3), today), '3 ago');
-  });
-
-  test('las abreviaturas de mes son de tres letras, sin punto', () {
-    for (var m = 1; m <= 12; m++) {
-      final abbr = monthAbbr(DateTime(2026, m));
-      expect(abbr, hasLength(3));
-      expect(abbr, isNot(contains('.')));
-    }
-  });
-
-  test('monthTitle y monthName van capitalizados', () {
-    expect(monthTitle(DateTime(2026, 8)), 'Agosto 2026');
-    expect(monthName(DateTime(2026)), 'Enero');
-  });
 }

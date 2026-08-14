@@ -44,43 +44,8 @@ bool sameDay(DateTime a, DateTime b) =>
 bool sameMonth(DateTime a, DateTime b) =>
     a.year == b.year && a.month == b.month;
 
-/// `Agosto 2026`.
-String monthTitle(DateTime m) => _capitalize(_monthYearFormat.format(m));
-
-/// `Agosto`.
-String monthName(DateTime m) => _capitalize(_monthFormat.format(m));
-
-/// `Ago` — para las etiquetas de las barras de 6 meses.
-///
-/// No usa `DateFormat('MMM')`: en español CLDR devuelve `ago.` y `sept.`, con
-/// punto y hasta 4 letras, que desbordan las etiquetas estrechas del diseño.
-String monthAbbr(DateTime m) => _abbrs[m.month - 1];
-
-/// Cabecera de grupo del historial: `Hoy`, `Ayer` o `12 de agosto`.
-String dayLabel(DateTime d, DateTime today) {
-  if (sameDay(d, today)) return 'Hoy';
-  if (sameDay(d, daysBefore(today, 1))) return 'Ayer';
-  return '${d.day} de ${_monthFormat.format(d)}';
-}
-
-/// Versión corta para las listas de detalle: `Hoy`, `Ayer` o `12 ago`.
-String dayLabelShort(DateTime d, DateTime today) {
-  if (sameDay(d, today)) return 'Hoy';
-  if (sameDay(d, daysBefore(today, 1))) return 'Ayer';
-  return '${d.day} ${monthAbbr(d).toLowerCase()}';
-}
-
-const List<String> _abbrs = [
-  'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-  'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic', //
-];
-
-// `intl` devuelve los meses en minúscula en español; se capitaliza solo donde
-// la etiqueta va suelta, y las pantallas usan .toLowerCase() en mitad de frase.
+// Los formatos de clave son fijos y no dependen del idioma: `2026-08-12` es
+// ordenable, agrupable con `substr()` y lo que espera la base de datos. Las
+// etiquetas que sí ve el usuario viven en `date_labels.dart`.
 final DateFormat _dayFormat = DateFormat('yyyy-MM-dd');
 final DateFormat _monthKeyFormat = DateFormat('yyyy-MM');
-final DateFormat _monthYearFormat = DateFormat('MMMM y', 'es');
-final DateFormat _monthFormat = DateFormat('MMMM', 'es');
-
-String _capitalize(String s) =>
-    s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);

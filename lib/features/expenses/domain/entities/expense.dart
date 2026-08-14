@@ -24,10 +24,9 @@ class Expense {
   final String categoryName;
   final String? accountId;
 
-  /// Nombre de la cuenta, o `Sin cuenta` si el gasto no tiene ninguna.
-  // TODO(l10n): debería ser `String?` y que la presentación resuelva el texto;
-  // hoy el literal lo pone el modelo de datos.
-  final String accountName;
+  /// Nombre de la cuenta, o `null` si el gasto no tiene ninguna. El texto que
+  /// se muestra en ese caso lo decide la presentación.
+  final String? accountName;
 
   final double val;
 

@@ -5,6 +5,7 @@ import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/utils/formatters.dart';
+import 'package:gastegi/core/utils/l10n_context.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/color_dot.dart';
 import 'package:gastegi/core/widgets/progress_bar.dart';
@@ -16,19 +17,24 @@ class BudgetsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(appDataProvider);
+    final l10n = context.l10n;
+    final dates = context.dates;
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 14,
         children: [
-          const Text(
-            'Presupuestos',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+          Text(
+            l10n.budgetsTitle,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
           ),
           Text(
-            '${state.currentMonthName} · ${formatAmount(state.total)}'
-            ' de ${formatAmount(state.totalBudget)} presupuestados',
+            l10n.budgetsSummary(
+              dates.monthName(state.monthAnchor),
+              formatAmount(state.total),
+              formatAmount(state.totalBudget),
+            ),
             style: const TextStyle(fontSize: 13, color: AppColors.neutral500),
           ),
           Column(
@@ -69,7 +75,9 @@ class BudgetsPage extends ConsumerWidget {
                                   color: AppColors.accent,
                                 ),
                                 Text(
-                                  b.alertLabel,
+                                  b.over
+                                      ? l10n.budgetsAlertOver
+                                      : l10n.budgetsAlertNear,
                                   style: const TextStyle(
                                     fontSize: 11,
                                     color: AppColors.accent,
@@ -79,7 +87,10 @@ class BudgetsPage extends ConsumerWidget {
                             ),
                           ),
                         Text(
-                          '${formatAmount(b.spent)} / ${formatAmount(b.category.budget)}',
+                          l10n.budgetsSpentOfBudget(
+                            formatAmount(b.spent),
+                            formatAmount(b.category.budget),
+                          ),
                           style: const TextStyle(
                             fontSize: 12,
                             color: AppColors.neutral500,
@@ -90,8 +101,13 @@ class BudgetsPage extends ConsumerWidget {
                     ProgressBar(fraction: b.ratio, color: b.barColor),
                     Text(
                       b.over
-                          ? 'Excedido por ${formatAmount(b.spent - b.category.budget)}'
-                          : 'Quedan ${formatAmount(b.category.budget - b.spent)} · ${(b.ratio * 100).round()}% usado',
+                          ? l10n.budgetsOverBy(
+                              formatAmount(b.spent - b.category.budget),
+                            )
+                          : l10n.budgetsRemaining(
+                              formatAmount(b.category.budget - b.spent),
+                              (b.ratio * 100).round(),
+                            ),
                       style: const TextStyle(
                         fontSize: 11,
                         color: AppColors.neutral600,

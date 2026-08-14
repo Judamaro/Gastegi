@@ -31,6 +31,4 @@ class BudgetRow {
       : alert
       ? AppColors.accent
       : category.color;
-
-  String get alertLabel => over ? 'Excedido' : 'Alerta';
 }

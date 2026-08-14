@@ -28,6 +28,11 @@ void main() {
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
 
+    // Sin esto la app arrancaría en inglés: el dispositivo de prueba dice
+    // en_US y ya no hay un `locale` fijo en MaterialApp.
+    tester.platformDispatcher.localesTestValue = const [Locale('es')];
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+
     final container = await buildLoadedContainer(db);
     await tester.pumpWidget(
       UncontrolledProviderScope(

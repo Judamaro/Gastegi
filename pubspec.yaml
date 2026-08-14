@@ -74,6 +74,9 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # Genera AppLocalizations desde lib/l10n/*.arb (ver l10n.yaml).
+  generate: true
+
   fonts:
     - family: Phosphor
       fonts:

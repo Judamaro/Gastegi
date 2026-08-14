@@ -8,9 +8,7 @@ import 'package:flutter/widgets.dart';
 abstract final class AppConfig {
   static const String title = 'Gastegi';
 
-  /// La app está pensada en español; el inglés existe para que el selector de
-  /// fecha de Material no se quede sin traducciones si el sistema lo pide.
-  static const Locale defaultLocale = Locale('es');
-
-  static const List<Locale> supportedLocales = [Locale('es'), Locale('en')];
+  /// Idioma con el que arranca la app si el del sistema no está soportado, y
+  /// el que se precarga en `intl` antes del primer `DateFormat`.
+  static const Locale fallbackLocale = Locale('es');
 }

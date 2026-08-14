@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gastegi/app/router/route_names.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
+import 'package:gastegi/core/utils/l10n_context.dart';
 import 'package:go_router/go_router.dart';
 
 /// Barra de pestañas inferior.
@@ -10,19 +11,18 @@ class AppTabBar extends StatelessWidget {
 
   final StatefulNavigationShell navigationShell;
 
-  /// Las cinco entradas visibles. `branch` es el índice de la rama del shell, o
-  /// nulo para "Agregar", que no es una pestaña sino una pantalla que se abre
-  /// encima y oculta esta barra.
-  static const _tabs = [
-    (0, AppIcons.house, AppIcons.houseFill, 'Inicio'),
-    (1, AppIcons.receipt, AppIcons.receiptFill, 'Historial'),
-    (null, AppIcons.plusCircle, AppIcons.plusCircleFill, 'Agregar'),
-    (2, AppIcons.wallet, AppIcons.walletFill, 'Cuentas'),
-    (3, AppIcons.target, AppIcons.targetFill, 'Presupuesto'),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    // `branch` es el índice de la rama del shell, o nulo para "Agregar", que no
+    // es una pestaña sino una pantalla que se abre encima y oculta esta barra.
+    final tabs = [
+      (0, AppIcons.house, AppIcons.houseFill, l10n.tabHome),
+      (1, AppIcons.receipt, AppIcons.receiptFill, l10n.tabHistory),
+      (null, AppIcons.plusCircle, AppIcons.plusCircleFill, l10n.tabAdd),
+      (2, AppIcons.wallet, AppIcons.walletFill, l10n.tabAccounts),
+      (3, AppIcons.target, AppIcons.targetFill, l10n.tabBudgets),
+    ];
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
       decoration: const BoxDecoration(
@@ -31,7 +31,7 @@ class AppTabBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          for (final (branch, icon, fillIcon, label) in _tabs)
+          for (final (branch, icon, fillIcon, label) in tabs)
             Expanded(
               child: _TabItem(
                 icon: icon,

@@ -23,9 +23,7 @@ class ExpenseModel extends Expense {
     categoryId: r['category_id'] as String,
     categoryName: r['category_name'] as String,
     accountId: r['account_id'] as String?,
-    // TODO(l10n): este literal debería salir de aquí y resolverlo la
-    // presentación a partir de un `accountName` nulo.
-    accountName: (r['account_name'] as String?) ?? 'Sin cuenta',
+    accountName: r['account_name'] as String?,
     val: (r['amount'] as num).toDouble(),
   );
 }

@@ -33,26 +33,24 @@ final categoryTotalProvider = Provider.family<double, String>(
   (ref, name) => ref.watch(appDataProvider).catTotals[name] ?? 0,
 );
 
-/// Totales semanales de la categoría.
+/// Gasto de la categoría por semana del mes, en cuatro tramos.
 ///
-/// El último tramo llega hasta el final real del mes, sea 28, 29, 30 o 31: con
-/// un corte fijo en el 28, los gastos de fin de mes desaparecerían del gráfico.
-final categoryWeeksProvider = Provider.family<List<(String, double)>, String>((
+/// El último llega hasta el final real del mes, sea 28, 29, 30 o 31: con un
+/// corte fijo en el 28, los gastos de fin de mes desaparecerían del gráfico.
+///
+/// Devuelve importes y no etiquetas: "Sem 1" es texto de pantalla.
+final categoryWeeksProvider = Provider.family<List<double>, String>((
   ref,
   name,
 ) {
   final last = ref.watch(appDataProvider).daysInCurrentMonth;
   final items = ref.watch(categoryExpensesProvider(name));
-  const labels = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'];
   final ranges = [(1, 7), (8, 14), (15, 21), (22, last)];
 
   return [
-    for (var i = 0; i < labels.length; i++)
-      (
-        labels[i],
-        items
-            .where((e) => e.day >= ranges[i].$1 && e.day <= ranges[i].$2)
-            .fold(0.0, (s, e) => s + e.val),
-      ),
+    for (final (from, to) in ranges)
+      items
+          .where((e) => e.day >= from && e.day <= to)
+          .fold(0.0, (s, e) => s + e.val),
   ];
 });

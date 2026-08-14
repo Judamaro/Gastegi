@@ -4,6 +4,7 @@ import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/core/utils/formatters.dart';
+import 'package:gastegi/core/utils/l10n_context.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/app_icon_button.dart';
 import 'package:gastegi/core/widgets/kicker.dart';
@@ -25,6 +26,7 @@ class AccountsPage extends ConsumerWidget {
     final form = ref.watch(accountFormProvider);
     final transferOpen = ref.watch(transferFormProvider.select((s) => s.open));
     final openForm = ref.read(accountFormProvider.notifier).open;
+    final l10n = context.l10n;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
@@ -34,10 +36,13 @@ class AccountsPage extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Cuentas',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                  l10n.accountsTitle,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
               AppIconButton(icon: AppIcons.plusCircle, onTap: openForm),
@@ -46,7 +51,7 @@ class AccountsPage extends ConsumerWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Kicker('Saldo total', size: 11),
+              Kicker(l10n.accountsTotalBalance, size: 11),
               const SizedBox(height: 4),
               Text(
                 formatAmount(data.patrimonio),
@@ -63,12 +68,15 @@ class AccountsPage extends ConsumerWidget {
             AppCard(
               gap: 10,
               children: [
-                const Kicker('Sin cuentas'),
-                const Text(
-                  'Crea una cuenta para poder registrar gastos y ver tu saldo.',
-                  style: TextStyle(fontSize: 13, color: AppColors.neutral500),
+                Kicker(l10n.accountsEmptyKicker),
+                Text(
+                  l10n.accountsEmptyBody,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.neutral500,
+                  ),
                 ),
-                PrimaryButton(label: 'Crear cuenta', onTap: openForm),
+                PrimaryButton(label: l10n.accountsCreate, onTap: openForm),
               ],
             )
           else
@@ -87,7 +95,7 @@ class AccountsPage extends ConsumerWidget {
           // Con menos de dos cuentas no hay nada entre lo que transferir.
           if (data.canTransfer)
             PrimaryButton(
-              label: 'Transferir entre cuentas',
+              label: l10n.accountsTransfer,
               icon: AppIcons.arrowsLeftRight,
               onTap: ref.read(transferFormProvider.notifier).open,
             ),

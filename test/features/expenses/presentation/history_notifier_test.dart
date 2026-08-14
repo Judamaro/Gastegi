@@ -30,17 +30,18 @@ void main() {
         amount: amount,
       );
 
-  test('historyGroups etiqueta y ordena por fecha real', () async {
+  test('historyGroups agrupa por día y ordena del más reciente', () async {
     await addExpense(DateTime(2026, 8, 12), 10);
     await addExpense(DateTime(2026, 8, 11), 20);
     await addExpense(DateTime(2026, 8, 3), 30);
 
     final container = await buildLoadedContainer(db);
 
+    // Días, no etiquetas: el texto lo pone la pantalla con el idioma activo.
     expect(container.read(historyGroupsProvider).map((g) => g.$1), [
-      'Hoy',
-      'Ayer',
-      '3 de agosto',
+      DateTime(2026, 8, 12),
+      DateTime(2026, 8, 11),
+      DateTime(2026, 8, 3),
     ]);
   });
 

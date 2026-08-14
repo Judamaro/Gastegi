@@ -89,8 +89,10 @@ final filteredExpensesProvider = Provider<List<Expense>>((ref) {
 });
 
 /// Los gastos filtrados, agrupados por día del más reciente al más antiguo.
-final historyGroupsProvider = Provider<List<(String, List<Expense>)>>((ref) {
-  final data = ref.watch(appDataProvider);
+///
+/// La clave es el día, no su etiqueta: escribir aquí "Hoy" obligaría a este
+/// archivo a conocer el idioma del usuario.
+final historyGroupsProvider = Provider<List<(DateTime, List<Expense>)>>((ref) {
   final expenses = ref.watch(filteredExpensesProvider);
 
   final byDay = <DateTime, List<Expense>>{};
@@ -98,5 +100,5 @@ final historyGroupsProvider = Provider<List<(String, List<Expense>)>>((ref) {
     byDay.putIfAbsent(dateOnly(e.date), () => []).add(e);
   }
   final days = byDay.keys.toList()..sort((a, b) => b.compareTo(a));
-  return [for (final d in days) (dayLabel(d, data.today), byDay[d]!)];
+  return [for (final d in days) (d, byDay[d]!)];
 });

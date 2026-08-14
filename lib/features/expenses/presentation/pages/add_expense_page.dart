@@ -6,6 +6,7 @@ import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/utils/date_utils.dart';
+import 'package:gastegi/core/utils/l10n_context.dart';
 import 'package:gastegi/core/widgets/app_chip.dart';
 import 'package:gastegi/core/widgets/app_icon_button.dart';
 import 'package:gastegi/core/widgets/app_input.dart';
@@ -25,6 +26,7 @@ class AddExpensePage extends ConsumerWidget {
     final data = ref.watch(appDataProvider);
     final state = ref.watch(addExpenseProvider);
     final form = ref.read(addExpenseProvider.notifier);
+    final l10n = context.l10n;
 
     final today = data.today;
     final isToday = sameDay(state.date, today);
@@ -49,10 +51,10 @@ class AddExpensePage extends ConsumerWidget {
                     children: [
                       Row(
                         children: [
-                          const Expanded(
+                          Expanded(
                             child: Text(
-                              'Nuevo gasto',
-                              style: TextStyle(
+                              l10n.addExpenseTitle,
+                              style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -88,7 +90,7 @@ class AddExpensePage extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         spacing: 5,
                         children: [
-                          const FieldLabel('Categoría'),
+                          FieldLabel(l10n.addExpenseCategory),
                           Wrap(
                             spacing: 6,
                             runSpacing: 6,
@@ -109,7 +111,7 @@ class AddExpensePage extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         spacing: 5,
                         children: [
-                          const FieldLabel('Cuenta'),
+                          FieldLabel(l10n.addExpenseAccount),
                           // Sin cuentas no se puede guardar nada: explicarlo y dar
                           // la salida, en vez de dejar un hueco vacío y un botón
                           // deshabilitado sin motivo aparente.
@@ -118,15 +120,15 @@ class AddExpensePage extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               spacing: 8,
                               children: [
-                                const Text(
-                                  'Necesitas una cuenta para registrar el gasto.',
-                                  style: TextStyle(
+                                Text(
+                                  l10n.addExpenseNeedsAccount,
+                                  style: const TextStyle(
                                     fontSize: 12,
                                     color: AppColors.neutral500,
                                   ),
                                 ),
                                 SecondaryButton(
-                                  label: 'Crear cuenta',
+                                  label: l10n.accountsCreate,
                                   onTap: () => context.go(RouteNames.accounts),
                                 ),
                               ],
@@ -150,25 +152,28 @@ class AddExpensePage extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         spacing: 5,
                         children: [
-                          const FieldLabel('Fecha'),
+                          FieldLabel(l10n.addExpenseDate),
                           Wrap(
                             spacing: 6,
                             runSpacing: 6,
                             children: [
                               AppChip(
-                                label: 'Hoy',
+                                label: l10n.commonToday,
                                 active: isToday,
                                 onTap: () => form.setDate(today),
                               ),
                               AppChip(
-                                label: 'Ayer',
+                                label: l10n.commonYesterday,
                                 active: isYesterday,
                                 onTap: () => form.setDate(daysBefore(today, 1)),
                               ),
                               AppChip(
                                 label: isPreset
-                                    ? 'Otra fecha…'
-                                    : dayLabelShort(state.date, today),
+                                    ? l10n.addExpenseOtherDate
+                                    : context.dates.dayLabelShort(
+                                        state.date,
+                                        today,
+                                      ),
                                 active: !isPreset,
                                 onTap: () async {
                                   final picked = await showDatePicker(
@@ -186,13 +191,13 @@ class AddExpensePage extends ConsumerWidget {
                         ],
                       ),
                       AppInput(
-                        hint: 'Descripción (opcional)',
+                        hint: l10n.addExpenseDescriptionHint,
                         onChanged: form.setDescription,
                       ),
                       const Spacer(),
                       AmountKeypad(onKey: form.keypadTap),
                       PrimaryButton(
-                        label: 'Guardar gasto',
+                        label: l10n.addExpenseSave,
                         disabled: state.saveDisabled,
                         onTap: () async {
                           if (!await form.save()) return;

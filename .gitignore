@@ -10,6 +10,8 @@ build/
 # Generated files
 *.g.dart
 *.freezed.dart
+# Traducciones generadas por gen-l10n; se regeneran con `flutter pub get`.
+lib/l10n/generated/
 
 # Flutter generated files
 .flutter-plugins

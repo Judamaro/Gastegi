@@ -1,14 +1,13 @@
 import 'package:gastegi/core/utils/date_utils.dart';
 
 /// Ventana temporal que muestra el historial.
+///
+/// Sin etiqueta: el texto es cosa de la pantalla, para que traducirlo no
+/// obligue a tocar la lógica del filtro.
 enum HistoryRange {
-  month('Todo el mes'),
-  last15('Últimos 15 días'),
-  last7('Últimos 7 días');
-
-  const HistoryRange(this.label);
-
-  final String label;
+  month,
+  last15,
+  last7;
 
   /// Si [d] cae dentro del rango. [monthAnchor] es el primer día del mes en
   /// curso; los rangos por días pueden alcanzar el mes anterior a principios

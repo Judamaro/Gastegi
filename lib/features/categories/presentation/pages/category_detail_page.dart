@@ -6,6 +6,7 @@ import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/utils/formatters.dart';
+import 'package:gastegi/core/utils/l10n_context.dart';
 import 'package:gastegi/core/widgets/amount_tile.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/app_icon_button.dart';
@@ -32,6 +33,9 @@ class CategoryDetailPage extends ConsumerWidget {
     final state = ref.watch(appDataProvider);
     final catTotal = ref.watch(categoryTotalProvider(categoryName));
     final expenses = ref.watch(categoryExpensesProvider(categoryName));
+    final l10n = context.l10n;
+    final dates = context.dates;
+    final monthName = dates.monthName(state.monthAnchor);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
@@ -77,8 +81,10 @@ class CategoryDetailPage extends ConsumerWidget {
                   ),
                   Flexible(
                     child: Text(
-                      'en ${state.currentMonthName.toLowerCase()}'
-                      ' · ${percentOf(catTotal, state.total)}% del total',
+                      l10n.categoryShareOfTotal(
+                        monthName.toLowerCase(),
+                        percentOf(catTotal, state.total),
+                      ),
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 13,
@@ -100,7 +106,10 @@ class CategoryDetailPage extends ConsumerWidget {
                     color: cat.color,
                   ),
                   Text(
-                    'Presupuesto: ${formatAmount(catTotal)} de ${formatAmount(cat.budget)}',
+                    l10n.categoryBudgetLine(
+                      formatAmount(catTotal),
+                      formatAmount(cat.budget),
+                    ),
                     style: const TextStyle(
                       fontSize: 11,
                       color: AppColors.neutral500,
@@ -113,13 +122,12 @@ class CategoryDetailPage extends ConsumerWidget {
           AppCard(
             gap: 8,
             children: [
-              const Kicker('Por semana'),
+              Kicker(l10n.categoryByWeek),
               BarChart(
                 bars: [
-                  for (final (label, value) in ref.watch(
-                    categoryWeeksProvider(categoryName),
-                  ))
-                    (label, value, cat.color),
+                  for (final (i, value)
+                      in ref.watch(categoryWeeksProvider(categoryName)).indexed)
+                    (l10n.categoryWeekLabel(i + 1), value, cat.color),
                 ],
                 height: 96,
                 maxBarHeight: 64,
@@ -132,8 +140,10 @@ class CategoryDetailPage extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: Text(
-                'Sin gastos de ${cat.name.toLowerCase()} en '
-                '${state.currentMonthName.toLowerCase()}',
+                l10n.categoryNoExpenses(
+                  cat.name.toLowerCase(),
+                  monthName.toLowerCase(),
+                ),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 13,
@@ -147,8 +157,10 @@ class CategoryDetailPage extends ConsumerWidget {
                 for (final e in expenses)
                   AmountTile(
                     title: e.desc,
-                    subtitle:
-                        '${state.dayLabelShortOf(e.date)} · ${e.accountName}',
+                    subtitle: l10n.categoryExpenseSubtitle(
+                      dates.dayLabelShort(e.date, state.today),
+                      e.accountName ?? l10n.commonNoAccount,
+                    ),
                     amount: formatAmount(e.val),
                   ),
               ],
