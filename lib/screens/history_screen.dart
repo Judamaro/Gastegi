@@ -69,18 +69,22 @@ class HistoryScreen extends StatelessWidget {
                     title: e.desc,
                     subtitle: '${e.cat} · ${e.acct}',
                     amount: state.fmt(e.val),
-                    icon: state.categoryOf(e.cat).icon,
-                    iconColor: state.categoryOf(e.cat).color,
+                    icon: state.categoryOf(e.cat)?.icon,
+                    iconColor: state.categoryOf(e.cat)?.color,
                   ),
               ],
             ),
           if (groups.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
               child: Text(
-                'Sin resultados para esta búsqueda',
+                // Distinguir "no hay nada" de "los filtros no encuentran nada":
+                // en una app recién instalada el segundo mensaje despista.
+                state.hasNoExpensesAtAll
+                    ? 'Todavía no hay gastos registrados'
+                    : 'Sin resultados para esta búsqueda',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: Nocturne.neutral600),
+                style: const TextStyle(fontSize: 13, color: Nocturne.neutral600),
               ),
             ),
         ],

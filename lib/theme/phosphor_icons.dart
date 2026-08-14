@@ -37,4 +37,37 @@ abstract final class PhIcons {
   static const x = IconData(0xe4f6, fontFamily: _family);
   static const warning = IconData(0xe4e0, fontFamily: _family);
   static const arrowsLeftRight = IconData(0xe0a0, fontFamily: _family);
+
+  /// Iconos persistibles: en la BD se guarda la clave, no el [IconData].
+  static const Map<String, IconData> byKey = {
+    'forkKnife': forkKnife,
+    'bus': bus,
+    'houseLine': houseLine,
+    'popcorn': popcorn,
+    'heartbeat': heartbeat,
+    'shoppingBag': shoppingBag,
+    'money': money,
+    'creditCard': creditCard,
+    'bank': bank,
+    'wallet': wallet,
+  };
+
+  /// Una clave desconocida no debe romper la app: al sincronizar, un teléfono
+  /// con la app vieja recibirá claves que todavía no conoce.
+  static IconData resolve(String key) => byKey[key] ?? wallet;
+
+  static String keyOf(IconData icon) => byKey.entries
+      .firstWhere(
+        (e) => e.value == icon,
+        orElse: () => const MapEntry('wallet', wallet),
+      )
+      .key;
+
+  /// Iconos elegibles al crear o editar una cuenta.
+  static const List<String> accountIconKeys = [
+    'money',
+    'creditCard',
+    'bank',
+    'wallet',
+  ];
 }

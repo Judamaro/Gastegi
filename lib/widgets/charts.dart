@@ -106,7 +106,8 @@ class _TrendPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (values.isEmpty) return;
+    // Con un solo punto, el reparto horizontal dividiría entre cero.
+    if (values.length < 2) return;
     final max = values.fold(1.0, math.max);
     final yScale = size.height / 90;
     final points = <Offset>[

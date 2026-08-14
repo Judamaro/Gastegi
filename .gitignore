@@ -133,3 +133,5 @@ coverage/
 # ==========================
 firebase-debug.log
 flutterfire-debug.log
+# Widget Preview related
+.widget_preview/

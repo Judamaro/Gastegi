@@ -24,7 +24,8 @@ class BudgetsScreen extends StatelessWidget {
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
           ),
           Text(
-            'Julio · ${state.fmt(state.total)} de ${state.fmt(state.totalBudget)} presupuestados',
+            '${state.currentMonthName} · ${state.fmt(state.total)}'
+            ' de ${state.fmt(state.totalBudget)} presupuestados',
             style: const TextStyle(fontSize: 13, color: Nocturne.neutral500),
           ),
           Column(
