@@ -3,9 +3,16 @@ import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_elevation.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/app/theme/app_spacing.dart';
+import 'package:gastegi/core/widgets/app_card.dart';
+import 'package:gastegi/core/widgets/app_chip.dart';
+import 'package:gastegi/core/widgets/app_icon_button.dart';
+import 'package:gastegi/core/widgets/app_input.dart';
+import 'package:gastegi/core/widgets/field_label.dart';
+import 'package:gastegi/core/widgets/kicker.dart';
+import 'package:gastegi/core/widgets/primary_button.dart';
+import 'package:gastegi/core/widgets/secondary_button.dart';
 import 'package:gastegi/models/models.dart';
 import 'package:gastegi/state/app_state.dart';
-import 'package:gastegi/widgets/common.dart';
 
 /// Cuentas: saldo total, alta y edición de cuentas, y transferencias.
 class AccountsScreen extends StatelessWidget {
@@ -29,7 +36,7 @@ class AccountsScreen extends StatelessWidget {
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
                 ),
               ),
-              NIconButton(
+              AppIconButton(
                 icon: AppIcons.plusCircle,
                 onTap: state.openAccountForm,
               ),
@@ -52,7 +59,7 @@ class AccountsScreen extends StatelessWidget {
             ],
           ),
           if (state.accounts.isEmpty && !state.accountFormOpen)
-            NCard(
+            AppCard(
               gap: 10,
               children: [
                 const Kicker('Sin cuentas'),
@@ -138,7 +145,9 @@ class _AccountCard extends StatelessWidget {
                     Text(
                       account.kind,
                       style: const TextStyle(
-                          fontSize: 11, color: AppColors.neutral600),
+                        fontSize: 11,
+                        color: AppColors.neutral600,
+                      ),
                     ),
                 ],
               ),
@@ -151,7 +160,7 @@ class _AccountCard extends StatelessWidget {
                 color: negative ? AppColors.neutral500 : AppColors.text,
               ),
             ),
-            NIconButton(
+            AppIconButton(
               icon: AppIcons.x,
               onTap: () => state.askDeleteAccount(account.id),
             ),
@@ -173,7 +182,7 @@ class _DeleteConfirm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final n = state.pendingDeleteExpenses;
-    return NCard(
+    return AppCard(
       gap: 10,
       elevated: true,
       children: [
@@ -182,15 +191,12 @@ class _DeleteConfirm extends StatelessWidget {
           n == 0
               ? '¿Seguro que quieres eliminar esta cuenta?'
               : 'Esta cuenta tiene $n ${n == 1 ? 'gasto' : 'gastos'}. '
-                  'Si la eliminas, los gastos se conservan; si prefieres '
-                  'ocultarla sin perderla de vista, archívala.',
+                    'Si la eliminas, los gastos se conservan; si prefieres '
+                    'ocultarla sin perderla de vista, archívala.',
           style: const TextStyle(fontSize: 12, color: AppColors.neutral500),
         ),
         if (n > 0)
-          PrimaryButton(
-            label: 'Archivar',
-            onTap: state.archivePendingAccount,
-          ),
+          PrimaryButton(label: 'Archivar', onTap: state.archivePendingAccount),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           spacing: 8,
@@ -225,7 +231,7 @@ class _AccountForm extends StatelessWidget {
     // conservaría el texto de la cuenta anterior al cambiar de una a otra.
     final formKey = state.editingAccountId ?? 'new';
 
-    return NCard(
+    return AppCard(
       gap: 12,
       elevated: true,
       children: [
@@ -235,7 +241,7 @@ class _AccountForm extends StatelessWidget {
           spacing: 5,
           children: [
             const FieldLabel('Nombre'),
-            NInput(
+            AppInput(
               key: ValueKey('acct-name-$formKey'),
               hint: 'Efectivo',
               initialValue: state.afName,
@@ -248,7 +254,7 @@ class _AccountForm extends StatelessWidget {
           spacing: 5,
           children: [
             const FieldLabel('Tipo'),
-            NInput(
+            AppInput(
               key: ValueKey('acct-kind-$formKey'),
               hint: 'Tarjeta de débito',
               initialValue: state.afKind,
@@ -266,7 +272,7 @@ class _AccountForm extends StatelessWidget {
               runSpacing: 6,
               children: [
                 for (final key in AppIcons.accountIconKeys)
-                  NChip(
+                  AppChip(
                     label: _iconLabels[key] ?? key,
                     icon: AppIcons.resolve(key),
                     active: state.afIconKey == key,
@@ -281,7 +287,7 @@ class _AccountForm extends StatelessWidget {
           spacing: 5,
           children: [
             FieldLabel(editing ? 'Saldo actual' : 'Saldo inicial'),
-            NInput(
+            AppInput(
               key: ValueKey('acct-balance-$formKey'),
               hint: '0',
               initialValue: state.afBalance,
@@ -332,7 +338,7 @@ class _TransferForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NCard(
+    return AppCard(
       gap: 12,
       elevated: true,
       children: [
@@ -347,7 +353,7 @@ class _TransferForm extends StatelessWidget {
               runSpacing: 6,
               children: [
                 for (final a in state.accounts)
-                  NChip(
+                  AppChip(
                     label: a.name,
                     active: state.trFromId == a.id,
                     onTap: () => state.pickTrFrom(a.id),
@@ -366,7 +372,7 @@ class _TransferForm extends StatelessWidget {
               runSpacing: 6,
               children: [
                 for (final a in state.accounts)
-                  NChip(
+                  AppChip(
                     label: a.name,
                     active: state.trToId == a.id,
                     onTap: () => state.pickTrTo(a.id),
@@ -380,9 +386,11 @@ class _TransferForm extends StatelessWidget {
           spacing: 5,
           children: [
             const FieldLabel('Monto'),
-            NInput(
+            AppInput(
               hint: '0',
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               onChanged: state.setTrAmt,
             ),
           ],
@@ -394,7 +402,10 @@ class _TransferForm extends StatelessWidget {
             SecondaryButton(label: 'Cancelar', onTap: state.closeTransfer),
             SizedBox(
               width: 110,
-              child: PrimaryButton(label: 'Transferir', onTap: state.doTransfer),
+              child: PrimaryButton(
+                label: 'Transferir',
+                onTap: state.doTransfer,
+              ),
             ),
           ],
         ),

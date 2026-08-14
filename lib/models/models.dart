@@ -8,14 +8,13 @@ import 'package:gastegi/app/theme/app_icons.dart';
 
 /// Categoría de gasto con su color, icono y presupuesto mensual.
 class Category {
-
   factory Category.fromRow(Map<String, Object?> r) => Category(
-        id: r['id'] as String,
-        name: r['name'] as String,
-        color: Color(r['color'] as int),
-        icon: AppIcons.resolve(r['icon_key'] as String),
-        budget: (r['budget'] as num).toDouble(),
-      );
+    id: r['id'] as String,
+    name: r['name'] as String,
+    color: Color(r['color'] as int),
+    icon: AppIcons.resolve(r['icon_key'] as String),
+    budget: (r['budget'] as num).toDouble(),
+  );
   const Category({
     required this.id,
     required this.name,
@@ -37,16 +36,15 @@ class Category {
 /// transferencias): nadie lo muta desde Dart, lo recalcula la BD. Ver
 /// `AccountRepository.recomputeBalances`.
 class Account {
-
   factory Account.fromRow(Map<String, Object?> r) => Account(
-        id: r['id'] as String,
-        name: r['name'] as String,
-        kind: r['kind'] as String,
-        icon: AppIcons.resolve(r['icon_key'] as String),
-        balance: (r['balance'] as num).toDouble(),
-        initialBalance: (r['initial_balance'] as num).toDouble(),
-        archived: (r['archived'] as int) == 1,
-      );
+    id: r['id'] as String,
+    name: r['name'] as String,
+    kind: r['kind'] as String,
+    icon: AppIcons.resolve(r['icon_key'] as String),
+    balance: (r['balance'] as num).toDouble(),
+    initialBalance: (r['initial_balance'] as num).toDouble(),
+    archived: (r['archived'] as int) == 1,
+  );
   const Account({
     required this.id,
     required this.name,
@@ -69,17 +67,16 @@ class Account {
 /// Gasto individual. [cat] y [acct] son los nombres resueltos por el JOIN de la
 /// consulta, para que las pantallas sigan mostrando texto sin más búsquedas.
 class Expense {
-
   factory Expense.fromRow(Map<String, Object?> r) => Expense(
-        id: r['id'] as String,
-        date: DateTime.parse(r['spent_on'] as String),
-        desc: r['description'] as String,
-        categoryId: r['category_id'] as String,
-        cat: r['category_name'] as String,
-        accountId: r['account_id'] as String?,
-        acct: (r['account_name'] as String?) ?? 'Sin cuenta',
-        val: (r['amount'] as num).toDouble(),
-      );
+    id: r['id'] as String,
+    date: DateTime.parse(r['spent_on'] as String),
+    desc: r['description'] as String,
+    categoryId: r['category_id'] as String,
+    cat: r['category_name'] as String,
+    accountId: r['account_id'] as String?,
+    acct: (r['account_name'] as String?) ?? 'Sin cuenta',
+    val: (r['amount'] as num).toDouble(),
+  );
   const Expense({
     required this.id,
     required this.date,

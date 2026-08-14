@@ -38,7 +38,10 @@ void main() {
 
     expect(find.text('Agosto 2026'.toUpperCase()), findsOneWidget);
     expect(find.text('gastado este mes'), findsOneWidget);
-    expect(find.text('Todavía no has registrado ningún gasto.'), findsOneWidget);
+    expect(
+      find.text('Todavía no has registrado ningún gasto.'),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -69,8 +72,14 @@ void main() {
     await tester.tap(find.text('Crear cuenta'));
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byKey(const ValueKey('acct-name-new')), 'Efectivo');
-    await tester.enterText(find.byKey(const ValueKey('acct-balance-new')), '480');
+    await tester.enterText(
+      find.byKey(const ValueKey('acct-name-new')),
+      'Efectivo',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('acct-balance-new')),
+      '480',
+    );
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
 
@@ -78,8 +87,9 @@ void main() {
     expect(find.text('Efectivo'), findsOneWidget);
   });
 
-  testWidgets('el gasto se guarda, aparece bajo HOY y baja el saldo',
-      (tester) async {
+  testWidgets('el gasto se guarda, aparece bajo HOY y baja el saldo', (
+    tester,
+  ) async {
     await AccountRepository(db).create(
       name: 'Efectivo',
       kind: 'Dinero en mano',

@@ -22,11 +22,11 @@ void main() {
   tearDown(() async => db.close());
 
   Future<String> newAccount([double balance = 1000]) => accounts.create(
-        name: 'Débito',
-        kind: 'Tarjeta',
-        iconKey: 'creditCard',
-        initialBalance: balance,
-      );
+    name: 'Débito',
+    kind: 'Tarjeta',
+    iconKey: 'creditCard',
+    initialBalance: balance,
+  );
 
   Future<double> balanceOf(String id) async =>
       (await accounts.all()).firstWhere((a) => a.id == id).balance;
@@ -98,12 +98,12 @@ void main() {
   test('monthlyTotals agrupa por mes e ignora los borrados', () async {
     final accountId = await newAccount();
     Future<String> add(DateTime date, double amount) => expenses.create(
-          date: date,
-          description: 'Gasto',
-          categoryId: categoryId,
-          accountId: accountId,
-          amount: amount,
-        );
+      date: date,
+      description: 'Gasto',
+      categoryId: categoryId,
+      accountId: accountId,
+      amount: amount,
+    );
 
     await add(DateTime(2026, 7, 3), 100);
     await add(DateTime(2026, 8), 20);
@@ -127,20 +127,22 @@ void main() {
     expect((await expenses.since(testNow)).single.acct, 'Sin cuenta');
   });
 
-  test('since respeta el corte de fecha y ordena de más nuevo a más viejo',
-      () async {
-    final accountId = await newAccount();
-    for (final day in [1, 10, 20]) {
-      await expenses.create(
-        date: DateTime(2026, 8, day),
-        description: 'Día $day',
-        categoryId: categoryId,
-        accountId: accountId,
-        amount: 10,
-      );
-    }
+  test(
+    'since respeta el corte de fecha y ordena de más nuevo a más viejo',
+    () async {
+      final accountId = await newAccount();
+      for (final day in [1, 10, 20]) {
+        await expenses.create(
+          date: DateTime(2026, 8, day),
+          description: 'Día $day',
+          categoryId: categoryId,
+          accountId: accountId,
+          amount: 10,
+        );
+      }
 
-    final recent = await expenses.since(DateTime(2026, 8, 10));
-    expect(recent.map((e) => e.desc), ['Día 20', 'Día 10']);
-  });
+      final recent = await expenses.since(DateTime(2026, 8, 10));
+      expect(recent.map((e) => e.desc), ['Día 20', 'Día 10']);
+    },
+  );
 }

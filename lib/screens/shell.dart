@@ -74,7 +74,8 @@ class _TabBar extends StatelessWidget {
                 icon: icon,
                 fillIcon: fillIcon,
                 label: label,
-                active: state.screen == screen ||
+                active:
+                    state.screen == screen ||
                     (screen == Screen.home && state.screen == Screen.catDetail),
                 onTap: () => state.goTo(screen),
               ),

@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/app/theme/app_spacing.dart';
+import 'package:gastegi/core/widgets/app_chip.dart';
+import 'package:gastegi/core/widgets/app_icon_button.dart';
+import 'package:gastegi/core/widgets/app_input.dart';
+import 'package:gastegi/core/widgets/field_label.dart';
+import 'package:gastegi/core/widgets/primary_button.dart';
+import 'package:gastegi/core/widgets/secondary_button.dart';
 import 'package:gastegi/state/app_state.dart';
-import 'package:gastegi/widgets/common.dart';
 
 /// Nuevo gasto: monto con teclado propio, categoría, cuenta y descripción.
 class AddExpenseScreen extends StatelessWidget {
@@ -52,7 +57,7 @@ class AddExpenseScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                      NIconButton(
+                      AppIconButton(
                         icon: AppIcons.x,
                         onTap: () => state.goTo(Screen.home),
                       ),
@@ -68,7 +73,9 @@ class AddExpenseScreen extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                         letterSpacing: -0.88,
                         height: 1,
-                        color: hasAmount ? AppColors.text : AppColors.neutral700,
+                        color: hasAmount
+                            ? AppColors.text
+                            : AppColors.neutral700,
                       ),
                     ),
                   ),
@@ -82,7 +89,7 @@ class AddExpenseScreen extends StatelessWidget {
                         runSpacing: 6,
                         children: [
                           for (final c in state.categories)
-                            NChip(
+                            AppChip(
                               label: c.name,
                               icon: c.icon,
                               color: c.color,
@@ -109,7 +116,9 @@ class AddExpenseScreen extends StatelessWidget {
                             const Text(
                               'Necesitas una cuenta para registrar el gasto.',
                               style: TextStyle(
-                                  fontSize: 12, color: AppColors.neutral500),
+                                fontSize: 12,
+                                color: AppColors.neutral500,
+                              ),
                             ),
                             SecondaryButton(
                               label: 'Crear cuenta',
@@ -123,7 +132,7 @@ class AddExpenseScreen extends StatelessWidget {
                           runSpacing: 6,
                           children: [
                             for (final a in state.accounts)
-                              NChip(
+                              AppChip(
                                 label: a.name,
                                 active: state.addAccountId == a.id,
                                 onTap: () => state.pickAddAcct(a.id),
@@ -141,17 +150,17 @@ class AddExpenseScreen extends StatelessWidget {
                         spacing: 6,
                         runSpacing: 6,
                         children: [
-                          NChip(
+                          AppChip(
                             label: 'Hoy',
                             active: state.addDateIsToday,
                             onTap: state.setAddDateToday,
                           ),
-                          NChip(
+                          AppChip(
                             label: 'Ayer',
                             active: state.addDateIsYesterday,
                             onTap: state.setAddDateYesterday,
                           ),
-                          NChip(
+                          AppChip(
                             label: state.addDateLabel,
                             active: !state.addDateIsPreset,
                             onTap: () async {
@@ -169,7 +178,7 @@ class AddExpenseScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  NInput(
+                  AppInput(
                     hint: 'Descripción (opcional)',
                     onChanged: state.setAddDesc,
                   ),
@@ -181,7 +190,10 @@ class AddExpenseScreen extends StatelessWidget {
                         Row(
                           spacing: 8,
                           children: [
-                            for (final key in _keys.sublist(row * 3, row * 3 + 3))
+                            for (final key in _keys.sublist(
+                              row * 3,
+                              row * 3 + 3,
+                            ))
                               Expanded(
                                 child: InkWell(
                                   onTap: () => state.keypadTap(key),

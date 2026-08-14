@@ -1,6 +1,6 @@
+import 'package:gastegi/core/utils/date_utils.dart';
 import 'package:gastegi/data/balances.dart';
 import 'package:gastegi/models/models.dart';
-import 'package:gastegi/util/dates.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
@@ -17,33 +17,41 @@ class ExpenseRepository {
   /// el historial de un gasto sigue mostrando el nombre de su cuenta aunque el
   /// usuario la haya borrado después.
   Future<List<Expense>> since(DateTime from) async {
-    final rows = await _db.rawQuery('''
+    final rows = await _db.rawQuery(
+      '''
       SELECT e.*, c.name AS category_name, a.name AS account_name
       FROM expenses e
       JOIN categories c ON c.id = e.category_id
       LEFT JOIN accounts a ON a.id = e.account_id
       WHERE e.spent_on >= ? AND e.deleted_at IS NULL
       ORDER BY e.spent_on DESC, e.created_at DESC
-      ''', [dayKey(from)]);
+      ''',
+      [dayKey(from)],
+    );
     return rows.map(Expense.fromRow).toList();
   }
 
   /// Cuántos gastos hay en total. Distingue "todavía no has registrado nada"
   /// de "no hay nada en el periodo que estás mirando".
   Future<int> count() async =>
-      Sqflite.firstIntValue(await _db.rawQuery(
-        'SELECT COUNT(*) FROM expenses WHERE deleted_at IS NULL',
-      )) ??
+      Sqflite.firstIntValue(
+        await _db.rawQuery(
+          'SELECT COUNT(*) FROM expenses WHERE deleted_at IS NULL',
+        ),
+      ) ??
       0;
 
   /// Total gastado por mes desde [from], indexado por `YYYY-MM`.
   Future<Map<String, double>> monthlyTotals({required DateTime from}) async {
-    final rows = await _db.rawQuery('''
+    final rows = await _db.rawQuery(
+      '''
       SELECT substr(spent_on, 1, 7) AS ym, SUM(amount) AS total
       FROM expenses
       WHERE spent_on >= ? AND deleted_at IS NULL
       GROUP BY ym
-      ''', [dayKey(from)]);
+      ''',
+      [dayKey(from)],
+    );
     return {
       for (final r in rows)
         r['ym'] as String: (r['total'] as num?)?.toDouble() ?? 0,

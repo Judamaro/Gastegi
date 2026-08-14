@@ -25,10 +25,9 @@ abstract final class AppTheme {
     );
 
     return base.copyWith(
-      textTheme: GoogleFonts.interTextTheme(base.textTheme).apply(
-        bodyColor: AppColors.text,
-        displayColor: AppColors.text,
-      ),
+      textTheme: GoogleFonts.interTextTheme(
+        base.textTheme,
+      ).apply(bodyColor: AppColors.text, displayColor: AppColors.text),
     );
   }
 }

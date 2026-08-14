@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
+import 'package:gastegi/core/widgets/amount_tile.dart';
+import 'package:gastegi/core/widgets/app_chip.dart';
+import 'package:gastegi/core/widgets/app_input.dart';
 import 'package:gastegi/state/app_state.dart';
-import 'package:gastegi/widgets/common.dart';
 
 /// Historial: búsqueda, filtros por rango y categoría, gastos agrupados por día.
 class HistoryScreen extends StatelessWidget {
@@ -23,13 +25,13 @@ class HistoryScreen extends StatelessWidget {
             'Historial',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
           ),
-          NInput(hint: 'Buscar gasto…', onChanged: state.setSearch),
+          AppInput(hint: 'Buscar gasto…', onChanged: state.setSearch),
           Wrap(
             spacing: 6,
             runSpacing: 6,
             children: [
               for (final range in HistoryRange.values)
-                NChip(
+                AppChip(
                   label: range.label,
                   active: state.filterRange == range,
                   onTap: () => state.setFilterRange(range),
@@ -40,8 +42,11 @@ class HistoryScreen extends StatelessWidget {
             spacing: 6,
             runSpacing: 6,
             children: [
-              for (final name in ['Todas', ...state.categories.map((c) => c.name)])
-                NChip(
+              for (final name in [
+                'Todas',
+                ...state.categories.map((c) => c.name),
+              ])
+                AppChip(
                   label: name,
                   active: state.filterCat == name,
                   onTap: () => state.setFilterCat(name),
@@ -64,7 +69,7 @@ class HistoryScreen extends StatelessWidget {
                   ),
                 ),
                 for (final e in items)
-                  ExpenseTile(
+                  AmountTile(
                     title: e.desc,
                     subtitle: '${e.cat} · ${e.acct}',
                     amount: state.fmt(e.val),
@@ -83,7 +88,10 @@ class HistoryScreen extends StatelessWidget {
                     ? 'Todavía no hay gastos registrados'
                     : 'Sin resultados para esta búsqueda',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13, color: AppColors.neutral600),
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.neutral600,
+                ),
               ),
             ),
         ],

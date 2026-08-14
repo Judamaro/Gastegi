@@ -23,8 +23,11 @@ void main() {
   });
   tearDown(() async => db.close());
 
-  Future<void> addExpense(DateTime date, double amount,
-      {String? accountId}) async {
+  Future<void> addExpense(
+    DateTime date,
+    double amount, {
+    String? accountId,
+  }) async {
     await expenses.create(
       date: date,
       description: 'Gasto',
@@ -96,8 +99,11 @@ void main() {
     await addExpense(DateTime(2026, 8, 3), 30);
 
     final state = await buildState(db);
-    expect(state.historyGroups.map((g) => g.$1),
-        ['Hoy', 'Ayer', '3 de agosto']);
+    expect(state.historyGroups.map((g) => g.$1), [
+      'Hoy',
+      'Ayer',
+      '3 de agosto',
+    ]);
   });
 
   test('los rangos del historial alcanzan el mes anterior', () async {
@@ -170,8 +176,9 @@ void main() {
 
   test('las alertas de presupuesto usan el umbral del 90 %', () async {
     // Ocio tiene 200 de presupuesto; 182 son el 91 %.
-    final ocio = (await CategoryRepository(db).all())
-        .firstWhere((c) => c.name == 'Ocio');
+    final ocio = (await CategoryRepository(
+      db,
+    ).all()).firstWhere((c) => c.name == 'Ocio');
     await expenses.create(
       date: testNow,
       description: 'Concierto',
@@ -188,24 +195,26 @@ void main() {
     expect(byName['Comida']!.alert, isFalse);
   });
 
-  test('borrar una cuenta seleccionada no deja el formulario apuntando a ella',
-      () async {
-    final id = await accounts.create(
-      name: 'Efectivo',
-      kind: '',
-      iconKey: 'money',
-      initialBalance: 10,
-    );
-    final state = await buildState(db);
-    state.pickAddAcct(id);
+  test(
+    'borrar una cuenta seleccionada no deja el formulario apuntando a ella',
+    () async {
+      final id = await accounts.create(
+        name: 'Efectivo',
+        kind: '',
+        iconKey: 'money',
+        initialBalance: 10,
+      );
+      final state = await buildState(db);
+      state.pickAddAcct(id);
 
-    await state.askDeleteAccount(id);
-    await state.confirmDeleteAccount();
+      await state.askDeleteAccount(id);
+      await state.confirmDeleteAccount();
 
-    expect(state.accounts, isEmpty);
-    expect(state.addAccountId, isNull);
-    expect(state.trFromId, isNull);
-  });
+      expect(state.accounts, isEmpty);
+      expect(state.addAccountId, isNull);
+      expect(state.trFromId, isNull);
+    },
+  );
 
   test('el nombre de cuenta duplicado se rechaza con mensaje', () async {
     await accounts.create(

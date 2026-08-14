@@ -4,12 +4,12 @@ import 'dart:ui' show Color;
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
+import 'package:gastegi/core/utils/date_utils.dart';
+import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/data/account_repository.dart';
 import 'package:gastegi/data/category_repository.dart';
 import 'package:gastegi/data/expense_repository.dart';
 import 'package:gastegi/models/models.dart';
-import 'package:gastegi/util/dates.dart';
-import 'package:intl/intl.dart';
 
 enum Screen { home, history, catDetail, accounts, budgets, add }
 
@@ -130,17 +130,12 @@ class AppState extends ChangeNotifier {
   /// confirmación ofrece archivar.
   int pendingDeleteExpenses = 0;
 
-  static final NumberFormat _nf = NumberFormat.decimalPattern('es');
+  // Delegados a `core/utils/formatters.dart`. Siguen aquí porque las pantallas
+  // todavía llaman `state.fmt(...)`; desaparecen cuando dejen de recibir el
+  // estado por constructor.
+  String fmt(double n) => formatAmount(n);
 
-  /// Redondea a entero y aplica separador de miles es-ES.
-  String fmt(double n) => _nf.format(n.round());
-
-  /// Porcentaje entero de [part] sobre [whole]; 0 si [whole] no es positivo.
-  ///
-  /// Sin esta guarda, una app recién instalada calcula `0 / 0` y el
-  /// `double.nan.round()` resultante lanza `UnsupportedError`.
-  int pct(double part, double whole) =>
-      whole > 0 ? (part / whole * 100).round() : 0;
+  int pct(double part, double whole) => percentOf(part, whole);
 
   // ── Carga ──────────────────────────────────────────────────────────────
 
@@ -151,14 +146,17 @@ class AppState extends ChangeNotifier {
     _today = dateOnly(now);
     _monthAnchor = monthStart(now);
 
-    final windowStart =
-        earliest(_monthAnchor, daysBefore(_today, _windowPadDays));
+    final windowStart = earliest(
+      _monthAnchor,
+      daysBefore(_today, _windowPadDays),
+    );
 
     categories = await categoryRepo.all();
     accounts = await accountRepo.all();
     _window = await expenseRepo.since(windowStart);
-    _monthExpenses =
-        _window.where((e) => sameMonth(e.date, _monthAnchor)).toList();
+    _monthExpenses = _window
+        .where((e) => sameMonth(e.date, _monthAnchor))
+        .toList();
     _monthlySums = await expenseRepo.monthlyTotals(
       from: addMonths(_monthAnchor, -_monthsBack),
     );
@@ -241,21 +239,21 @@ class AppState extends ChangeNotifier {
 
   /// Gasto por día del mes (índice 0 = día 1).
   List<double> get dailyTotals => List.generate(
-        daysInCurrentMonth,
-        (i) => _monthExpenses
-            .where((e) => e.day == i + 1)
-            .fold(0.0, (a, e) => a + e.val),
-      );
+    daysInCurrentMonth,
+    (i) => _monthExpenses
+        .where((e) => e.day == i + 1)
+        .fold(0.0, (a, e) => a + e.val),
+  );
 
   /// Barras de los últimos 6 meses; el mes en curso usa el total en vivo.
   List<(String, double)> get monthTotals => [
-        for (var i = _monthsBack; i > 0; i--)
-          () {
-            final m = addMonths(_monthAnchor, -i);
-            return (monthAbbr(m), _monthlySums[monthKey(m)] ?? 0.0);
-          }(),
-        (currentMonthAbbr, total),
-      ];
+    for (var i = _monthsBack; i > 0; i--)
+      () {
+        final m = addMonths(_monthAnchor, -i);
+        return (monthAbbr(m), _monthlySums[monthKey(m)] ?? 0.0);
+      }(),
+    (currentMonthAbbr, total),
+  ];
 
   /// Total del mes anterior, para la comparación del inicio.
   double get prevTotal =>
@@ -294,12 +292,14 @@ class AppState extends ChangeNotifier {
   List<Expense> get filteredExpenses {
     final q = search.trim().toLowerCase();
     return _window
-        .where((e) =>
-            filterRange.includes(e.date, _today, _monthAnchor) &&
-            (filterCat == 'Todas' || e.cat == filterCat) &&
-            (q.isEmpty ||
-                e.desc.toLowerCase().contains(q) ||
-                e.cat.toLowerCase().contains(q)))
+        .where(
+          (e) =>
+              filterRange.includes(e.date, _today, _monthAnchor) &&
+              (filterCat == 'Todas' || e.cat == filterCat) &&
+              (q.isEmpty ||
+                  e.desc.toLowerCase().contains(q) ||
+                  e.cat.toLowerCase().contains(q)),
+        )
         .toList();
   }
 
@@ -471,12 +471,14 @@ class AppState extends ChangeNotifier {
     final from = trFromId;
     final to = trToId;
     if (from == null || to == null || from == to || amount <= 0) return;
-    await _write(() => accountRepo.transfer(
-          fromId: from,
-          toId: to,
-          amount: amount,
-          date: _today,
-        ));
+    await _write(
+      () => accountRepo.transfer(
+        fromId: from,
+        toId: to,
+        amount: amount,
+        date: _today,
+      ),
+    );
     transferOpen = false;
     trAmt = '';
     notifyListeners();
@@ -526,13 +528,15 @@ class AppState extends ChangeNotifier {
     final value = addAmountValue;
     final desc = addDesc.trim().isEmpty ? category.name : addDesc.trim();
 
-    await _write(() => expenseRepo.create(
-          date: addDate,
-          description: desc,
-          categoryId: category.id,
-          accountId: addAccountId,
-          amount: value,
-        ));
+    await _write(
+      () => expenseRepo.create(
+        date: addDate,
+        description: desc,
+        categoryId: category.id,
+        accountId: addAccountId,
+        amount: value,
+      ),
+    );
 
     addAmount = '';
     addCat = null;
@@ -666,8 +670,8 @@ extension BudgetRowColors on BudgetRow {
   Color get barColor => over
       ? AppColors.accent300
       : alert
-          ? AppColors.accent
-          : category.color;
+      ? AppColors.accent
+      : category.color;
 
   String get alertLabel => over ? 'Excedido' : 'Alerta';
 }

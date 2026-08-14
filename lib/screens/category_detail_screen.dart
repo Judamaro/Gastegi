@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
+import 'package:gastegi/core/widgets/amount_tile.dart';
+import 'package:gastegi/core/widgets/app_card.dart';
+import 'package:gastegi/core/widgets/app_icon_button.dart';
+import 'package:gastegi/core/widgets/charts/bar_chart.dart';
+import 'package:gastegi/core/widgets/color_dot.dart';
+import 'package:gastegi/core/widgets/kicker.dart';
+import 'package:gastegi/core/widgets/progress_bar.dart';
 import 'package:gastegi/state/app_state.dart';
-import 'package:gastegi/widgets/charts.dart';
-import 'package:gastegi/widgets/common.dart';
 
 /// Detalle de una categoría: total, presupuesto, barras semanales y gastos.
 class CategoryDetailScreen extends StatelessWidget {
@@ -29,14 +34,17 @@ class CategoryDetailScreen extends StatelessWidget {
           Row(
             spacing: 8,
             children: [
-              NIconButton(
+              AppIconButton(
                 icon: AppIcons.caretLeft,
                 onTap: () => state.goTo(Screen.home),
               ),
               Expanded(
                 child: Text(
                   cat.name,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
               ColorDot(cat.color, size: 12),
@@ -64,7 +72,10 @@ class CategoryDetailScreen extends StatelessWidget {
                       'en ${state.currentMonthName.toLowerCase()}'
                       ' · ${state.pct(catTotal, state.total)}% del total',
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 13, color: AppColors.neutral500),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.neutral500,
+                      ),
                     ),
                   ),
                 ],
@@ -82,13 +93,16 @@ class CategoryDetailScreen extends StatelessWidget {
                   ),
                   Text(
                     'Presupuesto: ${state.fmt(catTotal)} de ${state.fmt(cat.budget)}',
-                    style: const TextStyle(fontSize: 11, color: AppColors.neutral500),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.neutral500,
+                    ),
                   ),
                 ],
               ),
             ],
           ),
-          NCard(
+          AppCard(
             gap: 8,
             children: [
               const Kicker('Por semana'),
@@ -111,14 +125,17 @@ class CategoryDetailScreen extends StatelessWidget {
                 'Sin gastos de ${cat.name.toLowerCase()} en '
                 '${state.currentMonthName.toLowerCase()}',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13, color: AppColors.neutral600),
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.neutral600,
+                ),
               ),
             )
           else
             Column(
               children: [
                 for (final e in expenses)
-                  ExpenseTile(
+                  AmountTile(
                     title: e.desc,
                     subtitle: '${state.dayLabelShortOf(e.date)} · ${e.acct}',
                     amount: state.fmt(e.val),

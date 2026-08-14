@@ -40,12 +40,12 @@ abstract final class AppDatabase {
 
   /// Ruta explícita: los tests pasan `inMemoryDatabasePath`.
   static Future<Database> openAt(String path) => openDatabase(
-        path,
-        version: schemaVersion,
-        onConfigure: _onConfigure,
-        onCreate: _onCreate,
-        onUpgrade: _onUpgrade,
-      );
+    path,
+    version: schemaVersion,
+    onConfigure: _onConfigure,
+    onCreate: _onCreate,
+    onUpgrade: _onUpgrade,
+  );
 
   static Future<void> _onConfigure(Database db) =>
       db.execute('PRAGMA foreign_keys = ON');

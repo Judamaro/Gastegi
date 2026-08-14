@@ -1,6 +1,6 @@
+import 'package:gastegi/core/utils/date_utils.dart';
 import 'package:gastegi/data/balances.dart';
 import 'package:gastegi/models/models.dart';
-import 'package:gastegi/util/dates.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
@@ -14,7 +14,9 @@ class AccountRepository {
   Future<List<Account>> all({bool includeArchived = false}) async {
     final rows = await _db.query(
       'accounts',
-      where: includeArchived ? 'deleted_at IS NULL' : 'deleted_at IS NULL AND archived = 0',
+      where: includeArchived
+          ? 'deleted_at IS NULL'
+          : 'deleted_at IS NULL AND archived = 0',
       orderBy: 'sort_order, name',
     );
     return rows.map(Account.fromRow).toList();
@@ -28,9 +30,12 @@ class AccountRepository {
   }) async {
     final id = _uuid.v4();
     final now = DateTime.now().millisecondsSinceEpoch;
-    final nextOrder = Sqflite.firstIntValue(await _db.rawQuery(
-          'SELECT COALESCE(MAX(sort_order) + 1, 0) FROM accounts',
-        )) ??
+    final nextOrder =
+        Sqflite.firstIntValue(
+          await _db.rawQuery(
+            'SELECT COALESCE(MAX(sort_order) + 1, 0) FROM accounts',
+          ),
+        ) ??
         0;
     await _db.transaction((txn) async {
       await txn.insert('accounts', {
@@ -87,14 +92,14 @@ class AccountRepository {
   }
 
   Future<void> setArchived(String id, bool archived) => _db.update(
-        'accounts',
-        {
-          'archived': archived ? 1 : 0,
-          'updated_at': DateTime.now().millisecondsSinceEpoch,
-        },
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+    'accounts',
+    {
+      'archived': archived ? 1 : 0,
+      'updated_at': DateTime.now().millisecondsSinceEpoch,
+    },
+    where: 'id = ?',
+    whereArgs: [id],
+  );
 
   /// Borrado lógico. Los gastos de la cuenta **no** se tocan: conservan la
   /// referencia y el historial sigue mostrando el nombre de la cuenta.
@@ -112,17 +117,20 @@ class AccountRepository {
   }
 
   Future<int> expenseCount(String id) async =>
-      Sqflite.firstIntValue(await _db.rawQuery(
-        'SELECT COUNT(*) FROM expenses WHERE account_id = ? AND deleted_at IS NULL',
-        [id],
-      )) ??
+      Sqflite.firstIntValue(
+        await _db.rawQuery(
+          'SELECT COUNT(*) FROM expenses WHERE account_id = ? AND deleted_at IS NULL',
+          [id],
+        ),
+      ) ??
       0;
 
   Future<bool> nameExists(String name, {String? exceptId}) async {
     final rows = await _db.query(
       'accounts',
       columns: ['id'],
-      where: 'deleted_at IS NULL AND name = ? COLLATE NOCASE'
+      where:
+          'deleted_at IS NULL AND name = ? COLLATE NOCASE'
           '${exceptId == null ? '' : ' AND id != ?'}',
       whereArgs: [name, ?exceptId],
       limit: 1,

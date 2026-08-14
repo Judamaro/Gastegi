@@ -17,12 +17,9 @@ class CategoryRepository {
   }
 
   Future<void> updateBudget(String id, double budget) => _db.update(
-        'categories',
-        {
-          'budget': budget,
-          'updated_at': DateTime.now().millisecondsSinceEpoch,
-        },
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+    'categories',
+    {'budget': budget, 'updated_at': DateTime.now().millisecondsSinceEpoch},
+    where: 'id = ?',
+    whereArgs: [id],
+  );
 }

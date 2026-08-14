@@ -6,7 +6,7 @@ import 'package:uuid/uuid.dart';
 /// Sin cuentas y sin gastos — el dinero lo pone el usuario. Los colores,
 /// iconos y presupuestos son los del diseño original.
 const List<(String name, int color, String iconKey, double budget)>
-    initialCategories = [
+initialCategories = [
   ('Comida', 0xFFB5ABFC, 'forkKnife', 500),
   ('Transporte', 0xFF9690C9, 'bus', 180),
   ('Hogar', 0xFFD2CEFD, 'houseLine', 400),

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
+import 'package:gastegi/core/widgets/app_card.dart';
+import 'package:gastegi/core/widgets/color_dot.dart';
+import 'package:gastegi/core/widgets/progress_bar.dart';
 import 'package:gastegi/state/app_state.dart';
-import 'package:gastegi/widgets/common.dart';
 
 /// Presupuestos: progreso por categoría con alertas de umbral y exceso.
 class BudgetsScreen extends StatelessWidget {
@@ -32,7 +34,7 @@ class BudgetsScreen extends StatelessWidget {
             spacing: 12,
             children: [
               for (final b in state.budgetRows)
-                NCard(
+                AppCard(
                   gap: 8,
                   children: [
                     Row(
@@ -40,13 +42,17 @@ class BudgetsScreen extends StatelessWidget {
                       children: [
                         ColorDot(b.category.color),
                         Expanded(
-                          child: Text(b.category.name,
-                              style: const TextStyle(fontSize: 14)),
+                          child: Text(
+                            b.category.name,
+                            style: const TextStyle(fontSize: 14),
+                          ),
                         ),
                         if (b.alert)
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 3),
+                              horizontal: 10,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
                               border: Border.all(color: AppColors.accent),
                               borderRadius: BorderRadius.circular(6),
@@ -55,12 +61,17 @@ class BudgetsScreen extends StatelessWidget {
                               mainAxisSize: MainAxisSize.min,
                               spacing: 4,
                               children: [
-                                const Icon(AppIcons.warning,
-                                    size: 11, color: AppColors.accent),
+                                const Icon(
+                                  AppIcons.warning,
+                                  size: 11,
+                                  color: AppColors.accent,
+                                ),
                                 Text(
                                   b.alertLabel,
                                   style: const TextStyle(
-                                      fontSize: 11, color: AppColors.accent),
+                                    fontSize: 11,
+                                    color: AppColors.accent,
+                                  ),
                                 ),
                               ],
                             ),
@@ -68,7 +79,9 @@ class BudgetsScreen extends StatelessWidget {
                         Text(
                           '${state.fmt(b.spent)} / ${state.fmt(b.category.budget)}',
                           style: const TextStyle(
-                              fontSize: 12, color: AppColors.neutral500),
+                            fontSize: 12,
+                            color: AppColors.neutral500,
+                          ),
                         ),
                       ],
                     ),
@@ -77,7 +90,10 @@ class BudgetsScreen extends StatelessWidget {
                       b.over
                           ? 'Excedido por ${state.fmt(b.spent - b.category.budget)}'
                           : 'Quedan ${state.fmt(b.category.budget - b.spent)} · ${(b.ratio * 100).round()}% usado',
-                      style: const TextStyle(fontSize: 11, color: AppColors.neutral600),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.neutral600,
+                      ),
                     ),
                   ],
                 ),

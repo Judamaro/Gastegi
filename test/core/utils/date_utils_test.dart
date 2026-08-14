@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gastegi/util/dates.dart';
+import 'package:gastegi/core/utils/date_utils.dart';
 
-import '../helpers/test_db.dart';
+import '../../helpers/test_db.dart';
 
 void main() {
   setUpAll(initTestLocale);

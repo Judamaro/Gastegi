@@ -41,7 +41,8 @@ DateTime earliest(DateTime a, DateTime b) => a.isBefore(b) ? a : b;
 bool sameDay(DateTime a, DateTime b) =>
     a.year == b.year && a.month == b.month && a.day == b.day;
 
-bool sameMonth(DateTime a, DateTime b) => a.year == b.year && a.month == b.month;
+bool sameMonth(DateTime a, DateTime b) =>
+    a.year == b.year && a.month == b.month;
 
 /// `Agosto 2026`.
 String monthTitle(DateTime m) => _capitalize(_monthYearFormat.format(m));
