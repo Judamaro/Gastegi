@@ -124,7 +124,7 @@ void main() {
       accountId: null,
       amount: 15,
     );
-    expect((await expenses.since(testNow)).single.acct, 'Sin cuenta');
+    expect((await expenses.since(testNow)).single.accountName, 'Sin cuenta');
   });
 
   test(

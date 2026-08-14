@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
+import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/widgets/amount_tile.dart';
 import 'package:gastegi/core/widgets/app_chip.dart';
 import 'package:gastegi/core/widgets/app_input.dart';
@@ -71,10 +72,10 @@ class HistoryScreen extends StatelessWidget {
                 for (final e in items)
                   AmountTile(
                     title: e.desc,
-                    subtitle: '${e.cat} · ${e.acct}',
+                    subtitle: '${e.categoryName} · ${e.accountName}',
                     amount: state.fmt(e.val),
-                    icon: state.categoryOf(e.cat)?.icon,
-                    iconColor: state.categoryOf(e.cat)?.color,
+                    icon: state.categoryOf(e.categoryName)?.icon,
+                    iconColor: state.categoryOf(e.categoryName)?.color,
                   ),
               ],
             ),

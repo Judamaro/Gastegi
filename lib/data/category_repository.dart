@@ -1,4 +1,5 @@
-import 'package:gastegi/models/models.dart';
+import 'package:gastegi/features/categories/data/models/category_model.dart';
+import 'package:gastegi/features/categories/domain/entities/category.dart';
 import 'package:sqflite/sqflite.dart';
 
 /// Lectura y escritura de categorías.
@@ -13,7 +14,7 @@ class CategoryRepository {
       where: 'deleted_at IS NULL',
       orderBy: 'sort_order, name',
     );
-    return rows.map(Category.fromRow).toList();
+    return rows.map(CategoryModel.fromRow).toList();
   }
 
   Future<void> updateBudget(String id, double budget) => _db.update(

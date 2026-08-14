@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
+import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/widgets/amount_tile.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/app_icon_button.dart';
@@ -137,7 +138,8 @@ class CategoryDetailScreen extends StatelessWidget {
                 for (final e in expenses)
                   AmountTile(
                     title: e.desc,
-                    subtitle: '${state.dayLabelShortOf(e.date)} · ${e.acct}',
+                    subtitle:
+                        '${state.dayLabelShortOf(e.date)} · ${e.accountName}',
                     amount: state.fmt(e.val),
                   ),
               ],

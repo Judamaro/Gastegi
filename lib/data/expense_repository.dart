@@ -1,6 +1,7 @@
 import 'package:gastegi/core/storage/balances.dart';
 import 'package:gastegi/core/utils/date_utils.dart';
-import 'package:gastegi/models/models.dart';
+import 'package:gastegi/features/expenses/data/models/expense_model.dart';
+import 'package:gastegi/features/expenses/domain/entities/expense.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
@@ -28,7 +29,7 @@ class ExpenseRepository {
       ''',
       [dayKey(from)],
     );
-    return rows.map(Expense.fromRow).toList();
+    return rows.map(ExpenseModel.fromRow).toList();
   }
 
   /// Cuántos gastos hay en total. Distingue "todavía no has registrado nada"

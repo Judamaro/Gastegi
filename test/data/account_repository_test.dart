@@ -102,7 +102,7 @@ void main() {
     final remaining = await expenses.since(testNow);
     expect(remaining, hasLength(1));
     // El historial conserva el nombre: el JOIN no filtra tombstones.
-    expect(remaining.single.acct, 'Débito');
+    expect(remaining.single.accountName, 'Débito');
   });
 
   test('archivar oculta la cuenta sin borrarla', () async {

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/storage/app_database.dart';
 import 'package:gastegi/core/storage/seed.dart';
 import 'package:gastegi/data/account_repository.dart';

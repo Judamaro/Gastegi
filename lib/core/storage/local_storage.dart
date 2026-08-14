@@ -28,11 +28,10 @@ class LocalStorage {
   }
 
   /// Escribe [value] en [key], sobrescribiendo lo que hubiera.
-  Future<void> write(String key, String value) => _db.insert(
-    table,
-    {'key': key, 'value': value},
-    conflictAlgorithm: ConflictAlgorithm.replace,
-  );
+  Future<void> write(String key, String value) => _db.insert(table, {
+    'key': key,
+    'value': value,
+  }, conflictAlgorithm: ConflictAlgorithm.replace);
 
   Future<void> delete(String key) =>
       _db.delete(table, where: 'key = ?', whereArgs: [key]);

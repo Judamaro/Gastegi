@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
+import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/charts/bar_chart.dart';
 import 'package:gastegi/core/widgets/charts/compare_bar.dart';

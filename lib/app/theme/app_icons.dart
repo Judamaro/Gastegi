@@ -56,13 +56,6 @@ abstract final class AppIcons {
   /// con la app vieja recibirá claves que todavía no conoce.
   static IconData resolve(String key) => byKey[key] ?? wallet;
 
-  static String keyOf(IconData icon) => byKey.entries
-      .firstWhere(
-        (e) => e.value == icon,
-        orElse: () => const MapEntry('wallet', wallet),
-      )
-      .key;
-
   /// Iconos elegibles al crear o editar una cuenta.
   static const List<String> accountIconKeys = [
     'money',

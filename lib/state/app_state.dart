@@ -3,13 +3,15 @@ import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:gastegi/app/theme/app_colors.dart';
-import 'package:gastegi/app/theme/app_icons.dart';
+import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/utils/date_utils.dart';
 import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/data/account_repository.dart';
 import 'package:gastegi/data/category_repository.dart';
 import 'package:gastegi/data/expense_repository.dart';
-import 'package:gastegi/models/models.dart';
+import 'package:gastegi/features/accounts/domain/entities/account.dart';
+import 'package:gastegi/features/categories/domain/entities/category.dart';
+import 'package:gastegi/features/expenses/domain/entities/expense.dart';
 
 enum Screen { home, history, catDetail, accounts, budgets, add }
 
@@ -232,7 +234,7 @@ class AppState extends ChangeNotifier {
   Map<String, double> get catTotals {
     final totals = {for (final c in categories) c.name: 0.0};
     for (final e in _monthExpenses) {
-      totals[e.cat] = (totals[e.cat] ?? 0) + e.val;
+      totals[e.categoryName] = (totals[e.categoryName] ?? 0) + e.val;
     }
     return totals;
   }
@@ -295,10 +297,10 @@ class AppState extends ChangeNotifier {
         .where(
           (e) =>
               filterRange.includes(e.date, _today, _monthAnchor) &&
-              (filterCat == 'Todas' || e.cat == filterCat) &&
+              (filterCat == 'Todas' || e.categoryName == filterCat) &&
               (q.isEmpty ||
                   e.desc.toLowerCase().contains(q) ||
-                  e.cat.toLowerCase().contains(q)),
+                  e.categoryName.toLowerCase().contains(q)),
         )
         .toList();
   }
@@ -321,7 +323,7 @@ class AppState extends ChangeNotifier {
   List<Expense> get selCatExpenses {
     final cat = selCategory;
     if (cat == null) return const [];
-    return _monthExpenses.where((e) => e.cat == cat.name).toList()
+    return _monthExpenses.where((e) => e.categoryName == cat.name).toList()
       ..sort((a, b) => b.date.compareTo(a.date));
   }
 
@@ -556,7 +558,7 @@ class AppState extends ChangeNotifier {
     afName = account?.name ?? '';
     afKind = account?.kind ?? '';
     afBalance = account == null ? '' : _plain(account.balance);
-    afIconKey = account == null ? 'wallet' : AppIcons.keyOf(account.icon);
+    afIconKey = account?.iconKey ?? 'wallet';
     afError = null;
     notifyListeners();
   }

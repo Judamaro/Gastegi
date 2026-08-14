@@ -3,6 +3,7 @@ import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_elevation.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/app/theme/app_spacing.dart';
+import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/app_chip.dart';
 import 'package:gastegi/core/widgets/app_icon_button.dart';
@@ -11,7 +12,7 @@ import 'package:gastegi/core/widgets/field_label.dart';
 import 'package:gastegi/core/widgets/kicker.dart';
 import 'package:gastegi/core/widgets/primary_button.dart';
 import 'package:gastegi/core/widgets/secondary_button.dart';
-import 'package:gastegi/models/models.dart';
+import 'package:gastegi/features/accounts/domain/entities/account.dart';
 import 'package:gastegi/state/app_state.dart';
 
 /// Cuentas: saldo total, alta y edición de cuentas, y transferencias.

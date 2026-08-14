@@ -1,6 +1,7 @@
 import 'package:gastegi/core/storage/balances.dart';
 import 'package:gastegi/core/utils/date_utils.dart';
-import 'package:gastegi/models/models.dart';
+import 'package:gastegi/features/accounts/data/models/account_model.dart';
+import 'package:gastegi/features/accounts/domain/entities/account.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
@@ -19,7 +20,7 @@ class AccountRepository {
           : 'deleted_at IS NULL AND archived = 0',
       orderBy: 'sort_order, name',
     );
-    return rows.map(Account.fromRow).toList();
+    return rows.map(AccountModel.fromRow).toList();
   }
 
   Future<String> create({
