@@ -1,3 +1,5 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gastegi/core/storage/database_provider.dart';
 import 'package:gastegi/features/categories/data/models/category_model.dart';
 import 'package:gastegi/features/categories/domain/entities/category.dart';
 import 'package:gastegi/features/categories/domain/repositories/category_repository.dart';
@@ -27,3 +29,8 @@ class CategoryRepositoryImpl implements CategoryRepository {
     whereArgs: [id],
   );
 }
+
+/// El repositorio de categories, atado a la base de datos del ámbito.
+final categoryRepositoryProvider = Provider<CategoryRepository>(
+  (ref) => CategoryRepositoryImpl(ref.watch(databaseProvider)),
+);

@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gastegi/app/app.dart';
 import 'package:gastegi/app/state/app_state.dart';
@@ -27,10 +28,15 @@ void main() {
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
 
-    final state = await buildState(db);
-    await tester.pumpWidget(GastegiApp(state: state));
+    final container = await buildLoadedContainer(db);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const GastegiApp(),
+      ),
+    );
     await tester.pumpAndSettle();
-    return state;
+    return container.read(appStateProvider);
   }
 
   testWidgets('la app arranca vacía y sin excepciones', (tester) async {

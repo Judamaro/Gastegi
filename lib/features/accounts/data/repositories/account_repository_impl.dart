@@ -1,4 +1,6 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gastegi/core/storage/balances.dart';
+import 'package:gastegi/core/storage/database_provider.dart';
 import 'package:gastegi/core/utils/date_utils.dart';
 import 'package:gastegi/features/accounts/data/models/account_model.dart';
 import 'package:gastegi/features/accounts/domain/entities/account.dart';
@@ -173,3 +175,8 @@ class AccountRepositoryImpl implements AccountRepository {
     });
   }
 }
+
+/// El repositorio de accounts, atado a la base de datos del ámbito.
+final accountRepositoryProvider = Provider<AccountRepository>(
+  (ref) => AccountRepositoryImpl(ref.watch(databaseProvider)),
+);

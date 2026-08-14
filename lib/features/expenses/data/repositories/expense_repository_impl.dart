@@ -1,4 +1,6 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gastegi/core/storage/balances.dart';
+import 'package:gastegi/core/storage/database_provider.dart';
 import 'package:gastegi/core/utils/date_utils.dart';
 import 'package:gastegi/features/expenses/data/models/expense_model.dart';
 import 'package:gastegi/features/expenses/domain/entities/expense.dart';
@@ -107,3 +109,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     });
   }
 }
+
+/// El repositorio de expenses, atado a la base de datos del ámbito.
+final expenseRepositoryProvider = Provider<ExpenseRepository>(
+  (ref) => ExpenseRepositoryImpl(ref.watch(databaseProvider)),
+);

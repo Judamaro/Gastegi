@@ -49,6 +49,7 @@ dependencies:
   sqflite_common_ffi: ^2.3.6
   # Ids estables entre dispositivos, de cara a la sincronización en la nube.
   uuid: ^4.5.1
+  flutter_riverpod: ^2.6.1
 
 dev_dependencies:
   flutter_test:

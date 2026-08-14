@@ -1,16 +1,18 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gastegi/app/config/app_config.dart';
-import 'package:gastegi/app/state/app_state.dart';
+import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/core/storage/app_database.dart';
-import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
-import 'package:gastegi/features/categories/data/repositories/category_repository_impl.dart';
-import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
+import 'package:gastegi/core/storage/database_provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
-/// Punto de composición: aquí —y solo aquí— se construyen las dependencias
-/// concretas de la aplicación y se cablean entre sí.
-Future<AppState> bootstrap() async {
+/// Punto de composición: abre la base de datos, monta el ámbito de providers
+/// con ella dentro y carga los datos antes del primer frame.
+///
+/// Cargar aquí —y no en el primer `build`— es lo que permite que las pantallas
+/// lean datos de forma síncrona, sin `FutureBuilder` ni estados de carga.
+Future<ProviderContainer> bootstrap() async {
   final binding = WidgetsFlutterBinding.ensureInitialized();
   // Publica el árbol de semántica desde el arranque (accesibilidad en web).
   binding.ensureSemantics();
@@ -22,12 +24,10 @@ Future<AppState> bootstrap() async {
   Intl.defaultLocale = locale;
 
   final db = await AppDatabase.open();
-  final state = AppState(
-    categoryRepo: CategoryRepositoryImpl(db),
-    accountRepo: AccountRepositoryImpl(db),
-    expenseRepo: ExpenseRepositoryImpl(db),
+  final container = ProviderContainer(
+    overrides: [databaseProvider.overrideWithValue(db)],
   );
-  await state.load();
+  await container.read(appDataProvider.notifier).load();
 
-  return state;
+  return container;
 }

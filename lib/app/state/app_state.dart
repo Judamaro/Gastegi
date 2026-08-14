@@ -1,8 +1,11 @@
 import 'package:flutter/foundation.dart' hide Category;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gastegi/app/router/app_screen.dart';
-import 'package:gastegi/app/state/app_data_store.dart';
+import 'package:gastegi/app/state/app_data.dart';
+import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/core/utils/date_utils.dart';
 import 'package:gastegi/core/utils/formatters.dart';
+import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:gastegi/features/accounts/domain/entities/account.dart';
 import 'package:gastegi/features/accounts/domain/failures.dart';
 import 'package:gastegi/features/accounts/domain/repositories/account_repository.dart';
@@ -10,53 +13,38 @@ import 'package:gastegi/features/accounts/domain/usecases/save_account.dart';
 import 'package:gastegi/features/accounts/domain/usecases/transfer_between_accounts.dart';
 import 'package:gastegi/features/budgets/presentation/models/budget_row.dart';
 import 'package:gastegi/features/categories/domain/entities/category.dart';
-import 'package:gastegi/features/categories/domain/repositories/category_repository.dart';
+import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
 import 'package:gastegi/features/expenses/domain/entities/expense.dart';
-import 'package:gastegi/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:gastegi/features/expenses/domain/usecases/save_expense.dart';
 import 'package:gastegi/features/expenses/presentation/models/history_range.dart';
 
 /// Estado de la interfaz: navegación, formularios, filtros y selecciones.
 ///
-/// Los datos son de [AppDataStore]; aquí solo se delegan. Es una clase de
+/// Los datos son de [appDataProvider]; aquí solo se delegan. Es una clase de
 /// transición: cada funcionalidad se irá llevando su trozo a
 /// `features/*/presentation/providers/` hasta que no quede nada.
 class AppState extends ChangeNotifier {
-  AppState({
-    required CategoryRepository categoryRepo,
-    required AccountRepository accountRepo,
-    required ExpenseRepository expenseRepo,
-    DateTime Function()? clock,
-  }) : _data = AppDataStore(
-         categoryRepo: categoryRepo,
-         accountRepo: accountRepo,
-         expenseRepo: expenseRepo,
-         clock: clock,
-       ),
-       _accountRepo = accountRepo,
-       _saveAccount = SaveAccount(accountRepo),
-       _saveExpense = SaveExpense(expenseRepo),
-       _transfer = TransferBetweenAccounts(accountRepo) {
-    // Al recargar hay que corregir las selecciones antes de que nadie repinte:
-    // una cuenta o una categoría puede haber desaparecido.
-    _data.onReloaded = _normalizeSelections;
-    _data.addListener(notifyListeners);
+  AppState(this._ref) {
+    // Al recargar hay que corregir las selecciones **antes** de que nadie
+    // repinte: una cuenta o una categoría puede haber desaparecido bajo los
+    // pies de un selector. `ref.listen` corre en el mismo microtask que el
+    // cambio, mucho antes del siguiente frame.
+    _ref.listen(appDataProvider, (_, _) {
+      _normalizeSelections();
+      notifyListeners();
+    });
     addDate = _data.today;
   }
 
-  final AppDataStore _data;
-  final AccountRepository _accountRepo;
-  final SaveAccount _saveAccount;
-  final SaveExpense _saveExpense;
-  final TransferBetweenAccounts _transfer;
+  final Ref _ref;
 
-  @override
-  void dispose() {
-    _data
-      ..removeListener(notifyListeners)
-      ..dispose();
-    super.dispose();
-  }
+  AppData get _data => _ref.read(appDataProvider);
+  AccountRepository get _accountRepo => _ref.read(accountRepositoryProvider);
+  SaveAccount get _saveAccount => SaveAccount(_accountRepo);
+  SaveExpense get _saveExpense =>
+      SaveExpense(_ref.read(expenseRepositoryProvider));
+  TransferBetweenAccounts get _transfer =>
+      TransferBetweenAccounts(_accountRepo);
 
   // ── Estado de UI ───────────────────────────────────────────────────────
 
@@ -99,9 +87,10 @@ class AppState extends ChangeNotifier {
 
   // ── Carga ──────────────────────────────────────────────────────────────
 
-  Future<void> load() => _data.load();
+  Future<void> load() => _ref.read(appDataProvider.notifier).load();
 
-  Future<void> _write(Future<void> Function() op) => _data.write(op);
+  Future<void> _write(Future<void> Function() op) =>
+      _ref.read(appDataProvider.notifier).write(op);
 
   void _normalizeSelections() {
     final ids = accounts.map((a) => a.id).toSet();
@@ -481,3 +470,10 @@ class AppState extends ChangeNotifier {
   String _plain(double n) =>
       n == n.roundToDouble() ? n.round().toString() : n.toString();
 }
+
+/// El estado de interfaz de la app.
+///
+/// `ChangeNotifierProvider` es transitorio: existe mientras quede un objeto
+/// dios que notifique en bloque. Cada funcionalidad que se lleva su trozo a un
+/// `Notifier` propio recorta esta clase, y con la última desaparece.
+final appStateProvider = ChangeNotifierProvider<AppState>(AppState.new);
