@@ -7,8 +7,8 @@ import 'package:gastegi/core/widgets/app_input.dart';
 import 'package:gastegi/state/app_state.dart';
 
 /// Historial: búsqueda, filtros por rango y categoría, gastos agrupados por día.
-class HistoryScreen extends StatelessWidget {
-  const HistoryScreen({super.key, required this.state});
+class HistoryPage extends StatelessWidget {
+  const HistoryPage({super.key, required this.state});
 
   final AppState state;
 

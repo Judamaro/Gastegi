@@ -13,8 +13,8 @@ import 'package:gastegi/state/app_state.dart';
 
 /// Inicio: total del mes, comparación con el mes anterior, dona por categoría,
 /// tendencia diaria y últimos 6 meses.
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key, required this.state});
+class HomePage extends StatelessWidget {
+  const HomePage({super.key, required this.state});
 
   final AppState state;
 

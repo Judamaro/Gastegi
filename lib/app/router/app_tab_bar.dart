@@ -1,18 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
-import 'package:gastegi/screens/accounts_screen.dart';
-import 'package:gastegi/screens/add_expense_screen.dart';
-import 'package:gastegi/screens/budgets_screen.dart';
-import 'package:gastegi/screens/category_detail_screen.dart';
-import 'package:gastegi/screens/history_screen.dart';
-import 'package:gastegi/screens/home_screen.dart';
 import 'package:gastegi/state/app_state.dart';
 
-/// Scaffold raíz: muestra la pantalla activa según el enum del estado y la
-/// barra de pestañas inferior (oculta en "Nuevo gasto").
-class Shell extends StatelessWidget {
-  const Shell({super.key, required this.state});
+/// Barra de pestañas inferior.
+class AppTabBar extends StatelessWidget {
+  const AppTabBar({super.key, required this.state});
 
   final AppState state;
 
@@ -26,40 +19,6 @@ class Shell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: state,
-      builder: (context, _) {
-        final body = switch (state.screen) {
-          Screen.home => HomeScreen(state: state),
-          Screen.history => HistoryScreen(state: state),
-          Screen.catDetail => CategoryDetailScreen(state: state),
-          Screen.accounts => AccountsScreen(state: state),
-          Screen.budgets => BudgetsScreen(state: state),
-          Screen.add => AddExpenseScreen(state: state),
-        };
-        return Scaffold(
-          backgroundColor: AppColors.bg,
-          body: SafeArea(
-            child: Column(
-              children: [
-                Expanded(child: body),
-                if (state.screen != Screen.add) _TabBar(state: state),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _TabBar extends StatelessWidget {
-  const _TabBar({required this.state});
-
-  final AppState state;
-
-  @override
-  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
       decoration: const BoxDecoration(
@@ -68,12 +27,14 @@ class _TabBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          for (final (screen, icon, fillIcon, label) in Shell._tabs)
+          for (final (screen, icon, fillIcon, label) in _tabs)
             Expanded(
               child: _TabItem(
                 icon: icon,
                 fillIcon: fillIcon,
                 label: label,
+                // El detalle de categoría se abre desde Inicio, así que esa
+                // pestaña se queda encendida mientras se está dentro.
                 active:
                     state.screen == screen ||
                     (screen == Screen.home && state.screen == Screen.catDetail),

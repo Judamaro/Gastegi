@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
-import 'package:gastegi/app/theme/app_spacing.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/widgets/app_chip.dart';
 import 'package:gastegi/core/widgets/app_icon_button.dart';
@@ -9,28 +8,14 @@ import 'package:gastegi/core/widgets/app_input.dart';
 import 'package:gastegi/core/widgets/field_label.dart';
 import 'package:gastegi/core/widgets/primary_button.dart';
 import 'package:gastegi/core/widgets/secondary_button.dart';
+import 'package:gastegi/features/expenses/presentation/widgets/amount_keypad.dart';
 import 'package:gastegi/state/app_state.dart';
 
 /// Nuevo gasto: monto con teclado propio, categoría, cuenta y descripción.
-class AddExpenseScreen extends StatelessWidget {
-  const AddExpenseScreen({super.key, required this.state});
+class AddExpensePage extends StatelessWidget {
+  const AddExpensePage({super.key, required this.state});
 
   final AppState state;
-
-  static const _keys = [
-    '1',
-    '2',
-    '3',
-    '4',
-    '5',
-    '6',
-    '7',
-    '8',
-    '9',
-    ',',
-    '0',
-    '⌫',
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -184,48 +169,7 @@ class AddExpenseScreen extends StatelessWidget {
                     onChanged: state.setAddDesc,
                   ),
                   const Spacer(),
-                  Column(
-                    spacing: 8,
-                    children: [
-                      for (var row = 0; row < 4; row++)
-                        Row(
-                          spacing: 8,
-                          children: [
-                            for (final key in _keys.sublist(
-                              row * 3,
-                              row * 3 + 3,
-                            ))
-                              Expanded(
-                                child: InkWell(
-                                  onTap: () => state.keypadTap(key),
-                                  borderRadius: BorderRadius.circular(
-                                    AppRadius.md,
-                                  ),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.surface,
-                                      border: Border.all(
-                                        color: AppColors.divider,
-                                      ),
-                                      borderRadius: BorderRadius.circular(
-                                        AppRadius.md,
-                                      ),
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      key,
-                                      style: const TextStyle(fontSize: 20),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                    ],
-                  ),
+                  AmountKeypad(onKey: state.keypadTap),
                   PrimaryButton(
                     label: 'Guardar gasto',
                     disabled: state.saveDisabled,

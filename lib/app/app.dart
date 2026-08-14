@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:gastegi/app/config/app_config.dart';
+import 'package:gastegi/app/router/app_shell.dart';
 import 'package:gastegi/app/theme/app_theme.dart';
-import 'package:gastegi/screens/shell.dart';
 import 'package:gastegi/state/app_state.dart';
 
 /// Widget raíz de la aplicación.

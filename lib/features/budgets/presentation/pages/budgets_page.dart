@@ -8,8 +8,8 @@ import 'package:gastegi/core/widgets/progress_bar.dart';
 import 'package:gastegi/state/app_state.dart';
 
 /// Presupuestos: progreso por categoría con alertas de umbral y exceso.
-class BudgetsScreen extends StatelessWidget {
-  const BudgetsScreen({super.key, required this.state});
+class BudgetsPage extends StatelessWidget {
+  const BudgetsPage({super.key, required this.state});
 
   final AppState state;
 

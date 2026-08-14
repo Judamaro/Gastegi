@@ -12,8 +12,8 @@ import 'package:gastegi/core/widgets/progress_bar.dart';
 import 'package:gastegi/state/app_state.dart';
 
 /// Detalle de una categoría: total, presupuesto, barras semanales y gastos.
-class CategoryDetailScreen extends StatelessWidget {
-  const CategoryDetailScreen({super.key, required this.state});
+class CategoryDetailPage extends StatelessWidget {
+  const CategoryDetailPage({super.key, required this.state});
 
   final AppState state;
 
