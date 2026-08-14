@@ -1,20 +1,20 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gastegi/data/account_repository.dart';
-import 'package:gastegi/data/category_repository.dart';
-import 'package:gastegi/data/expense_repository.dart';
+import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
+import 'package:gastegi/features/categories/data/repositories/category_repository_impl.dart';
+import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-import '../helpers/test_db.dart';
+import '../../../../helpers/test_db.dart';
 
 void main() {
   late Database db;
-  late AccountRepository accounts;
-  late ExpenseRepository expenses;
+  late AccountRepositoryImpl accounts;
+  late ExpenseRepositoryImpl expenses;
 
   setUp(() async {
     db = await openTestDb();
-    accounts = AccountRepository(db);
-    expenses = ExpenseRepository(db);
+    accounts = AccountRepositoryImpl(db);
+    expenses = ExpenseRepositoryImpl(db);
   });
   tearDown(() async => db.close());
 
@@ -85,7 +85,7 @@ void main() {
   );
 
   test('borrar una cuenta con gastos no borra los gastos', () async {
-    final categoryId = (await CategoryRepository(db).all()).first.id;
+    final categoryId = (await CategoryRepositoryImpl(db).all()).first.id;
     final accountId = await newAccount('Débito', 1000);
     await expenses.create(
       date: testNow,

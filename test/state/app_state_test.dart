@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gastegi/data/account_repository.dart';
-import 'package:gastegi/data/category_repository.dart';
-import 'package:gastegi/data/expense_repository.dart';
+import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
+import 'package:gastegi/features/categories/data/repositories/category_repository_impl.dart';
+import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
 import 'package:gastegi/state/app_state.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -11,15 +11,15 @@ void main() {
   setUpAll(initTestLocale);
 
   late Database db;
-  late ExpenseRepository expenses;
-  late AccountRepository accounts;
+  late ExpenseRepositoryImpl expenses;
+  late AccountRepositoryImpl accounts;
   late String categoryId;
 
   setUp(() async {
     db = await openTestDb();
-    expenses = ExpenseRepository(db);
-    accounts = AccountRepository(db);
-    categoryId = (await CategoryRepository(db).all()).first.id; // Comida
+    expenses = ExpenseRepositoryImpl(db);
+    accounts = AccountRepositoryImpl(db);
+    categoryId = (await CategoryRepositoryImpl(db).all()).first.id; // Comida
   });
   tearDown(() async => db.close());
 
@@ -176,7 +176,7 @@ void main() {
 
   test('las alertas de presupuesto usan el umbral del 90 %', () async {
     // Ocio tiene 200 de presupuesto; 182 son el 91 %.
-    final ocio = (await CategoryRepository(
+    final ocio = (await CategoryRepositoryImpl(
       db,
     ).all()).firstWhere((c) => c.name == 'Ocio');
     await expenses.create(

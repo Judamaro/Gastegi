@@ -1,13 +1,15 @@
 import 'package:gastegi/features/categories/data/models/category_model.dart';
 import 'package:gastegi/features/categories/domain/entities/category.dart';
+import 'package:gastegi/features/categories/domain/repositories/category_repository.dart';
 import 'package:sqflite/sqflite.dart';
 
 /// Lectura y escritura de categorías.
-class CategoryRepository {
-  const CategoryRepository(this._db);
+class CategoryRepositoryImpl implements CategoryRepository {
+  const CategoryRepositoryImpl(this._db);
 
   final Database _db;
 
+  @override
   Future<List<Category>> all() async {
     final rows = await _db.query(
       'categories',
@@ -17,6 +19,7 @@ class CategoryRepository {
     return rows.map(CategoryModel.fromRow).toList();
   }
 
+  @override
   Future<void> updateBudget(String id, double budget) => _db.update(
     'categories',
     {'budget': budget, 'updated_at': DateTime.now().millisecondsSinceEpoch},

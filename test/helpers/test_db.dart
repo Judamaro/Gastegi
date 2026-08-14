@@ -1,7 +1,7 @@
 import 'package:gastegi/core/storage/app_database.dart';
-import 'package:gastegi/data/account_repository.dart';
-import 'package:gastegi/data/category_repository.dart';
-import 'package:gastegi/data/expense_repository.dart';
+import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
+import 'package:gastegi/features/categories/data/repositories/category_repository_impl.dart';
+import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
 import 'package:gastegi/state/app_state.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -39,9 +39,9 @@ Future<void> initTestLocale() => initializeDateFormatting('es');
 
 Future<AppState> buildState(Database db, {DateTime? now}) async {
   final state = AppState(
-    categoryRepo: CategoryRepository(db),
-    accountRepo: AccountRepository(db),
-    expenseRepo: ExpenseRepository(db),
+    categoryRepo: CategoryRepositoryImpl(db),
+    accountRepo: AccountRepositoryImpl(db),
+    expenseRepo: ExpenseRepositoryImpl(db),
     clock: () => now ?? testNow,
   );
   await state.load();

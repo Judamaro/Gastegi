@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/storage/app_database.dart';
 import 'package:gastegi/core/storage/seed.dart';
-import 'package:gastegi/data/account_repository.dart';
-import 'package:gastegi/data/category_repository.dart';
+import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
+import 'package:gastegi/features/categories/data/repositories/category_repository_impl.dart';
 import 'package:path/path.dart' as p;
 // `Sqflite` (con sus helpers estáticos) solo lo expone el paquete sqflite.
 import 'package:sqflite/sqflite.dart' show Sqflite;
@@ -20,7 +20,7 @@ void main() {
   tearDown(() async => db.close());
 
   test('una BD nueva se siembra solo con las categorías', () async {
-    final categories = await CategoryRepository(db).all();
+    final categories = await CategoryRepositoryImpl(db).all();
     expect(categories.map((c) => c.name), initialCategories.map((c) => c.$1));
 
     final comida = categories.firstWhere((c) => c.name == 'Comida');
@@ -60,10 +60,10 @@ void main() {
     addTearDown(() => dir.delete(recursive: true));
 
     var reopened = await AppDatabase.openAt(path);
-    final beforeIds = (await CategoryRepository(
+    final beforeIds = (await CategoryRepositoryImpl(
       reopened,
     ).all()).map((c) => c.id).toList();
-    await AccountRepository(reopened).create(
+    await AccountRepositoryImpl(reopened).create(
       name: 'Efectivo',
       kind: 'Dinero en mano',
       iconKey: 'money',
@@ -74,10 +74,10 @@ void main() {
     reopened = await AppDatabase.openAt(path);
     addTearDown(reopened.close);
 
-    final afterIds = (await CategoryRepository(
+    final afterIds = (await CategoryRepositoryImpl(
       reopened,
     ).all()).map((c) => c.id).toList();
     expect(afterIds, beforeIds, reason: 'no debe re-sembrar categorías');
-    expect(await AccountRepository(reopened).all(), hasLength(1));
+    expect(await AccountRepositoryImpl(reopened).all(), hasLength(1));
   });
 }

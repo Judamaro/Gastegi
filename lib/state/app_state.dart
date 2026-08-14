@@ -6,12 +6,16 @@ import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/utils/date_utils.dart';
 import 'package:gastegi/core/utils/formatters.dart';
-import 'package:gastegi/data/account_repository.dart';
-import 'package:gastegi/data/category_repository.dart';
-import 'package:gastegi/data/expense_repository.dart';
 import 'package:gastegi/features/accounts/domain/entities/account.dart';
+import 'package:gastegi/features/accounts/domain/failures.dart';
+import 'package:gastegi/features/accounts/domain/repositories/account_repository.dart';
+import 'package:gastegi/features/accounts/domain/usecases/save_account.dart';
+import 'package:gastegi/features/accounts/domain/usecases/transfer_between_accounts.dart';
 import 'package:gastegi/features/categories/domain/entities/category.dart';
+import 'package:gastegi/features/categories/domain/repositories/category_repository.dart';
 import 'package:gastegi/features/expenses/domain/entities/expense.dart';
+import 'package:gastegi/features/expenses/domain/repositories/expense_repository.dart';
+import 'package:gastegi/features/expenses/domain/usecases/save_expense.dart';
 
 enum Screen { home, history, catDetail, accounts, budgets, add }
 
@@ -60,7 +64,10 @@ class AppState extends ChangeNotifier {
     required this.accountRepo,
     required this.expenseRepo,
     DateTime Function()? clock,
-  }) : _clock = clock ?? DateTime.now {
+  }) : _clock = clock ?? DateTime.now,
+       _saveAccount = SaveAccount(accountRepo),
+       _saveExpense = SaveExpense(expenseRepo),
+       _transfer = TransferBetweenAccounts(accountRepo) {
     final now = _clock();
     _today = dateOnly(now);
     _monthAnchor = monthStart(now);
@@ -70,6 +77,10 @@ class AppState extends ChangeNotifier {
   final CategoryRepository categoryRepo;
   final AccountRepository accountRepo;
   final ExpenseRepository expenseRepo;
+
+  final SaveAccount _saveAccount;
+  final SaveExpense _saveExpense;
+  final TransferBetweenAccounts _transfer;
 
   /// Inyectable para que los tests no dependan del día real.
   final DateTime Function() _clock;
@@ -125,7 +136,7 @@ class AppState extends ChangeNotifier {
   String afKind = '';
   String afBalance = '';
   String afIconKey = 'wallet';
-  String? afError;
+  AccountFailure? afError;
   String? pendingDeleteId;
 
   /// Gastos asociados a la cuenta que se está a punto de borrar; decide si la
@@ -469,18 +480,16 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> doTransfer() async {
-    final amount = trAmtValue;
-    final from = trFromId;
-    final to = trToId;
-    if (from == null || to == null || from == to || amount <= 0) return;
-    await _write(
-      () => accountRepo.transfer(
-        fromId: from,
-        toId: to,
-        amount: amount,
+    var done = false;
+    await _write(() async {
+      done = await _transfer(
+        fromId: trFromId,
+        toId: trToId,
+        amount: trAmtValue,
         date: _today,
-      ),
-    );
+      );
+    });
+    if (!done) return;
     transferOpen = false;
     trAmt = '';
     notifyListeners();
@@ -527,16 +536,14 @@ class AppState extends ChangeNotifier {
     if (saveDisabled) return;
     final category = categoryOf(addCat!);
     if (category == null) return;
-    final value = addAmountValue;
-    final desc = addDesc.trim().isEmpty ? category.name : addDesc.trim();
 
     await _write(
-      () => expenseRepo.create(
+      () => _saveExpense(
         date: addDate,
-        description: desc,
-        categoryId: category.id,
+        description: addDesc,
+        category: category,
         accountId: addAccountId,
-        amount: value,
+        amount: addAmountValue,
       ),
     );
 
@@ -592,38 +599,21 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> submitAccountForm() async {
-    final name = afName.trim();
-    if (name.isEmpty) {
-      afError = 'Ponle un nombre a la cuenta';
-      notifyListeners();
-      return;
-    }
-    if (await accountRepo.nameExists(name, exceptId: editingAccountId)) {
-      afError = 'Ya tienes una cuenta con ese nombre';
-      notifyListeners();
-      return;
-    }
-
-    final balance = _parseAmount(afBalance);
-    final id = editingAccountId;
+    AccountFailure? failure;
     await _write(() async {
-      if (id == null) {
-        await accountRepo.create(
-          name: name,
-          kind: afKind.trim(),
-          iconKey: afIconKey,
-          initialBalance: balance,
-        );
-      } else {
-        await accountRepo.update(
-          id,
-          name: name,
-          kind: afKind.trim(),
-          iconKey: afIconKey,
-          balance: balance,
-        );
-      }
+      failure = await _saveAccount(
+        id: editingAccountId,
+        name: afName,
+        kind: afKind,
+        iconKey: afIconKey,
+        balance: _parseAmount(afBalance),
+      );
     });
+    if (failure != null) {
+      afError = failure;
+      notifyListeners();
+      return;
+    }
 
     accountFormOpen = false;
     editingAccountId = null;

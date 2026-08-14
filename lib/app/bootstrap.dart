@@ -1,9 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:gastegi/app/config/app_config.dart';
 import 'package:gastegi/core/storage/app_database.dart';
-import 'package:gastegi/data/account_repository.dart';
-import 'package:gastegi/data/category_repository.dart';
-import 'package:gastegi/data/expense_repository.dart';
+import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
+import 'package:gastegi/features/categories/data/repositories/category_repository_impl.dart';
+import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
 import 'package:gastegi/state/app_state.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
@@ -23,9 +23,9 @@ Future<AppState> bootstrap() async {
 
   final db = await AppDatabase.open();
   final state = AppState(
-    categoryRepo: CategoryRepository(db),
-    accountRepo: AccountRepository(db),
-    expenseRepo: ExpenseRepository(db),
+    categoryRepo: CategoryRepositoryImpl(db),
+    accountRepo: AccountRepositoryImpl(db),
+    expenseRepo: ExpenseRepositoryImpl(db),
   );
   await state.load();
 

@@ -13,6 +13,7 @@ import 'package:gastegi/core/widgets/kicker.dart';
 import 'package:gastegi/core/widgets/primary_button.dart';
 import 'package:gastegi/core/widgets/secondary_button.dart';
 import 'package:gastegi/features/accounts/domain/entities/account.dart';
+import 'package:gastegi/features/accounts/presentation/account_failure_message.dart';
 import 'package:gastegi/state/app_state.dart';
 
 /// Cuentas: saldo total, alta y edición de cuentas, y transferencias.
@@ -302,7 +303,7 @@ class _AccountForm extends StatelessWidget {
         ),
         if (state.afError != null)
           Text(
-            state.afError!,
+            accountFailureMessage(state.afError!),
             style: const TextStyle(fontSize: 12, color: AppColors.accent),
           ),
         Row(

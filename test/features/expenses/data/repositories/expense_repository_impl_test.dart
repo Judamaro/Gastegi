@@ -1,23 +1,23 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gastegi/core/storage/balances.dart';
-import 'package:gastegi/data/account_repository.dart';
-import 'package:gastegi/data/category_repository.dart';
-import 'package:gastegi/data/expense_repository.dart';
+import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
+import 'package:gastegi/features/categories/data/repositories/category_repository_impl.dart';
+import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-import '../helpers/test_db.dart';
+import '../../../../helpers/test_db.dart';
 
 void main() {
   late Database db;
-  late ExpenseRepository expenses;
-  late AccountRepository accounts;
+  late ExpenseRepositoryImpl expenses;
+  late AccountRepositoryImpl accounts;
   late String categoryId;
 
   setUp(() async {
     db = await openTestDb();
-    expenses = ExpenseRepository(db);
-    accounts = AccountRepository(db);
-    categoryId = (await CategoryRepository(db).all()).first.id;
+    expenses = ExpenseRepositoryImpl(db);
+    accounts = AccountRepositoryImpl(db);
+    categoryId = (await CategoryRepositoryImpl(db).all()).first.id;
   });
   tearDown(() async => db.close());
 

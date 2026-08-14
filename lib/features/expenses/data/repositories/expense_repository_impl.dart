@@ -2,12 +2,13 @@ import 'package:gastegi/core/storage/balances.dart';
 import 'package:gastegi/core/utils/date_utils.dart';
 import 'package:gastegi/features/expenses/data/models/expense_model.dart';
 import 'package:gastegi/features/expenses/domain/entities/expense.dart';
+import 'package:gastegi/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
 /// Lectura y escritura de gastos.
-class ExpenseRepository {
-  const ExpenseRepository(this._db);
+class ExpenseRepositoryImpl implements ExpenseRepository {
+  const ExpenseRepositoryImpl(this._db);
 
   final Database _db;
   static const _uuid = Uuid();
@@ -17,6 +18,7 @@ class ExpenseRepository {
   /// El `LEFT JOIN` sobre cuentas **no** filtra los tombstones a propósito: así
   /// el historial de un gasto sigue mostrando el nombre de su cuenta aunque el
   /// usuario la haya borrado después.
+  @override
   Future<List<Expense>> since(DateTime from) async {
     final rows = await _db.rawQuery(
       '''
@@ -34,6 +36,7 @@ class ExpenseRepository {
 
   /// Cuántos gastos hay en total. Distingue "todavía no has registrado nada"
   /// de "no hay nada en el periodo que estás mirando".
+  @override
   Future<int> count() async =>
       Sqflite.firstIntValue(
         await _db.rawQuery(
@@ -43,6 +46,7 @@ class ExpenseRepository {
       0;
 
   /// Total gastado por mes desde [from], indexado por `YYYY-MM`.
+  @override
   Future<Map<String, double>> monthlyTotals({required DateTime from}) async {
     final rows = await _db.rawQuery(
       '''
@@ -61,6 +65,7 @@ class ExpenseRepository {
 
   /// Inserta el gasto y recalcula saldos en una sola transacción: si algo
   /// falla, no queda un gasto sin reflejar en el saldo de su cuenta.
+  @override
   Future<String> create({
     required DateTime date,
     required String description,
@@ -88,6 +93,7 @@ class ExpenseRepository {
 
   /// Borrado lógico: la fila sobrevive como tombstone para que el borrado se
   /// pueda propagar cuando exista sincronización.
+  @override
   Future<void> softDelete(String id) async {
     final now = DateTime.now().millisecondsSinceEpoch;
     await _db.transaction((txn) async {
