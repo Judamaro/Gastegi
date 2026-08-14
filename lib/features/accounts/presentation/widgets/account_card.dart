@@ -1,24 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:gastegi/app/state/app_state.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_elevation.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/app/theme/app_spacing.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
+import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/core/widgets/app_icon_button.dart';
 import 'package:gastegi/features/accounts/domain/entities/account.dart';
+import 'package:gastegi/features/accounts/presentation/providers/account_form_notifier.dart';
 
-class AccountCard extends StatelessWidget {
-  const AccountCard({super.key, required this.state, required this.account});
+/// Fila de una cuenta: icono, nombre, tipo y saldo.
+class AccountCard extends ConsumerWidget {
+  const AccountCard({super.key, required this.account});
 
-  final AppState state;
   final Account account;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final form = ref.read(accountFormProvider.notifier);
     final negative = account.balance < 0;
     return InkWell(
-      onTap: () => state.openAccountForm(account),
+      onTap: () => form.open(account),
       borderRadius: BorderRadius.circular(AppRadius.md),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.space3),
@@ -60,7 +63,7 @@ class AccountCard extends StatelessWidget {
               ),
             ),
             Text(
-              '${negative ? '−' : ''}${state.fmt(account.balance.abs())}',
+              '${negative ? '−' : ''}${formatAmount(account.balance.abs())}',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -69,7 +72,7 @@ class AccountCard extends StatelessWidget {
             ),
             AppIconButton(
               icon: AppIcons.x,
-              onTap: () => state.askDeleteAccount(account.id),
+              onTap: () => form.askDelete(account.id),
             ),
           ],
         ),

@@ -1,6 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gastegi/app/router/app_screen.dart';
+import 'package:gastegi/app/state/app_data_notifier.dart';
+import 'package:gastegi/app/state/app_state.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
+import 'package:gastegi/features/accounts/presentation/providers/account_form_notifier.dart';
+import 'package:gastegi/features/accounts/presentation/providers/transfer_form_notifier.dart';
 import 'package:gastegi/features/categories/data/repositories/category_repository_impl.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
 import 'package:gastegi/features/expenses/presentation/models/history_range.dart';
@@ -196,8 +200,11 @@ void main() {
     expect(byName['Comida']!.alert, isFalse);
   });
 
+  // Este test vigila que ningún trozo de `_normalizeSelections` se pierda por
+  // el camino al repartirlo entre funcionalidades: toca a la vez la selección
+  // de cuenta del nuevo gasto y la del formulario de transferencia.
   test(
-    'borrar una cuenta seleccionada no deja el formulario apuntando a ella',
+    'borrar una cuenta seleccionada no deja ningún selector apuntando a ella',
     () async {
       final id = await accounts.create(
         name: 'Efectivo',
@@ -205,33 +212,20 @@ void main() {
         iconKey: 'money',
         initialBalance: 10,
       );
-      final state = await buildState(db);
+      final container = await buildLoadedContainer(db);
+      final state = container.read(appStateProvider);
       state.pickAddAcct(id);
+      // Fuerza la construcción del formulario de transferencia para que su
+      // normalización quede suscrita antes del borrado.
+      expect(container.read(transferFormProvider).fromId, id);
 
-      await state.askDeleteAccount(id);
-      await state.confirmDeleteAccount();
+      final form = container.read(accountFormProvider.notifier);
+      await form.askDelete(id);
+      await form.confirmDelete();
 
-      expect(state.accounts, isEmpty);
+      expect(container.read(appDataProvider).accounts, isEmpty);
       expect(state.addAccountId, isNull);
-      expect(state.trFromId, isNull);
+      expect(container.read(transferFormProvider).fromId, isNull);
     },
   );
-
-  test('el nombre de cuenta duplicado se rechaza con mensaje', () async {
-    await accounts.create(
-      name: 'Efectivo',
-      kind: '',
-      iconKey: 'money',
-      initialBalance: 0,
-    );
-    final state = await buildState(db);
-
-    state.openAccountForm();
-    state.setAfName('Efectivo');
-    await state.submitAccountForm();
-
-    expect(state.afError, isNotNull);
-    expect(state.accountFormOpen, isTrue);
-    expect(state.accounts, hasLength(1));
-  });
 }

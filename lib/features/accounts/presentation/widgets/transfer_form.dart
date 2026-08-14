@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:gastegi/app/state/app_state.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/app_chip.dart';
 import 'package:gastegi/core/widgets/app_input.dart';
@@ -7,14 +8,18 @@ import 'package:gastegi/core/widgets/field_label.dart';
 import 'package:gastegi/core/widgets/kicker.dart';
 import 'package:gastegi/core/widgets/primary_button.dart';
 import 'package:gastegi/core/widgets/secondary_button.dart';
+import 'package:gastegi/features/accounts/presentation/providers/transfer_form_notifier.dart';
 
-class TransferForm extends StatelessWidget {
-  const TransferForm({super.key, required this.state});
-
-  final AppState state;
+/// Transferencia entre dos cuentas, en línea bajo la lista.
+class TransferForm extends ConsumerWidget {
+  const TransferForm({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accounts = ref.watch(appDataProvider.select((d) => d.accounts));
+    final state = ref.watch(transferFormProvider);
+    final form = ref.read(transferFormProvider.notifier);
+
     return AppCard(
       gap: 12,
       elevated: true,
@@ -29,11 +34,11 @@ class TransferForm extends StatelessWidget {
               spacing: 6,
               runSpacing: 6,
               children: [
-                for (final a in state.accounts)
+                for (final a in accounts)
                   AppChip(
                     label: a.name,
-                    active: state.trFromId == a.id,
-                    onTap: () => state.pickTrFrom(a.id),
+                    active: state.fromId == a.id,
+                    onTap: () => form.pickFrom(a.id),
                   ),
               ],
             ),
@@ -48,11 +53,11 @@ class TransferForm extends StatelessWidget {
               spacing: 6,
               runSpacing: 6,
               children: [
-                for (final a in state.accounts)
+                for (final a in accounts)
                   AppChip(
                     label: a.name,
-                    active: state.trToId == a.id,
-                    onTap: () => state.pickTrTo(a.id),
+                    active: state.toId == a.id,
+                    onTap: () => form.pickTo(a.id),
                   ),
               ],
             ),
@@ -68,7 +73,7 @@ class TransferForm extends StatelessWidget {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
-              onChanged: state.setTrAmt,
+              onChanged: form.setAmount,
             ),
           ],
         ),
@@ -76,13 +81,10 @@ class TransferForm extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.end,
           spacing: 8,
           children: [
-            SecondaryButton(label: 'Cancelar', onTap: state.closeTransfer),
+            SecondaryButton(label: 'Cancelar', onTap: form.close),
             SizedBox(
               width: 110,
-              child: PrimaryButton(
-                label: 'Transferir',
-                onTap: state.doTransfer,
-              ),
+              child: PrimaryButton(label: 'Transferir', onTap: form.submit),
             ),
           ],
         ),

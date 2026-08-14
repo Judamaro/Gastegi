@@ -1,24 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:gastegi/app/state/app_state.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
+import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/app_icon_button.dart';
 import 'package:gastegi/core/widgets/kicker.dart';
 import 'package:gastegi/core/widgets/primary_button.dart';
+import 'package:gastegi/features/accounts/presentation/providers/account_form_notifier.dart';
+import 'package:gastegi/features/accounts/presentation/providers/transfer_form_notifier.dart';
 import 'package:gastegi/features/accounts/presentation/widgets/account_card.dart';
 import 'package:gastegi/features/accounts/presentation/widgets/account_form.dart';
 import 'package:gastegi/features/accounts/presentation/widgets/delete_account_confirm.dart';
 import 'package:gastegi/features/accounts/presentation/widgets/transfer_form.dart';
 
 /// Cuentas: saldo total, alta y edición de cuentas, y transferencias.
-class AccountsPage extends StatelessWidget {
-  const AccountsPage({super.key, required this.state});
-
-  final AppState state;
+class AccountsPage extends ConsumerWidget {
+  const AccountsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final data = ref.watch(appDataProvider);
+    final form = ref.watch(accountFormProvider);
+    final transferOpen = ref.watch(transferFormProvider.select((s) => s.open));
+    final openForm = ref.read(accountFormProvider.notifier).open;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       child: Column(
@@ -33,10 +40,7 @@ class AccountsPage extends StatelessWidget {
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
                 ),
               ),
-              AppIconButton(
-                icon: AppIcons.plusCircle,
-                onTap: state.openAccountForm,
-              ),
+              AppIconButton(icon: AppIcons.plusCircle, onTap: openForm),
             ],
           ),
           Column(
@@ -45,7 +49,7 @@ class AccountsPage extends StatelessWidget {
               const Kicker('Saldo total', size: 11),
               const SizedBox(height: 4),
               Text(
-                state.fmt(state.patrimonio),
+                formatAmount(data.patrimonio),
                 style: const TextStyle(
                   fontSize: 34,
                   fontWeight: FontWeight.w500,
@@ -55,7 +59,7 @@ class AccountsPage extends StatelessWidget {
               ),
             ],
           ),
-          if (state.accounts.isEmpty && !state.accountFormOpen)
+          if (data.accounts.isEmpty && !form.open)
             AppCard(
               gap: 10,
               children: [
@@ -64,10 +68,7 @@ class AccountsPage extends StatelessWidget {
                   'Crea una cuenta para poder registrar gastos y ver tu saldo.',
                   style: TextStyle(fontSize: 13, color: AppColors.neutral500),
                 ),
-                PrimaryButton(
-                  label: 'Crear cuenta',
-                  onTap: state.openAccountForm,
-                ),
+                PrimaryButton(label: 'Crear cuenta', onTap: openForm),
               ],
             )
           else
@@ -75,23 +76,22 @@ class AccountsPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               spacing: 10,
               children: [
-                for (final a in state.accounts) ...[
-                  AccountCard(state: state, account: a),
-                  if (state.pendingDeleteId == a.id)
-                    DeleteAccountConfirm(state: state, account: a),
+                for (final a in data.accounts) ...[
+                  AccountCard(account: a),
+                  if (form.pendingDeleteId == a.id)
+                    DeleteAccountConfirm(account: a),
                 ],
               ],
             ),
-          if (state.accountFormOpen) AccountForm(state: state),
+          if (form.open) const AccountForm(),
           // Con menos de dos cuentas no hay nada entre lo que transferir.
-          if (state.canTransfer)
+          if (data.canTransfer)
             PrimaryButton(
               label: 'Transferir entre cuentas',
               icon: AppIcons.arrowsLeftRight,
-              onTap: state.openTransfer,
+              onTap: ref.read(transferFormProvider.notifier).open,
             ),
-          if (state.transferOpen && state.canTransfer)
-            TransferForm(state: state),
+          if (transferOpen && data.canTransfer) const TransferForm(),
         ],
       ),
     );

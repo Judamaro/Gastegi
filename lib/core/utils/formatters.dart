@@ -11,3 +11,13 @@ String formatAmount(double n) => _decimal.format(n.round());
 /// `double.nan.round()` resultante lanza `UnsupportedError`.
 int percentOf(double part, double whole) =>
     whole > 0 ? (part / whole * 100).round() : 0;
+
+/// Lee un importe tecleado por el usuario. La coma es el separador decimal en
+/// español; `double.tryParse` solo entiende el punto.
+double parseAmount(String raw) =>
+    double.tryParse(raw.replaceAll(',', '.')) ?? 0;
+
+/// Importe sin separadores de miles, para prellenar un campo editable: lo que
+/// se escribe en un campo tiene que poder volver a leerse con [parseAmount].
+String plainAmount(double n) =>
+    n == n.roundToDouble() ? n.round().toString() : n.toString();

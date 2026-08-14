@@ -5,12 +5,7 @@ import 'package:gastegi/app/state/app_data.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/core/utils/date_utils.dart';
 import 'package:gastegi/core/utils/formatters.dart';
-import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:gastegi/features/accounts/domain/entities/account.dart';
-import 'package:gastegi/features/accounts/domain/failures.dart';
-import 'package:gastegi/features/accounts/domain/repositories/account_repository.dart';
-import 'package:gastegi/features/accounts/domain/usecases/save_account.dart';
-import 'package:gastegi/features/accounts/domain/usecases/transfer_between_accounts.dart';
 import 'package:gastegi/features/budgets/presentation/models/budget_row.dart';
 import 'package:gastegi/features/categories/domain/entities/category.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
@@ -39,12 +34,8 @@ class AppState extends ChangeNotifier {
   final Ref _ref;
 
   AppData get _data => _ref.read(appDataProvider);
-  AccountRepository get _accountRepo => _ref.read(accountRepositoryProvider);
-  SaveAccount get _saveAccount => SaveAccount(_accountRepo);
   SaveExpense get _saveExpense =>
       SaveExpense(_ref.read(expenseRepositoryProvider));
-  TransferBetweenAccounts get _transfer =>
-      TransferBetweenAccounts(_accountRepo);
 
   // ── Estado de UI ───────────────────────────────────────────────────────
 
@@ -54,29 +45,11 @@ class AppState extends ChangeNotifier {
   String filterCat = 'Todas';
   HistoryRange filterRange = HistoryRange.month;
 
-  bool transferOpen = false;
-  String? trFromId;
-  String? trToId;
-  String trAmt = '';
-
   String addAmount = '';
   String? addCat;
   String? addAccountId;
   String addDesc = '';
   late DateTime addDate;
-
-  bool accountFormOpen = false;
-  String? editingAccountId;
-  String afName = '';
-  String afKind = '';
-  String afBalance = '';
-  String afIconKey = 'wallet';
-  AccountFailure? afError;
-  String? pendingDeleteId;
-
-  /// Gastos asociados a la cuenta que se está a punto de borrar; decide si la
-  /// confirmación ofrece archivar.
-  int pendingDeleteExpenses = 0;
 
   // Delegados a `core/utils/formatters.dart`. Siguen aquí porque las pantallas
   // todavía llaman `state.fmt(...)`; desaparecen cuando dejen de recibir el
@@ -94,14 +67,6 @@ class AppState extends ChangeNotifier {
 
   void _normalizeSelections() {
     final ids = accounts.map((a) => a.id).toSet();
-    if (trFromId == null || !ids.contains(trFromId)) {
-      trFromId = accounts.isNotEmpty ? accounts.first.id : null;
-    }
-    if (trToId == null || !ids.contains(trToId) || trToId == trFromId) {
-      trToId = accounts.length > 1
-          ? accounts.firstWhere((a) => a.id != trFromId).id
-          : null;
-    }
     if (addAccountId != null && !ids.contains(addAccountId)) {
       addAccountId = null;
     }
@@ -209,13 +174,9 @@ class AppState extends ChangeNotifier {
     ];
   }
 
-  // ── Transferencias ─────────────────────────────────────────────────────
-
-  double get trAmtValue => _parseAmount(trAmt);
-
   // ── Nuevo gasto ────────────────────────────────────────────────────────
 
-  double get addAmountValue => _parseAmount(addAmount);
+  double get addAmountValue => parseAmount(addAmount);
 
   bool get saveDisabled =>
       !(addAmountValue > 0 && addCat != null && addAccountId != null);
@@ -233,9 +194,6 @@ class AppState extends ChangeNotifier {
   void setAddDateToday() => setAddDate(today);
 
   void setAddDateYesterday() => setAddDate(daysBefore(today, 1));
-
-  double _parseAmount(String raw) =>
-      double.tryParse(raw.replaceAll(',', '.')) ?? 0;
 
   // ── Acciones de navegación y filtros ───────────────────────────────────
 
@@ -262,50 +220,6 @@ class AppState extends ChangeNotifier {
 
   void setFilterRange(HistoryRange range) {
     filterRange = range;
-    notifyListeners();
-  }
-
-  // ── Transferencias ─────────────────────────────────────────────────────
-
-  void openTransfer() {
-    transferOpen = true;
-    notifyListeners();
-  }
-
-  void closeTransfer() {
-    transferOpen = false;
-    trAmt = '';
-    notifyListeners();
-  }
-
-  void pickTrFrom(String id) {
-    trFromId = id;
-    notifyListeners();
-  }
-
-  void pickTrTo(String id) {
-    trToId = id;
-    notifyListeners();
-  }
-
-  void setTrAmt(String value) {
-    trAmt = value;
-    notifyListeners();
-  }
-
-  Future<void> doTransfer() async {
-    var done = false;
-    await _write(() async {
-      done = await _transfer(
-        fromId: trFromId,
-        toId: trToId,
-        amount: trAmtValue,
-        date: today,
-      );
-    });
-    if (!done) return;
-    transferOpen = false;
-    trAmt = '';
     notifyListeners();
   }
 
@@ -369,106 +283,6 @@ class AppState extends ChangeNotifier {
     screen = Screen.history;
     notifyListeners();
   }
-
-  // ── Formulario de cuentas ──────────────────────────────────────────────
-
-  void openAccountForm([Account? account]) {
-    accountFormOpen = true;
-    pendingDeleteId = null;
-    editingAccountId = account?.id;
-    afName = account?.name ?? '';
-    afKind = account?.kind ?? '';
-    afBalance = account == null ? '' : _plain(account.balance);
-    afIconKey = account?.iconKey ?? 'wallet';
-    afError = null;
-    notifyListeners();
-  }
-
-  void closeAccountForm() {
-    accountFormOpen = false;
-    editingAccountId = null;
-    afError = null;
-    notifyListeners();
-  }
-
-  void setAfName(String value) {
-    afName = value;
-    afError = null;
-    notifyListeners();
-  }
-
-  void setAfKind(String value) {
-    afKind = value;
-    notifyListeners();
-  }
-
-  void setAfBalance(String value) {
-    afBalance = value;
-    notifyListeners();
-  }
-
-  void pickAfIcon(String key) {
-    afIconKey = key;
-    notifyListeners();
-  }
-
-  Future<void> submitAccountForm() async {
-    AccountFailure? failure;
-    await _write(() async {
-      failure = await _saveAccount(
-        id: editingAccountId,
-        name: afName,
-        kind: afKind,
-        iconKey: afIconKey,
-        balance: _parseAmount(afBalance),
-      );
-    });
-    if (failure != null) {
-      afError = failure;
-      notifyListeners();
-      return;
-    }
-
-    accountFormOpen = false;
-    editingAccountId = null;
-    afError = null;
-    notifyListeners();
-  }
-
-  Future<void> askDeleteAccount(String id) async {
-    pendingDeleteId = id;
-    accountFormOpen = false;
-    pendingDeleteExpenses = await _accountRepo.expenseCount(id);
-    notifyListeners();
-  }
-
-  void cancelDeleteAccount() {
-    pendingDeleteId = null;
-    pendingDeleteExpenses = 0;
-    notifyListeners();
-  }
-
-  Future<void> confirmDeleteAccount() async {
-    final id = pendingDeleteId;
-    if (id == null) return;
-    await _write(() => _accountRepo.softDelete(id));
-    pendingDeleteId = null;
-    pendingDeleteExpenses = 0;
-    notifyListeners();
-  }
-
-  Future<void> archivePendingAccount() async {
-    final id = pendingDeleteId;
-    if (id == null) return;
-    await _write(() => _accountRepo.setArchived(id, true));
-    pendingDeleteId = null;
-    pendingDeleteExpenses = 0;
-    notifyListeners();
-  }
-
-  /// Saldo sin separadores de miles, para prellenar el campo editable.
-  String _plain(double n) =>
-      n == n.roundToDouble() ? n.round().toString() : n.toString();
 }
 
 /// El estado de interfaz de la app.

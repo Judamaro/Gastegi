@@ -23,7 +23,7 @@ class Shell extends ConsumerWidget {
       Screen.home => HomePage(state: state),
       Screen.history => HistoryPage(state: state),
       Screen.catDetail => CategoryDetailPage(state: state),
-      Screen.accounts => AccountsPage(state: state),
+      Screen.accounts => const AccountsPage(),
       Screen.budgets => BudgetsPage(state: state),
       Screen.add => AddExpensePage(state: state),
     };
