@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gastegi/app/app.dart';
-import 'package:gastegi/app/state/app_state.dart';
+import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -23,7 +23,7 @@ void main() {
   tearDown(() async => db.close());
 
   // Viewport de teléfono (390×844), como el marco iOS del diseño.
-  Future<AppState> pumpApp(WidgetTester tester) async {
+  Future<ProviderContainer> pumpApp(WidgetTester tester) async {
     tester.view.physicalSize = const Size(390 * 3, 844 * 3);
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
@@ -36,7 +36,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    return container.read(appStateProvider);
+    return container;
   }
 
   testWidgets('la app arranca vacía y sin excepciones', (tester) async {
@@ -102,7 +102,7 @@ void main() {
       iconKey: 'money',
       initialBalance: 200,
     );
-    final state = await pumpApp(tester);
+    final container = await pumpApp(tester);
 
     await tester.tap(find.text('Agregar'));
     await tester.pumpAndSettle();
@@ -125,6 +125,6 @@ void main() {
     expect(find.text('Buscar gasto…'), findsOneWidget);
     expect(find.text('HOY'), findsOneWidget);
     expect(find.text('Comida · Efectivo'), findsOneWidget);
-    expect(state.patrimonio, 150);
+    expect(container.read(appDataProvider).patrimonio, 150);
   });
 }

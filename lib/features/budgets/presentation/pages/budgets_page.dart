@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:gastegi/app/state/app_state.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
+import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/color_dot.dart';
 import 'package:gastegi/core/widgets/progress_bar.dart';
 
 /// Presupuestos: progreso por categoría con alertas de umbral y exceso.
-class BudgetsPage extends StatelessWidget {
-  const BudgetsPage({super.key, required this.state});
-
-  final AppState state;
+class BudgetsPage extends ConsumerWidget {
+  const BudgetsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(appDataProvider);
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       child: Column(
@@ -26,8 +27,8 @@ class BudgetsPage extends StatelessWidget {
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
           ),
           Text(
-            '${state.currentMonthName} · ${state.fmt(state.total)}'
-            ' de ${state.fmt(state.totalBudget)} presupuestados',
+            '${state.currentMonthName} · ${formatAmount(state.total)}'
+            ' de ${formatAmount(state.totalBudget)} presupuestados',
             style: const TextStyle(fontSize: 13, color: AppColors.neutral500),
           ),
           Column(
@@ -78,7 +79,7 @@ class BudgetsPage extends StatelessWidget {
                             ),
                           ),
                         Text(
-                          '${state.fmt(b.spent)} / ${state.fmt(b.category.budget)}',
+                          '${formatAmount(b.spent)} / ${formatAmount(b.category.budget)}',
                           style: const TextStyle(
                             fontSize: 12,
                             color: AppColors.neutral500,
@@ -89,8 +90,8 @@ class BudgetsPage extends StatelessWidget {
                     ProgressBar(fraction: b.ratio, color: b.barColor),
                     Text(
                       b.over
-                          ? 'Excedido por ${state.fmt(b.spent - b.category.budget)}'
-                          : 'Quedan ${state.fmt(b.category.budget - b.spent)} · ${(b.ratio * 100).round()}% usado',
+                          ? 'Excedido por ${formatAmount(b.spent - b.category.budget)}'
+                          : 'Quedan ${formatAmount(b.category.budget - b.spent)} · ${(b.ratio * 100).round()}% usado',
                       style: const TextStyle(
                         fontSize: 11,
                         color: AppColors.neutral600,

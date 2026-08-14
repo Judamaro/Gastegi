@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
-import 'package:gastegi/app/state/app_state.dart';
 import 'package:gastegi/core/storage/app_database.dart';
 import 'package:gastegi/core/storage/database_provider.dart';
 import 'package:gastegi/core/utils/clock.dart';
@@ -55,9 +54,4 @@ Future<ProviderContainer> buildLoadedContainer(
   final container = buildContainer(db, now: now);
   await container.read(appDataProvider.notifier).load();
   return container;
-}
-
-Future<AppState> buildState(Database db, {DateTime? now}) async {
-  final container = await buildLoadedContainer(db, now: now);
-  return container.read(appStateProvider);
 }

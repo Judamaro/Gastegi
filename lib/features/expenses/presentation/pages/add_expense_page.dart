@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gastegi/app/router/app_screen.dart';
+import 'package:gastegi/app/router/nav_notifier.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
-import 'package:gastegi/app/state/app_state.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
@@ -25,7 +25,7 @@ class AddExpensePage extends ConsumerWidget {
     final data = ref.watch(appDataProvider);
     final state = ref.watch(addExpenseProvider);
     final form = ref.read(addExpenseProvider.notifier);
-    final nav = ref.read(appStateProvider);
+    final nav = ref.read(navProvider.notifier);
 
     final today = data.today;
     final isToday = sameDay(state.date, today);

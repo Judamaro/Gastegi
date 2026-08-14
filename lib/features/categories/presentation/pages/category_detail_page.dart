@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gastegi/app/router/app_screen.dart';
-import 'package:gastegi/app/state/app_state.dart';
+import 'package:gastegi/app/router/nav_notifier.dart';
+import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
+import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/core/widgets/amount_tile.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/app_icon_button.dart';
@@ -11,21 +14,21 @@ import 'package:gastegi/core/widgets/charts/bar_chart.dart';
 import 'package:gastegi/core/widgets/color_dot.dart';
 import 'package:gastegi/core/widgets/kicker.dart';
 import 'package:gastegi/core/widgets/progress_bar.dart';
+import 'package:gastegi/features/categories/presentation/providers/selected_category.dart';
 
 /// Detalle de una categoría: total, presupuesto, barras semanales y gastos.
-class CategoryDetailPage extends StatelessWidget {
-  const CategoryDetailPage({super.key, required this.state});
-
-  final AppState state;
+class CategoryDetailPage extends ConsumerWidget {
+  const CategoryDetailPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final cat = state.selCategory;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cat = ref.watch(selectedCategoryProvider);
     // La categoría puede haber desaparecido bajo los pies de la pantalla.
     if (cat == null) return const SizedBox.shrink();
 
-    final catTotal = state.selCatTotal;
-    final expenses = state.selCatExpenses;
+    final state = ref.watch(appDataProvider);
+    final catTotal = ref.watch(selectedCategoryTotalProvider);
+    final expenses = ref.watch(selectedCategoryExpensesProvider);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
@@ -38,7 +41,7 @@ class CategoryDetailPage extends StatelessWidget {
             children: [
               AppIconButton(
                 icon: AppIcons.caretLeft,
-                onTap: () => state.goTo(Screen.home),
+                onTap: () => ref.read(navProvider.notifier).goTo(Screen.home),
               ),
               Expanded(
                 child: Text(
@@ -61,7 +64,7 @@ class CategoryDetailPage extends StatelessWidget {
                 spacing: 8,
                 children: [
                   Text(
-                    state.fmt(catTotal),
+                    formatAmount(catTotal),
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.w500,
@@ -72,7 +75,7 @@ class CategoryDetailPage extends StatelessWidget {
                   Flexible(
                     child: Text(
                       'en ${state.currentMonthName.toLowerCase()}'
-                      ' · ${state.pct(catTotal, state.total)}% del total',
+                      ' · ${percentOf(catTotal, state.total)}% del total',
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 13,
@@ -94,7 +97,7 @@ class CategoryDetailPage extends StatelessWidget {
                     color: cat.color,
                   ),
                   Text(
-                    'Presupuesto: ${state.fmt(catTotal)} de ${state.fmt(cat.budget)}',
+                    'Presupuesto: ${formatAmount(catTotal)} de ${formatAmount(cat.budget)}',
                     style: const TextStyle(
                       fontSize: 11,
                       color: AppColors.neutral500,
@@ -110,7 +113,9 @@ class CategoryDetailPage extends StatelessWidget {
               const Kicker('Por semana'),
               BarChart(
                 bars: [
-                  for (final (label, value) in state.selCatWeeks)
+                  for (final (label, value) in ref.watch(
+                    selectedCategoryWeeksProvider,
+                  ))
                     (label, value, cat.color),
                 ],
                 height: 96,
@@ -141,7 +146,7 @@ class CategoryDetailPage extends StatelessWidget {
                     title: e.desc,
                     subtitle:
                         '${state.dayLabelShortOf(e.date)} · ${e.accountName}',
-                    amount: state.fmt(e.val),
+                    amount: formatAmount(e.val),
                   ),
               ],
             ),

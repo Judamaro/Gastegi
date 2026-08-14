@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gastegi/app/router/app_screen.dart';
-import 'package:gastegi/app/state/app_state.dart';
+import 'package:gastegi/app/router/nav_notifier.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 
 /// Barra de pestañas inferior.
-class AppTabBar extends StatelessWidget {
-  const AppTabBar({super.key, required this.state});
-
-  final AppState state;
+class AppTabBar extends ConsumerWidget {
+  const AppTabBar({super.key});
 
   static const _tabs = [
     (Screen.home, AppIcons.house, AppIcons.houseFill, 'Inicio'),
@@ -19,7 +18,9 @@ class AppTabBar extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final current = ref.watch(navProvider);
+    final nav = ref.read(navProvider.notifier);
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
       decoration: const BoxDecoration(
@@ -37,9 +38,9 @@ class AppTabBar extends StatelessWidget {
                 // El detalle de categoría se abre desde Inicio, así que esa
                 // pestaña se queda encendida mientras se está dentro.
                 active:
-                    state.screen == screen ||
-                    (screen == Screen.home && state.screen == Screen.catDetail),
-                onTap: () => state.goTo(screen),
+                    current == screen ||
+                    (screen == Screen.home && current == Screen.catDetail),
+                onTap: () => nav.goTo(screen),
               ),
             ),
         ],

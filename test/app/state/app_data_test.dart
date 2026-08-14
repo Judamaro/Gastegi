@@ -1,9 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gastegi/app/state/app_data.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
+import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:gastegi/features/accounts/presentation/providers/account_form_notifier.dart';
 import 'package:gastegi/features/accounts/presentation/providers/transfer_form_notifier.dart';
 import 'package:gastegi/features/categories/data/repositories/category_repository_impl.dart';
+import 'package:gastegi/features/categories/presentation/providers/selected_category.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
 import 'package:gastegi/features/expenses/presentation/providers/add_expense_notifier.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -26,6 +29,9 @@ void main() {
   });
   tearDown(() async => db.close());
 
+  Future<AppData> loadData({DateTime? now}) async =>
+      (await buildLoadedContainer(db, now: now)).read(appDataProvider);
+
   Future<void> addExpense(
     DateTime date,
     double amount, {
@@ -42,12 +48,12 @@ void main() {
 
   group('app recién instalada', () {
     test('no produce NaN en ningún cálculo derivado', () async {
-      final state = await buildState(db);
+      final state = await loadData();
 
       expect(state.total, 0);
       expect(state.patrimonio, 0);
       expect(state.prevTotal, 0);
-      expect(state.pct(0, 0), 0);
+      expect(percentOf(0, 0), 0);
       expect(state.cmpNowFrac, 0);
       expect(state.cmpPrevFrac, 0);
       expect(state.canCompare, isFalse);
@@ -63,7 +69,7 @@ void main() {
     });
 
     test('trae las 6 categorías y ninguna cuenta', () async {
-      final state = await buildState(db);
+      final state = await loadData();
       expect(state.categories, hasLength(6));
       expect(state.accounts, isEmpty);
       expect(state.canTransfer, isFalse);
@@ -71,10 +77,10 @@ void main() {
   });
 
   test('dailyTotals tiene tantas posiciones como días el mes', () async {
-    final feb = await buildState(db, now: DateTime(2026, 2, 10));
+    final feb = await loadData(now: DateTime(2026, 2, 10));
     expect(feb.dailyTotals, hasLength(28));
 
-    final ago = await buildState(db, now: DateTime(2026, 8, 12));
+    final ago = await loadData(now: DateTime(2026, 8, 12));
     expect(ago.dailyTotals, hasLength(31));
   });
 
@@ -83,7 +89,7 @@ void main() {
     await addExpense(DateTime(2026, 8, 11), 50);
     await addExpense(DateTime(2026, 7, 20), 999);
 
-    final state = await buildState(db);
+    final state = await loadData();
 
     expect(state.total, 150);
     expect(state.prevTotal, 999);
@@ -94,13 +100,17 @@ void main() {
     expect(state.monthTotals, hasLength(6));
   });
 
-  test('selCatWeeks reparte hasta el último día real del mes', () async {
+  test('los cortes semanales llegan al último día real del mes', () async {
     await addExpense(DateTime(2026, 2, 25), 60);
-    final state = await buildState(db, now: DateTime(2026, 2, 10));
-    state.openCategory('Comida');
+    final container = await buildLoadedContainer(
+      db,
+      now: DateTime(2026, 2, 10),
+    );
+    container.read(selectedCategoryNameProvider.notifier).select('Comida');
 
-    // Febrero acaba el 28: el día 25 cae en la cuarta semana.
-    expect(state.selCatWeeks.last.$2, 60);
+    // Febrero acaba el 28: el día 25 cae en la cuarta semana. Con un corte
+    // fijo en el 28 se perdería.
+    expect(container.read(selectedCategoryWeeksProvider).last.$2, 60);
   });
 
   test('las alertas de presupuesto usan el umbral del 90 %', () async {
@@ -116,7 +126,7 @@ void main() {
       amount: 182,
     );
 
-    final state = await buildState(db);
+    final state = await loadData();
     final byName = {for (final b in state.budgetRows) b.category.name: b};
 
     expect(byName['Ocio']!.alert, isTrue);
