@@ -1,9 +1,8 @@
+import 'package:gastegi/data/balances.dart';
+import 'package:gastegi/models/models.dart';
+import 'package:gastegi/util/dates.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
-
-import '../models/models.dart';
-import '../util/dates.dart';
-import 'balances.dart';
 
 /// Lectura y escritura de cuentas y de las transferencias entre ellas.
 class AccountRepository {

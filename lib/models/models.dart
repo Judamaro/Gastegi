@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-import '../theme/phosphor_icons.dart';
+import 'package:gastegi/theme/phosphor_icons.dart';
 
 /// Modelos de dominio. Los ids son UUID de texto, no enteros autoincrementales:
 /// cuando la app sincronice con la nube, dos teléfonos generarían el mismo
@@ -8,6 +8,14 @@ import '../theme/phosphor_icons.dart';
 
 /// Categoría de gasto con su color, icono y presupuesto mensual.
 class Category {
+
+  factory Category.fromRow(Map<String, Object?> r) => Category(
+        id: r['id'] as String,
+        name: r['name'] as String,
+        color: Color(r['color'] as int),
+        icon: PhIcons.resolve(r['icon_key'] as String),
+        budget: (r['budget'] as num).toDouble(),
+      );
   const Category({
     required this.id,
     required this.name,
@@ -21,14 +29,6 @@ class Category {
   final Color color;
   final IconData icon;
   final double budget;
-
-  factory Category.fromRow(Map<String, Object?> r) => Category(
-        id: r['id'] as String,
-        name: r['name'] as String,
-        color: Color(r['color'] as int),
-        icon: PhIcons.resolve(r['icon_key'] as String),
-        budget: (r['budget'] as num).toDouble(),
-      );
 }
 
 /// Cuenta de dinero.
@@ -37,6 +37,16 @@ class Category {
 /// transferencias): nadie lo muta desde Dart, lo recalcula la BD. Ver
 /// `AccountRepository.recomputeBalances`.
 class Account {
+
+  factory Account.fromRow(Map<String, Object?> r) => Account(
+        id: r['id'] as String,
+        name: r['name'] as String,
+        kind: r['kind'] as String,
+        icon: PhIcons.resolve(r['icon_key'] as String),
+        balance: (r['balance'] as num).toDouble(),
+        initialBalance: (r['initial_balance'] as num).toDouble(),
+        archived: (r['archived'] as int) == 1,
+      );
   const Account({
     required this.id,
     required this.name,
@@ -54,21 +64,22 @@ class Account {
   final double balance;
   final double initialBalance;
   final bool archived;
-
-  factory Account.fromRow(Map<String, Object?> r) => Account(
-        id: r['id'] as String,
-        name: r['name'] as String,
-        kind: r['kind'] as String,
-        icon: PhIcons.resolve(r['icon_key'] as String),
-        balance: (r['balance'] as num).toDouble(),
-        initialBalance: (r['initial_balance'] as num).toDouble(),
-        archived: (r['archived'] as int) == 1,
-      );
 }
 
 /// Gasto individual. [cat] y [acct] son los nombres resueltos por el JOIN de la
 /// consulta, para que las pantallas sigan mostrando texto sin más búsquedas.
 class Expense {
+
+  factory Expense.fromRow(Map<String, Object?> r) => Expense(
+        id: r['id'] as String,
+        date: DateTime.parse(r['spent_on'] as String),
+        desc: r['description'] as String,
+        categoryId: r['category_id'] as String,
+        cat: r['category_name'] as String,
+        accountId: r['account_id'] as String?,
+        acct: (r['account_name'] as String?) ?? 'Sin cuenta',
+        val: (r['amount'] as num).toDouble(),
+      );
   const Expense({
     required this.id,
     required this.date,
@@ -95,15 +106,4 @@ class Expense {
 
   /// Día del mes; lo usan los cortes semanales del detalle de categoría.
   int get day => date.day;
-
-  factory Expense.fromRow(Map<String, Object?> r) => Expense(
-        id: r['id'] as String,
-        date: DateTime.parse(r['spent_on'] as String),
-        desc: r['description'] as String,
-        categoryId: r['category_id'] as String,
-        cat: r['category_name'] as String,
-        accountId: r['account_id'] as String?,
-        acct: (r['account_name'] as String?) ?? 'Sin cuenta',
-        val: (r['amount'] as num).toDouble(),
-      );
 }

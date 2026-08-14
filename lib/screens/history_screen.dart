@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../state/app_state.dart';
-import '../theme/nocturne.dart';
-import '../widgets/common.dart';
+import 'package:gastegi/state/app_state.dart';
+import 'package:gastegi/theme/nocturne.dart';
+import 'package:gastegi/widgets/common.dart';
 
 /// Historial: búsqueda, filtros por rango y categoría, gastos agrupados por día.
 class HistoryScreen extends StatelessWidget {

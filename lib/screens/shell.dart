@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import '../theme/phosphor_icons.dart';
-
-import '../state/app_state.dart';
-import '../theme/nocturne.dart';
-import 'accounts_screen.dart';
-import 'add_expense_screen.dart';
-import 'budgets_screen.dart';
-import 'category_detail_screen.dart';
-import 'history_screen.dart';
-import 'home_screen.dart';
+import 'package:gastegi/screens/accounts_screen.dart';
+import 'package:gastegi/screens/add_expense_screen.dart';
+import 'package:gastegi/screens/budgets_screen.dart';
+import 'package:gastegi/screens/category_detail_screen.dart';
+import 'package:gastegi/screens/history_screen.dart';
+import 'package:gastegi/screens/home_screen.dart';
+import 'package:gastegi/state/app_state.dart';
+import 'package:gastegi/theme/nocturne.dart';
+import 'package:gastegi/theme/phosphor_icons.dart';
 
 /// Scaffold raíz: muestra la pantalla activa según el enum del estado y la
 /// barra de pestañas inferior (oculta en "Nuevo gasto").

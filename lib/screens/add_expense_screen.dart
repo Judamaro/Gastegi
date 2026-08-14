@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import '../theme/phosphor_icons.dart';
-
-import '../state/app_state.dart';
-import '../theme/nocturne.dart';
-import '../widgets/common.dart';
+import 'package:gastegi/state/app_state.dart';
+import 'package:gastegi/theme/nocturne.dart';
+import 'package:gastegi/theme/phosphor_icons.dart';
+import 'package:gastegi/widgets/common.dart';
 
 /// Nuevo gasto: monto con teclado propio, categoría, cuenta y descripción.
 class AddExpenseScreen extends StatelessWidget {

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../state/app_state.dart';
-import '../theme/nocturne.dart';
-import '../theme/phosphor_icons.dart';
-import '../widgets/charts.dart';
-import '../widgets/common.dart';
+import 'package:gastegi/state/app_state.dart';
+import 'package:gastegi/theme/nocturne.dart';
+import 'package:gastegi/theme/phosphor_icons.dart';
+import 'package:gastegi/widgets/charts.dart';
+import 'package:gastegi/widgets/common.dart';
 
 /// Detalle de una categoría: total, presupuesto, barras semanales y gastos.
 class CategoryDetailScreen extends StatelessWidget {

@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../theme/nocturne.dart';
+import 'package:gastegi/theme/nocturne.dart';
 
 /// Dona de categorías: réplica del SVG del diseño (viewBox 160 renderizado a
 /// 128 px → radio 46.4, trazo 16, separación de 0.02 rad por lado).

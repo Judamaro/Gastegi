@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../state/app_state.dart';
-import '../theme/nocturne.dart';
-import '../widgets/charts.dart';
-import '../widgets/common.dart';
+import 'package:gastegi/state/app_state.dart';
+import 'package:gastegi/theme/nocturne.dart';
+import 'package:gastegi/widgets/charts.dart';
+import 'package:gastegi/widgets/common.dart';
 
 /// Inicio: total del mes, comparación con el mes anterior, dona por categoría,
 /// tendencia diaria y últimos 6 meses.

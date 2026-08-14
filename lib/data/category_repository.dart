@@ -1,6 +1,5 @@
+import 'package:gastegi/models/models.dart';
 import 'package:sqflite/sqflite.dart';
-
-import '../models/models.dart';
 
 /// Lectura y escritura de categorías.
 class CategoryRepository {

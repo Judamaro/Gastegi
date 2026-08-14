@@ -40,7 +40,7 @@ void main() {
 
     final device = await db.query('sync_state', where: "key = 'device_id'");
     expect(device, hasLength(1));
-    expect((device.first['value'] as String), isNotEmpty);
+    expect(device.first['value'] as String, isNotEmpty);
 
     final pragma = await db.rawQuery('PRAGMA foreign_keys');
     expect(pragma.first.values.first, 1);

@@ -1,12 +1,11 @@
 import 'dart:io' show Platform;
 
+import 'package:gastegi/data/seed.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 // Con prefijo: ambos paquetes exportan `databaseFactory`, `Database` y
 // compañía, y sin él la referencia sería ambigua.
 import 'package:sqflite_common_ffi/sqflite_ffi.dart' as ffi;
-
-import 'seed.dart';
 
 /// Apertura, esquema y migraciones de la base de datos local.
 ///

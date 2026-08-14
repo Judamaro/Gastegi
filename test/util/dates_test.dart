@@ -19,8 +19,8 @@ void main() {
   });
 
   test('addMonths cruza el fin de año en los dos sentidos', () {
-    expect(addMonths(DateTime(2026, 1), -1), DateTime(2025, 12));
-    expect(addMonths(DateTime(2026, 12), 1), DateTime(2027, 1));
+    expect(addMonths(DateTime(2026), -1), DateTime(2025, 12));
+    expect(addMonths(DateTime(2026, 12), 1), DateTime(2027));
     expect(addMonths(DateTime(2026, 8), -5), DateTime(2026, 3));
   });
 
@@ -46,6 +46,6 @@ void main() {
 
   test('monthTitle y monthName van capitalizados', () {
     expect(monthTitle(DateTime(2026, 8)), 'Agosto 2026');
-    expect(monthName(DateTime(2026, 1)), 'Enero');
+    expect(monthName(DateTime(2026)), 'Enero');
   });
 }

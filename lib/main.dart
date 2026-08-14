@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:gastegi/data/account_repository.dart';
+import 'package:gastegi/data/app_database.dart';
+import 'package:gastegi/data/category_repository.dart';
+import 'package:gastegi/data/expense_repository.dart';
+import 'package:gastegi/screens/shell.dart';
+import 'package:gastegi/state/app_state.dart';
+import 'package:gastegi/theme/nocturne.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
-
-import 'data/account_repository.dart';
-import 'data/app_database.dart';
-import 'data/category_repository.dart';
-import 'data/expense_repository.dart';
-import 'screens/shell.dart';
-import 'state/app_state.dart';
-import 'theme/nocturne.dart';
 
 Future<void> main() async {
   final binding = WidgetsFlutterBinding.ensureInitialized();

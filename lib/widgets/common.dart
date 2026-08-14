@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/nocturne.dart';
+import 'package:gastegi/theme/nocturne.dart';
 
 /// Tarjeta Nocturne: superficie + borde fino (elev-sm) o borde y sombra (elev-md).
 class NCard extends StatelessWidget {

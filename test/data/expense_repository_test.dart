@@ -106,12 +106,12 @@ void main() {
         );
 
     await add(DateTime(2026, 7, 3), 100);
-    await add(DateTime(2026, 8, 1), 20);
+    await add(DateTime(2026, 8), 20);
     await add(DateTime(2026, 8, 9), 30);
     final removed = await add(DateTime(2026, 8, 10), 999);
     await expenses.softDelete(removed);
 
-    final totals = await expenses.monthlyTotals(from: DateTime(2026, 3, 1));
+    final totals = await expenses.monthlyTotals(from: DateTime(2026, 3));
     expect(totals['2026-07'], 100);
     expect(totals['2026-08'], 50);
   });
