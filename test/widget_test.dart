@@ -1,9 +1,10 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gastegi/app/app.dart';
+import 'package:gastegi/app/state/app_data_notifier.dart';
+import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:gastegi/data/account_repository.dart';
-import 'package:gastegi/main.dart';
-import 'package:gastegi/state/app_state.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'helpers/test_db.dart';
@@ -22,15 +23,25 @@ void main() {
   tearDown(() async => db.close());
 
   // Viewport de teléfono (390×844), como el marco iOS del diseño.
-  Future<AppState> pumpApp(WidgetTester tester) async {
+  Future<ProviderContainer> pumpApp(WidgetTester tester) async {
     tester.view.physicalSize = const Size(390 * 3, 844 * 3);
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
 
-    final state = await buildState(db);
-    await tester.pumpWidget(GastegiApp(state: state));
+    // Sin esto la app arrancaría en inglés: el dispositivo de prueba dice
+    // en_US y ya no hay un `locale` fijo en MaterialApp.
+    tester.platformDispatcher.localesTestValue = const [Locale('es')];
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+
+    final container = await buildLoadedContainer(db);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const GastegiApp(),
+      ),
+    );
     await tester.pumpAndSettle();
-    return state;
+    return container;
   }
 
   testWidgets('la app arranca vacía y sin excepciones', (tester) async {
@@ -38,7 +49,10 @@ void main() {
 
     expect(find.text('Agosto 2026'.toUpperCase()), findsOneWidget);
     expect(find.text('gastado este mes'), findsOneWidget);
-    expect(find.text('Todavía no has registrado ningún gasto.'), findsOneWidget);
+    expect(
+      find.text('Todavía no has registrado ningún gasto.'),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -69,8 +83,14 @@ void main() {
     await tester.tap(find.text('Crear cuenta'));
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byKey(const ValueKey('acct-name-new')), 'Efectivo');
-    await tester.enterText(find.byKey(const ValueKey('acct-balance-new')), '480');
+    await tester.enterText(
+      find.byKey(const ValueKey('acct-name-new')),
+      'Efectivo',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('acct-balance-new')),
+      '480',
+    );
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
 
@@ -78,15 +98,16 @@ void main() {
     expect(find.text('Efectivo'), findsOneWidget);
   });
 
-  testWidgets('el gasto se guarda, aparece bajo HOY y baja el saldo',
-      (tester) async {
-    await AccountRepository(db).create(
+  testWidgets('el gasto se guarda, aparece bajo HOY y baja el saldo', (
+    tester,
+  ) async {
+    await AccountRepositoryImpl(db).create(
       name: 'Efectivo',
       kind: 'Dinero en mano',
       iconKey: 'money',
       initialBalance: 200,
     );
-    final state = await pumpApp(tester);
+    final container = await pumpApp(tester);
 
     await tester.tap(find.text('Agregar'));
     await tester.pumpAndSettle();
@@ -109,6 +130,6 @@ void main() {
     expect(find.text('Buscar gasto…'), findsOneWidget);
     expect(find.text('HOY'), findsOneWidget);
     expect(find.text('Comida · Efectivo'), findsOneWidget);
-    expect(state.patrimonio, 150);
+    expect(container.read(appDataProvider).patrimonio, 150);
   });
 }

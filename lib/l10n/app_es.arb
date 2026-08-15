@@ -1,0 +1,215 @@
+{
+  "@@locale": "es",
+
+  "appTitle": "Gastegi",
+
+  "tabHome": "Inicio",
+  "tabHistory": "Historial",
+  "tabAdd": "Agregar",
+  "tabAccounts": "Cuentas",
+  "tabBudgets": "Presupuesto",
+
+  "commonCancel": "Cancelar",
+  "commonSave": "Guardar",
+  "commonDelete": "Eliminar",
+  "commonArchive": "Archivar",
+  "commonAll": "Todas",
+  "commonToday": "Hoy",
+  "commonYesterday": "Ayer",
+  "commonNoAccount": "Sin cuenta",
+
+  "dayAndMonth": "{day} de {month}",
+  "@dayAndMonth": {
+    "description": "Cabecera de grupo del historial: 12 de agosto.",
+    "placeholders": { "day": { "type": "int" }, "month": { "type": "String" } }
+  },
+  "dayAndMonthShort": "{day} {month}",
+  "@dayAndMonthShort": {
+    "description": "Versión corta en listas: 12 ago.",
+    "placeholders": { "day": { "type": "int" }, "month": { "type": "String" } }
+  },
+  "monthAndYear": "{month} {year}",
+  "@monthAndYear": {
+    "description": "Título del mes en Inicio: Agosto 2026.",
+    "placeholders": { "month": { "type": "String" }, "year": { "type": "int" } }
+  },
+
+  "monthAbbr1": "Ene",
+  "monthAbbr2": "Feb",
+  "monthAbbr3": "Mar",
+  "monthAbbr4": "Abr",
+  "monthAbbr5": "May",
+  "monthAbbr6": "Jun",
+  "monthAbbr7": "Jul",
+  "monthAbbr8": "Ago",
+  "monthAbbr9": "Sep",
+  "monthAbbr10": "Oct",
+  "monthAbbr11": "Nov",
+  "monthAbbr12": "Dic",
+  "@monthAbbr1": {
+    "description": "Abreviaturas de mes de tres letras. Están escritas a mano y no salen de DateFormat('MMM') porque el CLDR español devuelve 'ago.' y 'sept.', con punto y hasta cuatro letras, que desbordan las etiquetas estrechas de las gráficas."
+  },
+
+  "homeSpentThisMonth": "gastado este mes",
+  "homeThisMonth": "este mes",
+  "homeNoExpensesKicker": "Sin gastos",
+  "homeNeverAnyExpense": "Todavía no has registrado ningún gasto.",
+  "homeNoExpensesInMonth": "Aún no has registrado gastos en {month}.",
+  "@homeNoExpensesInMonth": {
+    "placeholders": { "month": { "type": "String" } }
+  },
+  "homeRegisterFirst": "Registrar el primero",
+  "homeByCategory": "Por categoría",
+  "homeDailyTrend": "Tendencia diaria",
+  "homeLastSixMonths": "Últimos 6 meses",
+  "homeMonthComparison": "{month} {amount} · {prevMonth} {prevAmount}",
+  "@homeMonthComparison": {
+    "placeholders": {
+      "month": { "type": "String" },
+      "amount": { "type": "String" },
+      "prevMonth": { "type": "String" },
+      "prevAmount": { "type": "String" }
+    }
+  },
+  "homeDeltaVsPrevMonth": "{delta} vs {prevMonth}",
+  "@homeDeltaVsPrevMonth": {
+    "placeholders": {
+      "delta": { "type": "String" },
+      "prevMonth": { "type": "String" }
+    }
+  },
+  "homeAxisDay": "{day} {month}",
+  "@homeAxisDay": {
+    "description": "Etiqueta del eje de la tendencia diaria: 15 ago.",
+    "placeholders": { "day": { "type": "int" }, "month": { "type": "String" } }
+  },
+
+  "historyTitle": "Historial",
+  "historySearchHint": "Buscar gasto…",
+  "historyRangeMonth": "Todo el mes",
+  "historyRangeLast15": "Últimos 15 días",
+  "historyRangeLast7": "Últimos 7 días",
+  "historyEmptyEver": "Todavía no hay gastos registrados",
+  "historyEmptyForFilters": "Sin resultados para esta búsqueda",
+  "historyExpenseSubtitle": "{category} · {account}",
+  "@historyExpenseSubtitle": {
+    "placeholders": {
+      "category": { "type": "String" },
+      "account": { "type": "String" }
+    }
+  },
+
+  "addExpenseTitle": "Nuevo gasto",
+  "addExpenseCategory": "Categoría",
+  "addExpenseAccount": "Cuenta",
+  "addExpenseNeedsAccount": "Necesitas una cuenta para registrar el gasto.",
+  "addExpenseDate": "Fecha",
+  "addExpenseOtherDate": "Otra fecha…",
+  "addExpenseDescriptionHint": "Descripción (opcional)",
+  "addExpenseSave": "Guardar gasto",
+
+  "accountsTitle": "Cuentas",
+  "accountsTotalBalance": "Saldo total",
+  "accountsEmptyKicker": "Sin cuentas",
+  "accountsEmptyBody": "Crea una cuenta para poder registrar gastos y ver tu saldo.",
+  "accountsCreate": "Crear cuenta",
+  "accountsTransfer": "Transferir entre cuentas",
+
+  "accountFormEditTitle": "Editar cuenta",
+  "accountFormNewTitle": "Nueva cuenta",
+  "accountFormName": "Nombre",
+  "accountFormNameHint": "Efectivo",
+  "accountFormKind": "Tipo",
+  "accountFormKindHint": "Tarjeta de débito",
+  "accountFormIcon": "Icono",
+  "accountFormCurrentBalance": "Saldo actual",
+  "accountFormInitialBalance": "Saldo inicial",
+  "accountFormAmountHint": "0",
+  "accountFormEmptyName": "Ponle un nombre a la cuenta",
+  "accountFormDuplicateName": "Ya tienes una cuenta con ese nombre",
+
+  "accountIconMoney": "Efectivo",
+  "accountIconCreditCard": "Tarjeta",
+  "accountIconBank": "Banco",
+  "accountIconWallet": "Cartera",
+
+  "deleteAccountTitle": "Eliminar {name}",
+  "@deleteAccountTitle": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "deleteAccountConfirm": "¿Seguro que quieres eliminar esta cuenta?",
+  "deleteAccountWithExpenses": "{count, plural, one{Esta cuenta tiene {count} gasto.} other{Esta cuenta tiene {count} gastos.}} Si la eliminas, los gastos se conservan; si prefieres ocultarla sin perderla de vista, archívala.",
+  "@deleteAccountWithExpenses": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "transferTitle": "Nueva transferencia",
+  "transferFrom": "Desde",
+  "transferTo": "Hacia",
+  "transferAmount": "Monto",
+  "transferSubmit": "Transferir",
+
+  "budgetsTitle": "Presupuestos",
+  "budgetsSummary": "{month} · {spent} de {budget} presupuestados",
+  "@budgetsSummary": {
+    "placeholders": {
+      "month": { "type": "String" },
+      "spent": { "type": "String" },
+      "budget": { "type": "String" }
+    }
+  },
+  "budgetsSpentOfBudget": "{spent} / {budget}",
+  "@budgetsSpentOfBudget": {
+    "placeholders": {
+      "spent": { "type": "String" },
+      "budget": { "type": "String" }
+    }
+  },
+  "budgetsOverBy": "Excedido por {amount}",
+  "@budgetsOverBy": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "budgetsRemaining": "Quedan {amount} · {percent}% usado",
+  "@budgetsRemaining": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "percent": { "type": "int" }
+    }
+  },
+  "budgetsAlertOver": "Excedido",
+  "budgetsAlertNear": "Alerta",
+
+  "categoryShareOfTotal": "en {month} · {percent}% del total",
+  "@categoryShareOfTotal": {
+    "placeholders": {
+      "month": { "type": "String" },
+      "percent": { "type": "int" }
+    }
+  },
+  "categoryBudgetLine": "Presupuesto: {spent} de {budget}",
+  "@categoryBudgetLine": {
+    "placeholders": {
+      "spent": { "type": "String" },
+      "budget": { "type": "String" }
+    }
+  },
+  "categoryByWeek": "Por semana",
+  "categoryWeekLabel": "Sem {number}",
+  "@categoryWeekLabel": {
+    "placeholders": { "number": { "type": "int" } }
+  },
+  "categoryNoExpenses": "Sin gastos de {category} en {month}",
+  "@categoryNoExpenses": {
+    "placeholders": {
+      "category": { "type": "String" },
+      "month": { "type": "String" }
+    }
+  },
+  "categoryExpenseSubtitle": "{date} · {account}",
+  "@categoryExpenseSubtitle": {
+    "placeholders": {
+      "date": { "type": "String" },
+      "account": { "type": "String" }
+    }
+  }
+}

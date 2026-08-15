@@ -1,8 +1,8 @@
-import 'package:gastegi/data/account_repository.dart';
-import 'package:gastegi/data/app_database.dart';
-import 'package:gastegi/data/category_repository.dart';
-import 'package:gastegi/data/expense_repository.dart';
-import 'package:gastegi/state/app_state.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gastegi/app/state/app_data_notifier.dart';
+import 'package:gastegi/core/storage/app_database.dart';
+import 'package:gastegi/core/storage/database_provider.dart';
+import 'package:gastegi/core/utils/clock.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -37,13 +37,21 @@ Future<Database> openTestDb() async {
 /// Carga los datos de locale que necesita `DateFormat('…', 'es')`.
 Future<void> initTestLocale() => initializeDateFormatting('es');
 
-Future<AppState> buildState(Database db, {DateTime? now}) async {
-  final state = AppState(
-    categoryRepo: CategoryRepository(db),
-    accountRepo: AccountRepository(db),
-    expenseRepo: ExpenseRepository(db),
-    clock: () => now ?? testNow,
-  );
-  await state.load();
-  return state;
+/// Ámbito de providers contra [db] y con el reloj congelado.
+ProviderContainer buildContainer(Database db, {DateTime? now}) =>
+    ProviderContainer(
+      overrides: [
+        databaseProvider.overrideWithValue(db),
+        clockProvider.overrideWithValue(() => now ?? testNow),
+      ],
+    );
+
+/// Ámbito ya cargado, como lo deja `bootstrap()` antes del primer frame.
+Future<ProviderContainer> buildLoadedContainer(
+  Database db, {
+  DateTime? now,
+}) async {
+  final container = buildContainer(db, now: now);
+  await container.read(appDataProvider.notifier).load();
+  return container;
 }

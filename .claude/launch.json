@@ -3,14 +3,14 @@
   "configurations": [
     {
       "name": "gastegi-web",
-      "runtimeExecutable": "bash",
-      "runtimeArgs": ["-c", "cd gastegi && flutter run -d web-server --web-port=8080"],
+      "runtimeExecutable": "flutter",
+      "runtimeArgs": ["run", "-d", "web-server", "--web-port=8080"],
       "port": 8080
     },
     {
       "name": "gastegi-web-release",
       "runtimeExecutable": "bash",
-      "runtimeArgs": ["-c", "cd gastegi/build/web && python3 -m http.server 8090"],
+      "runtimeArgs": ["-c", "python3 -m http.server 8090 --directory build/web"],
       "port": 8090
     }
   ]
