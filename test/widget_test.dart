@@ -25,11 +25,23 @@ void main() {
   setUp(() async => db = await openTestDb());
   tearDown(() async => db.close());
 
-  // Viewport de teléfono (390×844), como el marco iOS del diseño.
-  Future<ProviderContainer> pumpApp(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+  /// Monta la app en un viewport concreto.
+  ///
+  /// Por defecto, el teléfono de 390×844 del marco iOS del diseño, donde la
+  /// escala vale 1 y las medidas coinciden con las escritas en el código.
+  /// [textScale] es el ajuste de tamaño de letra del sistema, que la app acota
+  /// a 1.3× por su cuenta.
+  Future<ProviderContainer> pumpApp(
+    WidgetTester tester, {
+    Size size = const Size(390, 844),
+    double textScale = 1,
+  }) async {
+    tester.view.physicalSize = size * 3;
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
+
+    tester.platformDispatcher.textScaleFactorTestValue = textScale;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
     // Sin esto la app arrancaría en inglés: el dispositivo de prueba dice
     // en_US y ya no hay un `locale` fijo en MaterialApp.
