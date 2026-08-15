@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
+import 'package:gastegi/app/theme/app_spacing.dart';
+import 'package:gastegi/app/theme/app_typography.dart';
 
 /// Chip-botón en forma de píldora, réplica de chipSt() del diseño:
 /// activo = tinte del color al 18 % + borde y texto en el color; inactivo =
@@ -28,15 +31,15 @@ class AppChip extends StatelessWidget {
     final borderColor = color ?? AppColors.accent;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
+      borderRadius: BorderRadius.circular(AppRadius.pill),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        padding: EdgeInsets.symmetric(horizontal: 12.r, vertical: 5.r),
         decoration: BoxDecoration(
           color: active
               ? borderColor.withValues(alpha: 0.18)
               : Colors.transparent,
           border: Border.all(color: active ? borderColor : AppColors.divider),
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -44,15 +47,15 @@ class AppChip extends StatelessWidget {
             if (icon != null) ...[
               Icon(
                 icon,
-                size: 13,
+                size: 13.r,
                 color: active ? accentText : AppColors.neutral400,
               ),
-              const SizedBox(width: 5),
+              SizedBox(width: 5.r),
             ],
             Text(
               label,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: AppFontSize.label,
                 color: active ? accentText : AppColors.neutral400,
               ),
             ),

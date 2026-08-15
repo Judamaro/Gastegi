@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 
 /// Barra de progreso fina (6 px): pista neutral-900 + relleno coloreado.
@@ -12,14 +13,16 @@ class ProgressBar extends StatelessWidget {
 
   final double fraction;
   final Color color;
+
+  /// Grosor **en unidades de diseño**: lo escala este widget.
   final double height;
 
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(3),
+      borderRadius: BorderRadius.circular(3.r),
       child: SizedBox(
-        height: height,
+        height: height.r,
         child: Stack(
           children: [
             Container(color: AppColors.neutral900),
@@ -28,7 +31,7 @@ class ProgressBar extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   color: color,
-                  borderRadius: BorderRadius.circular(3),
+                  borderRadius: BorderRadius.circular(3.r),
                 ),
               ),
             ),

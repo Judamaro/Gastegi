@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_spacing.dart';
 
@@ -15,13 +16,13 @@ class AppIconButton extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.md),
       child: Container(
-        width: 36,
-        height: 36,
+        width: 36.r,
+        height: 36.r,
         decoration: BoxDecoration(
           border: Border.all(color: AppColors.divider),
           borderRadius: BorderRadius.circular(AppRadius.md),
         ),
-        child: Icon(icon, size: 16, color: AppColors.text),
+        child: Icon(icon, size: 16.r, color: AppColors.text),
       ),
     );
   }
