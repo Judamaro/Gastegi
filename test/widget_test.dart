@@ -174,9 +174,9 @@ void main() {
   // donde el teclado llena el alto disponible, y una ventana grande, donde
   // sobra sitio. La desalineación solo se ve en el segundo, porque con el
   // teclado a tope de altura da igual cómo se alinee dentro de su columna.
-  for (final (nombre, size) in const <(String, Size)>[
-    ('un teléfono tumbado', Size(844, 390)),
-    ('una ventana amplia', Size(1080, 956)),
+  for (final (nombre, size, altoMinTeclado) in const <(String, Size, double)>[
+    ('un teléfono tumbado', Size(844, 390), 250),
+    ('una ventana amplia', Size(1080, 956), 380),
   ]) {
     testWidgets('en apaisado, en $nombre, las dos columnas se alinean', (
       tester,
@@ -208,6 +208,15 @@ void main() {
       // La cabecera cruza las dos columnas: el botón de cerrar va al borde
       // derecho del contenido, no a media pantalla donde acaba la izquierda.
       expect(header.right, greaterThan(keypad.left));
+
+      // El teclado se queda con el alto sobrante en vez de dejarlo muerto al
+      // pie: con teclas del tamaño mínimo mediría unos 265 en las dos, y lo
+      // que se comprueba aquí es justo que crezca cuando hay sitio.
+      expect(
+        keypad.height,
+        greaterThan(altoMinTeclado),
+        reason: 'el teclado aprovecha el alto disponible',
+      );
       expect(tester.takeException(), isNull);
 
       appRouter.go(RouteNames.home);

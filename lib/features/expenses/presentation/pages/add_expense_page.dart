@@ -108,27 +108,38 @@ class _LandscapeLayout extends StatelessWidget {
         // termina esa columna, y no en la esquina donde se busca.
         const _Header(),
         Expanded(
-          child: Row(
-            // Las dos columnas arrancan a la misma altura, justo debajo de la
-            // cabecera. Sin esto la de la derecha se estira hasta el fondo y
-            // centra el teclado en su propio alto, que no coincide con nada de
-            // lo que tiene al lado.
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 20.r,
-            children: [
-              Expanded(
-                // Solo la columna de campos se desplaza: el teclado y Guardar
-                // tienen que quedarse quietos, que es lo que se está tocando.
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    spacing: 12.r,
-                    children: [const _AmountDisplay(), const _Fields()],
+          // El bloque de las dos columnas se centra en vertical: lo que sobra
+          // se reparte arriba y abajo en vez de amontonarse al pie. Se centra
+          // el bloque entero, no cada columna por su cuenta, que es lo que las
+          // desalineaba.
+          child: Center(
+            child: Row(
+              // Las dos columnas arrancan a la misma altura.
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 20.r,
+              children: [
+                Expanded(
+                  // Solo la columna de campos se desplaza: el teclado y Guardar
+                  // tienen que quedarse quietos, que es lo que se está tocando.
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      spacing: 12.r,
+                      children: [const _AmountDisplay(), const _Fields()],
+                    ),
                   ),
                 ),
-              ),
-              const Expanded(child: _Keypad()),
-            ],
+                Expanded(
+                  // El teclado se queda con el alto sobrante, hasta un tope:
+                  // sin él, en una ventana alta salen teclas de 200 dp, que no
+                  // se tocan mejor por ser enormes.
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxHeight: 420.r),
+                    child: const _Keypad(fillHeight: true),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -328,7 +339,10 @@ class _Fields extends ConsumerWidget {
 
 /// Teclado numérico y botón de guardar.
 class _Keypad extends ConsumerWidget {
-  const _Keypad();
+  const _Keypad({this.fillHeight = false});
+
+  /// Reparte el alto disponible entre las teclas. Ver [AmountKeypad.fillHeight].
+  final bool fillHeight;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -338,10 +352,14 @@ class _Keypad extends ConsumerWidget {
     );
     final form = ref.read(addExpenseProvider.notifier);
     return Column(
+      mainAxisSize: fillHeight ? MainAxisSize.max : MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 12.r,
       children: [
-        AmountKeypad(onKey: form.keypadTap),
+        if (fillHeight)
+          Expanded(child: AmountKeypad(onKey: form.keypadTap, fillHeight: true))
+        else
+          AmountKeypad(onKey: form.keypadTap),
         PrimaryButton(
           label: context.l10n.addExpenseSave,
           disabled: saveDisabled,
