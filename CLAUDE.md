@@ -115,6 +115,60 @@ MiEstado build() {
 Si no, `MissingMigrationException` al arrancar en el móvil de quien ya tenía la
 app instalada — nunca en el tuyo, que crea la BD de cero.
 
+### Tamaños y orientación
+
+**Ninguna medida se escribe en píxeles a pelo.** Los números del código son dp
+del lienzo de diseño (390×844) y se escalan: `.r` para cualquier medida de
+componente y `.sp` para las fuentes, ambos de `flutter_screenutil_plus`. Lo
+repetido vive en `AppSpacing`/`AppRadius` y `AppFontSize`/`AppTextStyles`
+(`lib/app/theme/`).
+
+**Nunca `.w` ni `.h`.** `.w` escala por ancho: en apaisado (844×390) devuelve
+2.16×, y el diseño revienta. `.r` usa `min(escalaAncho, escalaAlto)`, que se
+queda en la banda 0.82–1.21 en todo el catálogo de pantallas.
+
+**`watchScreen(context)` es la primera línea del `build` de cada pantalla**
+(`lib/core/utils/screen.dart`), aunque no uses lo que devuelve.
+
+> Por qué: `.r` y `.sp` se resuelven durante el `build` y quedan congelados
+> dentro del widget. `StatefulNavigationShellState` guarda el `Navigator` de
+> cada rama y solo lo rehace si cambia la ruta, así que un cambio de métricas
+> cortocircuita el subárbol por widget idéntico: **giras el móvil y la pantalla
+> conserva la escala del retrato sin fallar nada.** Lo mismo vale para un widget
+> `const` que resuelva medidas. Lo vigila el test de rotación de
+> `widget_test.dart`.
+
+**Los tokens de tamaño son getters, nunca `const` ni `final`.**
+
+> Por qué: `.r` necesita la pantalla ya medida, y un `final` de nivel superior
+> se evalúa al importar el archivo, antes de que `ScreenUtilPlusInit` haya
+> configurado nada → `LateInitializationError`. Es el mismo problema que
+> documenta `AppTheme.dark`, con otra excepción.
+
+**Los parámetros de tamaño de nuestros widgets viajan en unidades de diseño; los
+escala el widget en su `build`.** `Kicker.size`, `ColorDot.size`,
+`DonutChart.size`, `TrendChart.height`, `BarChart.height`… Quien llama escribe
+el número del diseño, sin `.r`.
+
+> Por qué: los valores por defecto tienen que ser constantes, así que no pueden
+> llevar `.r`. Si el sitio de llamada escalara y el defecto no, el mismo
+> parámetro admitiría dos unidades distintas sin que nada lo delate.
+
+**`fontSizeResolver: FontSizeResolvers.radius` y `splitScreenMode: true` en
+`GastegiApp` son estructurales.** El primero porque `minTextAdapt` es
+configuración muerta —`setSp` delega en el resolver y nunca alcanza la rama que
+lo consulta—; el segundo porque acota la escala de alto a 700 dp y sin él en
+apaisado la app sale en miniatura. Los fija `test/app/screen_scale_test.dart`.
+
+**Los puntos de ruptura no se escalan.** `kTabletBreakpoint` y el tope de
+`ContentWidth` van en dp reales: son límites del dispositivo y de legibilidad,
+no medidas del diseño, y escalarlos los movería justo donde deciden algo.
+
+**Dentro de un `CustomPainter` no hay escala.** Todo sale de la `size` que
+recibe, en fracciones. Si necesita texto, pásale el `TextScaler` del contexto
+—un painter no cuelga del árbol y no le llega solo— y **mete los campos nuevos
+en `shouldRepaint`**, o no repintará al girar.
+
 ### Fechas y números
 
 **Los días se restan con `daysBefore()` o `DateTime(y, m, d - n)`, jamás con
@@ -175,6 +229,13 @@ rareza; no la "simplifiques".
 > Por qué: la variante con isolate responde por el event loop real, que bajo el
 > `FakeAsync` de `testWidgets` no avanza. El primer `await` contra la BD se
 > cuelga para siempre.
+
+**`pumpApp` acepta `size` y `textScale`**, y `test/responsive_test.dart` recorre
+la app en cinco resoluciones por dos escalas de texto. Cuidado con lo que prueba:
+`takeException()` detecta un `RenderFlex` desbordado, pero **no** un texto
+elidido, encogido por un `FittedBox` o recortado por un `Stack`, y esta app usa
+las tres cosas a propósito. Si tocas layout, añade una aserción de tamaño real
+—`tester.getRect`, el `fontSize` efectivo— y no te fíes de la matriz sola.
 
 **Los tests de widget fijan el idioma del dispositivo:**
 
