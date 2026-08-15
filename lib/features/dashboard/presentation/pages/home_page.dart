@@ -178,68 +178,88 @@ class HomePage extends ConsumerWidget {
                       ),
                     ),
                     Expanded(
-                      child: Column(
-                        spacing: 7.r,
-                        children: [
-                          for (final c in state.categories)
-                            InkWell(
-                              onTap: () => context.go(
-                                RouteNames.categoryDetailOf(c.name),
-                              ),
-                              child: Row(
-                                spacing: 7.r,
-                                children: [
-                                  ColorDot(c.color),
-                                  // La leyenda va en la mitad estrecha, al
-                                  // lado de la dona, y el importe con moneda y
-                                  // decimales ya no cabe junto al nombre: se
-                                  // reparte a propósito, con más sitio para la
-                                  // cifra, que es el dato. El nombre se corta
-                                  // antes que envolverse a tres líneas.
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      c.name,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontSize: AppFontSize.label,
-                                      ),
-                                    ),
+                      // El ancho de la leyenda se mide una vez y sirve para
+                      // todas las filas.
+                      child: LayoutBuilder(
+                        builder: (context, legend) {
+                          // Con sitio de sobra manda el nombre; apretados,
+                          // manda la cifra.
+                          //
+                          // El reparto era 2:3 fijo. La cifra es el dato y
+                          // tiene que caber —en un móvil estrecho, con moneda y
+                          // decimales, se come más de media fila—, pero con el
+                          // reparto rígido «Transporte» se cortaba también en
+                          // una pantalla ancha donde sobraba espacio. Los dos
+                          // siguen siendo `Expanded`, así que la fila no puede
+                          // desbordar por mucho que crezca el texto.
+                          // El umbral sale de lo que piden los tres trozos a
+                          // su tamaño natural: la fila fija (punto, huecos y
+                          // porcentaje) unos 59, el nombre más largo unos 62 y
+                          // el importe corriente unos 72, en dp de diseño.
+                          final holgada = legend.maxWidth > 195.r;
+                          return Column(
+                            spacing: 7.r,
+                            children: [
+                              for (final c in state.categories)
+                                InkWell(
+                                  onTap: () => context.go(
+                                    RouteNames.categoryDetailOf(c.name),
                                   ),
-                                  Expanded(
-                                    flex: 3,
-                                    child: FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      alignment: Alignment.centerRight,
-                                      child: Text(
-                                        money.format(catTotals[c.name] ?? 0),
-                                        style: TextStyle(
-                                          fontSize: AppFontSize.label,
-                                          color: AppColors.neutral400,
+                                  child: Row(
+                                    spacing: 7.r,
+                                    children: [
+                                      ColorDot(c.color),
+                                      Expanded(
+                                        flex: holgada ? 1 : 2,
+                                        child: Text(
+                                          c.name,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: AppFontSize.label,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ),
-                                  // Ancho mínimo y no fijo: alinea la columna
-                                  // de porcentajes mientras caben, y la deja
-                                  // crecer cuando el tamaño de letra del
-                                  // sistema los hace más anchos.
-                                  ConstrainedBox(
-                                    constraints: BoxConstraints(minWidth: 30.r),
-                                    child: Text(
-                                      '${percentOf(catTotals[c.name] ?? 0, total)}%',
-                                      textAlign: TextAlign.right,
-                                      style: TextStyle(
-                                        fontSize: AppFontSize.label,
-                                        color: AppColors.neutral600,
+                                      Expanded(
+                                        flex: holgada ? 1 : 3,
+                                        child: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          alignment: Alignment.centerRight,
+                                          child: Text(
+                                            money.format(
+                                              catTotals[c.name] ?? 0,
+                                            ),
+                                            maxLines: 1,
+                                            style: TextStyle(
+                                              fontSize: AppFontSize.label,
+                                              color: AppColors.neutral400,
+                                            ),
+                                          ),
+                                        ),
                                       ),
-                                    ),
+                                      // Ancho mínimo y no fijo: alinea la
+                                      // columna de porcentajes mientras caben,
+                                      // y la deja crecer cuando el tamaño de
+                                      // letra del sistema los hace más anchos.
+                                      ConstrainedBox(
+                                        constraints: BoxConstraints(
+                                          minWidth: 30.r,
+                                        ),
+                                        child: Text(
+                                          '${percentOf(catTotals[c.name] ?? 0, total)}%',
+                                          textAlign: TextAlign.right,
+                                          style: TextStyle(
+                                            fontSize: AppFontSize.label,
+                                            color: AppColors.neutral600,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
-                        ],
+                                ),
+                            ],
+                          );
+                        },
                       ),
                     ),
                   ],

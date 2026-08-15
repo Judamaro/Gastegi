@@ -4,8 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 
-/// Dona de categorías: réplica del SVG del diseño (viewBox 160 renderizado a
-/// 128 px → radio 46.4, trazo 16, separación de 0.02 rad por lado).
+/// Dona de categorías, con el total en el hueco.
+///
+/// Las proporciones son las del SVG del diseño (viewBox 160, trazo 20,
+/// separación de 0.02 rad por lado), pero el círculo **llena su caja**: el SVG
+/// traía 15 % de margen incorporado, y aquí el hueco que sobra ya lo pone el
+/// `Row` que la coloca al lado de la leyenda.
 class DonutChart extends StatelessWidget {
   const DonutChart({
     super.key,
@@ -14,6 +18,13 @@ class DonutChart extends StatelessWidget {
     required this.centerSubtitle,
     this.size = 128,
   });
+
+  /// Grosor del anillo como fracción del diámetro (20 sobre 160 del diseño).
+  static const double _strokeRatio = 0.125;
+
+  /// Interlineado de los dos textos del centro. Explícito porque de él sale el
+  /// alto del bloque, y de ese alto sale el ancho que cabe en el hueco.
+  static const double _lineHeight = 1.15;
 
   /// Pares (fracción del total, color); solo categorías con gasto.
   final List<(double, Color)> segments;
@@ -26,12 +37,25 @@ class DonutChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final diameter = size.r;
-    // Los dos textos del centro salen del diámetro, no de `AppFontSize`, y por
-    // eso no llevan `.sp`: ya escalan con la dona. Es también el único sitio de
-    // la app que no respeta el ajuste de tamaño de letra del sistema —el hueco
-    // de la dona es geométrico y fijo, y honrarlo sacaría el texto del
-    // círculo—. Las proporciones son las del diseño: 19 y 9 sobre 128.
-    final hole = diameter * 0.58;
+    final holeRadius = diameter * (0.5 - _strokeRatio);
+
+    // Los dos textos salen del diámetro, no de `AppFontSize`, y por eso no
+    // llevan `.sp`: ya escalan con la dona. Es el único sitio de la app que no
+    // respeta el ajuste de tamaño de letra del sistema, y por eso lo desactiva
+    // explícitamente: el hueco es geométrico y honrarlo sacaría el texto del
+    // círculo. Las proporciones son las del diseño: 19 y 9 sobre 128.
+    final titleFont = diameter * 19 / 128;
+    final subtitleFont = diameter * 9 / 128;
+
+    // El ancho que cabe no es el diámetro del hueco: el bloque de dos líneas
+    // ocupa una banda, y en sus esquinas —lo más alejado del centro— la cuerda
+    // del círculo es más estrecha. Medir ahí es lo que evita que el importe se
+    // monte sobre el anillo.
+    final halfBlock = (titleFont + subtitleFont) * _lineHeight / 2;
+    final textWidth =
+        2 *
+        math.sqrt(math.max(0, holeRadius * holeRadius - halfBlock * halfBlock));
+
     return SizedBox(
       width: diameter,
       height: diameter,
@@ -42,38 +66,39 @@ class DonutChart extends StatelessWidget {
             size: Size.square(diameter),
             painter: _DonutPainter(segments),
           ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Encajados al hueco de la dona: el `Stack` recorta por defecto,
-              // así que un texto largo se perdería sin avisar de nada.
-              SizedBox(
-                width: hole,
-                child: FittedBox(
+          // Encajados al hueco: el `Stack` recorta por defecto, así que un
+          // texto largo se perdería sin avisar de nada.
+          SizedBox(
+            width: textWidth,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
                     centerTitle,
+                    textScaler: TextScaler.noScaling,
                     style: TextStyle(
-                      fontSize: diameter * 19 / 128,
+                      fontSize: titleFont,
+                      height: _lineHeight,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
-              ),
-              SizedBox(
-                width: hole,
-                child: FittedBox(
+                FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
                     centerSubtitle,
+                    textScaler: TextScaler.noScaling,
                     style: TextStyle(
-                      fontSize: diameter * 9 / 128,
+                      fontSize: subtitleFont,
+                      height: _lineHeight,
                       color: AppColors.neutral500,
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -88,10 +113,11 @@ class _DonutPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final scale = size.width / 160;
+    final stroke = size.width * DonutChart._strokeRatio;
     final center = size.center(Offset.zero);
-    final radius = 58 * scale;
-    final stroke = 20 * scale;
+    // Radio de la línea media: con medio trazo a cada lado, el borde exterior
+    // cae justo en el borde de la caja.
+    final radius = (size.width - stroke) / 2;
     var angle = -math.pi / 2;
     for (final (frac, color) in segments) {
       final sweep = frac * 2 * math.pi;
