@@ -88,7 +88,7 @@ class AccountFormNotifier extends Notifier<AccountFormState> {
       editingId: account?.id,
       name: account?.name ?? '',
       kind: account?.kind ?? '',
-      balance: account == null ? '' : plainAmount(account.balance),
+      balance: account == null ? '' : canonicalAmount(account.balance),
       iconKey: account?.iconKey ?? 'wallet',
     );
   }

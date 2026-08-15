@@ -4,9 +4,9 @@ import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/core/utils/l10n_context.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/app_chip.dart';
-import 'package:gastegi/core/widgets/app_input.dart';
 import 'package:gastegi/core/widgets/field_label.dart';
 import 'package:gastegi/core/widgets/kicker.dart';
+import 'package:gastegi/core/widgets/money_input.dart';
 import 'package:gastegi/core/widgets/primary_button.dart';
 import 'package:gastegi/core/widgets/secondary_button.dart';
 import 'package:gastegi/features/accounts/presentation/providers/transfer_form_notifier.dart';
@@ -70,11 +70,8 @@ class TransferForm extends ConsumerWidget {
           spacing: 5,
           children: [
             FieldLabel(l10n.transferAmount),
-            AppInput(
+            MoneyInput(
               hint: l10n.accountFormAmountHint,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
               onChanged: form.setAmount,
             ),
           ],

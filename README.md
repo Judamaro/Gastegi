@@ -100,7 +100,13 @@ has tocado" dejaría saldos viejos en pantalla **sin lanzar ningún error**.
   decisión de diseño: la app no interrumpe, muestra la consecuencia donde
   estaba mirando el usuario.
 - **El teclado del importe es propio.** No sube el del sistema, y las reglas de
-  entrada (una sola coma, máximo siete dígitos) las decide la app.
+  entrada (un solo separador decimal, siete enteros y dos decimales) las decide
+  la app.
+- **Los importes se guardan en canónico y se pintan en el idioma del
+  dispositivo.** El estado de un formulario guarda `1234.56`, con punto y sin
+  separadores de miles; la página lo traduce a `1.234,56 €` en español o
+  `€1,234.56` en inglés. La moneda es siempre la de `AppConfig.currencyCode`, y
+  el símbolo lo saca `intl` del código ISO: no hay ningún `€` escrito a mano.
 - **Las transferencias son filas, no restas al saldo.** Un contador mutado no
   es fusionable: dos dispositivos sin conexión restando cada uno acabarían con
   un saldo erróneo. El saldo se recalcula desde los movimientos.

@@ -4,7 +4,6 @@ import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
-import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/core/utils/l10n_context.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/color_dot.dart';
@@ -19,6 +18,7 @@ class BudgetsPage extends ConsumerWidget {
     final state = ref.watch(appDataProvider);
     final l10n = context.l10n;
     final dates = context.dates;
+    final money = context.money;
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       child: Column(
@@ -32,8 +32,8 @@ class BudgetsPage extends ConsumerWidget {
           Text(
             l10n.budgetsSummary(
               dates.monthName(state.monthAnchor),
-              formatAmount(state.total),
-              formatAmount(state.totalBudget),
+              money.format(state.total),
+              money.format(state.totalBudget),
             ),
             style: const TextStyle(fontSize: 13, color: AppColors.neutral500),
           ),
@@ -86,14 +86,20 @@ class BudgetsPage extends ConsumerWidget {
                               ],
                             ),
                           ),
-                        Text(
-                          l10n.budgetsSpentOfBudget(
-                            formatAmount(b.spent),
-                            formatAmount(b.category.budget),
-                          ),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.neutral500,
+                        // «Gastado / presupuesto» casi dobla su ancho con la
+                        // moneda puesta, y comparte fila con el chip de aviso.
+                        Flexible(
+                          child: Text(
+                            l10n.budgetsSpentOfBudget(
+                              money.format(b.spent),
+                              money.format(b.category.budget),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.neutral500,
+                            ),
                           ),
                         ),
                       ],
@@ -102,10 +108,10 @@ class BudgetsPage extends ConsumerWidget {
                     Text(
                       b.over
                           ? l10n.budgetsOverBy(
-                              formatAmount(b.spent - b.category.budget),
+                              money.format(b.spent - b.category.budget),
                             )
                           : l10n.budgetsRemaining(
-                              formatAmount(b.category.budget - b.spent),
+                              money.format(b.category.budget - b.spent),
                               (b.ratio * 100).round(),
                             ),
                       style: const TextStyle(

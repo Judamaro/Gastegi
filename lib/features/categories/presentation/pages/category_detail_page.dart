@@ -35,6 +35,7 @@ class CategoryDetailPage extends ConsumerWidget {
     final expenses = ref.watch(categoryExpensesProvider(categoryName));
     final l10n = context.l10n;
     final dates = context.dates;
+    final money = context.money;
     final monthName = dates.monthName(state.monthAnchor);
 
     return SingleChildScrollView(
@@ -66,17 +67,26 @@ class CategoryDetailPage extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
+                // Alineación por abajo y no por línea base: un `FittedBox` no
+                // expone la suya, y con `baseline` el `Row` se cae.
+                crossAxisAlignment: CrossAxisAlignment.end,
                 spacing: 8,
                 children: [
-                  Text(
-                    formatAmount(catTotal),
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: -0.64,
-                      height: 1,
+                  // Con moneda y decimales, un importe de siete cifras no cabe
+                  // al lado del texto: mejor encogerlo que desbordar.
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        money.format(catTotal),
+                        style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: -0.64,
+                          height: 1,
+                        ),
+                      ),
                     ),
                   ),
                   Flexible(
@@ -107,8 +117,8 @@ class CategoryDetailPage extends ConsumerWidget {
                   ),
                   Text(
                     l10n.categoryBudgetLine(
-                      formatAmount(catTotal),
-                      formatAmount(cat.budget),
+                      money.format(catTotal),
+                      money.format(cat.budget),
                     ),
                     style: const TextStyle(
                       fontSize: 11,
@@ -161,7 +171,7 @@ class CategoryDetailPage extends ConsumerWidget {
                       dates.dayLabelShort(e.date, state.today),
                       e.accountName ?? l10n.commonNoAccount,
                     ),
-                    amount: formatAmount(e.val),
+                    amount: money.formatSigned(-e.val),
                   ),
               ],
             ),

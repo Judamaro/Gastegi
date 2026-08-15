@@ -1,9 +1,34 @@
-import 'package:intl/intl.dart';
+/// Reglas de los importes que no dependen del idioma.
+///
+/// Lo que sí depende —los separadores, el símbolo y su sitio— vive en
+/// `money.dart`, igual que `date_labels.dart` está separado de `date_utils.dart`.
+library;
 
-final NumberFormat _decimal = NumberFormat.decimalPattern('es');
+/// Dígitos como máximo a cada lado del separador decimal.
+///
+/// Un solo tope para las tres vías de entrada: el teclado propio del gasto y
+/// los campos de saldo y de transferencia. Con dos decimales, `9.999.999,99`.
+const int maxIntegerDigits = 7;
+const int maxFractionDigits = 2;
 
-/// Redondea a entero y aplica separador de miles es-ES.
-String formatAmount(double n) => _decimal.format(n.round());
+/// Menos tipográfico (U+2212).
+///
+/// El CLDR devuelve el guion ASCII, más corto y más alto que las cifras: en un
+/// importe grande se lee como un tropiezo. `AppData.deltaLabel` ya usa este.
+const String minusSign = '−';
+
+/// Token de borrado del teclado propio.
+///
+/// Vive aquí y no en el widget porque quien lo interpreta es el estado, y así
+/// el notifier no tiene que importar una pantalla para reconocer una tecla.
+const String backspaceKey = '⌫';
+
+/// Separador decimal del texto *canónico*: el que guardan los notifiers.
+///
+/// Es siempre el punto, pase lo que pase con el idioma. Un notifier no tiene
+/// `BuildContext` y no puede saber si la coma de `12,5` es decimal o de miles;
+/// la traducción a los separadores del idioma la hace la página.
+const String canonicalDecimalPoint = '.';
 
 /// Porcentaje entero de [part] sobre [whole]; 0 si [whole] no es positivo.
 ///
@@ -12,12 +37,22 @@ String formatAmount(double n) => _decimal.format(n.round());
 int percentOf(double part, double whole) =>
     whole > 0 ? (part / whole * 100).round() : 0;
 
-/// Lee un importe tecleado por el usuario. La coma es el separador decimal en
-/// español; `double.tryParse` solo entiende el punto.
-double parseAmount(String raw) =>
-    double.tryParse(raw.replaceAll(',', '.')) ?? 0;
+/// Importe canónico para prellenar un campo editable.
+///
+/// Con los dos decimales puestos, que es lo que la app enseña siempre: si se
+/// prellenara `100.5`, el campo mostraría un importe que no existe en pantalla.
+String canonicalAmount(double n) => n.toStringAsFixed(maxFractionDigits);
 
-/// Importe sin separadores de miles, para prellenar un campo editable: lo que
-/// se escribe en un campo tiene que poder volver a leerse con [parseAmount].
-String plainAmount(double n) =>
-    n == n.roundToDouble() ? n.round().toString() : n.toString();
+/// Lee un importe canónico.
+///
+/// La coma no aparece por ninguna parte a propósito: quien teclea la coma es el
+/// usuario, y `MoneyLabels.canonical` la traduce antes de que el texto llegue al
+/// estado. El punto colgante de `12.` —el campo a medio escribir— se recorta
+/// aquí porque de este valor depende si el botón de guardar está activo.
+double parseAmount(String raw) =>
+    double.tryParse(
+      raw.endsWith(canonicalDecimalPoint)
+          ? raw.substring(0, raw.length - 1)
+          : raw,
+    ) ??
+    0;

@@ -5,7 +5,7 @@ import 'package:gastegi/app/theme/app_elevation.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/app/theme/app_spacing.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
-import 'package:gastegi/core/utils/formatters.dart';
+import 'package:gastegi/core/utils/l10n_context.dart';
 import 'package:gastegi/core/widgets/app_icon_button.dart';
 import 'package:gastegi/features/accounts/domain/entities/account.dart';
 import 'package:gastegi/features/accounts/presentation/providers/account_form_notifier.dart';
@@ -50,10 +50,17 @@ class AccountCard extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(account.name, style: const TextStyle(fontSize: 14)),
+                  Text(
+                    account.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 14),
+                  ),
                   if (account.kind.isNotEmpty)
                     Text(
                       account.kind,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 11,
                         color: AppColors.neutral600,
@@ -62,12 +69,21 @@ class AccountCard extends ConsumerWidget {
                 ],
               ),
             ),
-            Text(
-              '${negative ? '−' : ''}${formatAmount(account.balance.abs())}',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: negative ? AppColors.neutral500 : AppColors.text,
+            // Pegado a la derecha y encogible: un saldo de siete cifras con
+            // moneda y decimales no cabe junto al nombre de la cuenta.
+            Expanded(
+              flex: 2,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: Text(
+                  context.money.formatSigned(account.balance),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: negative ? AppColors.neutral500 : AppColors.text,
+                  ),
+                ),
               ),
             ),
             AppIconButton(

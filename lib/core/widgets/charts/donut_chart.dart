@@ -35,11 +35,19 @@ class DonutChart extends StatelessWidget {
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                centerTitle,
-                style: const TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.w500,
+              // Encajado al hueco de la dona: el `Stack` recorta por defecto,
+              // así que un importe largo se perdería sin avisar de nada.
+              SizedBox(
+                width: size * 0.58,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    centerTitle,
+                    style: const TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
               ),
               Text(

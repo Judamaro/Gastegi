@@ -67,6 +67,23 @@ void main() {
     expect(container.read(accountFormProvider).failure, isNull);
   });
 
+  test('editar una cuenta sin tocar el saldo no lo altera', () async {
+    // El prellenado y la lectura del campo tienen que hablar el mismo idioma.
+    // Cuando no lo hacían, abrir una cuenta de 100,5 y guardar sin tocar nada
+    // la dejaba en 1005: el campo se prellenaba con punto y se leía con coma.
+    final id = await newAccount('Débito', balance: 100.5);
+    final container = await buildLoadedContainer(db);
+    final form = container.read(accountFormProvider.notifier);
+
+    form.open(container.read(appDataProvider).accounts.single);
+    expect(container.read(accountFormProvider).balance, '100.50');
+
+    await form.submit();
+
+    expect(container.read(appDataProvider).accounts.single.balance, 100.5);
+    expect(container.read(appDataProvider).accounts.single.id, id);
+  });
+
   test('la transferencia preselecciona origen y destino distintos', () async {
     await newAccount('Débito', balance: 100);
     await newAccount('Ahorros', balance: 50);

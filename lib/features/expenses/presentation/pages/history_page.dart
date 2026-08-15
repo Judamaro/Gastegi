@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
-import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/core/utils/l10n_context.dart';
 import 'package:gastegi/core/widgets/amount_tile.dart';
 import 'package:gastegi/core/widgets/app_chip.dart';
@@ -92,7 +91,7 @@ class HistoryPage extends ConsumerWidget {
                       e.categoryName,
                       e.accountName ?? l10n.commonNoAccount,
                     ),
-                    amount: formatAmount(e.val),
+                    amount: context.money.formatSigned(-e.val),
                     icon: data.categoryOf(e.categoryName)?.icon,
                     iconColor: data.categoryOf(e.categoryName)?.color,
                   ),
