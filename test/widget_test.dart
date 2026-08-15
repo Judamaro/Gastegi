@@ -6,6 +6,7 @@ import 'package:gastegi/app/router/app_router.dart';
 import 'package:gastegi/app/router/route_names.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
+import 'package:gastegi/features/dashboard/presentation/pages/home_page.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -156,6 +157,16 @@ void main() {
 
     appRouter.go(RouteNames.home);
     await tester.pumpAndSettle();
+  });
+
+  testWidgets('en tableta el contenido se acota y se centra', (tester) async {
+    await pumpApp(tester, size: const Size(768, 1024));
+
+    // Sin tope, Inicio ocuparía los 768 dp de ancho y las líneas de texto
+    // saldrían ilegibles de tan largas.
+    final home = tester.getRect(find.byType(HomePage));
+    expect(home.width, 600);
+    expect(home.center.dx, closeTo(384, 0.01), reason: 'centrado');
   });
 
   testWidgets('crear una cuenta la refleja en el saldo total', (tester) async {

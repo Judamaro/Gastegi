@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gastegi/app/router/app_tab_bar.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
+import 'package:gastegi/core/widgets/content_width.dart';
 import 'package:go_router/go_router.dart';
 
 /// Scaffold de las pantallas con pestañas.
@@ -20,7 +21,7 @@ class AppShell extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            Expanded(child: navigationShell),
+            Expanded(child: ContentWidth(child: navigationShell)),
             AppTabBar(navigationShell: navigationShell),
           ],
         ),

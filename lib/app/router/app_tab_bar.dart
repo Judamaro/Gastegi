@@ -5,6 +5,7 @@ import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/app/theme/app_typography.dart';
 import 'package:gastegi/core/utils/l10n_context.dart';
+import 'package:gastegi/core/widgets/content_width.dart';
 import 'package:go_router/go_router.dart';
 
 /// Barra de pestañas inferior.
@@ -31,28 +32,34 @@ class AppTabBar extends StatelessWidget {
         color: AppColors.bg,
         border: Border(top: BorderSide(color: AppColors.divider)),
       ),
-      child: Row(
-        children: [
-          for (final (branch, icon, fillIcon, label) in tabs)
-            Expanded(
-              child: _TabItem(
-                icon: icon,
-                fillIcon: fillIcon,
-                label: label,
-                active:
-                    branch != null && navigationShell.currentIndex == branch,
-                onTap: () => branch == null
-                    ? context.push(RouteNames.addExpense)
-                    // `initialLocation` en la pestaña ya activa vuelve a su
-                    // raíz: tocar Inicio desde el detalle de una categoría
-                    // sale del detalle, como espera cualquiera.
-                    : navigationShell.goBranch(
-                        branch,
-                        initialLocation: branch == navigationShell.currentIndex,
-                      ),
+      // El tope va por dentro, rodeando solo las pestañas: envolver el
+      // `Container` entero cortaría el fondo y la línea superior a los 600 dp
+      // y dejaría dos franjas sin borde a los lados en una tableta.
+      child: ContentWidth(
+        child: Row(
+          children: [
+            for (final (branch, icon, fillIcon, label) in tabs)
+              Expanded(
+                child: _TabItem(
+                  icon: icon,
+                  fillIcon: fillIcon,
+                  label: label,
+                  active:
+                      branch != null && navigationShell.currentIndex == branch,
+                  onTap: () => branch == null
+                      ? context.push(RouteNames.addExpense)
+                      // `initialLocation` en la pestaña ya activa vuelve a su
+                      // raíz: tocar Inicio desde el detalle de una categoría
+                      // sale del detalle, como espera cualquiera.
+                      : navigationShell.goBranch(
+                          branch,
+                          initialLocation:
+                              branch == navigationShell.currentIndex,
+                        ),
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
