@@ -170,22 +170,50 @@ void main() {
     expect(home.center.dx, closeTo(384, 0.01), reason: 'centrado');
   });
 
-  testWidgets('en apaisado el nuevo gasto va en dos columnas', (tester) async {
-    await pumpApp(tester, size: const Size(844, 390));
+  // Dos apaisados con holgura vertical muy distinta: el del teléfono tumbado,
+  // donde el teclado llena el alto disponible, y una ventana grande, donde
+  // sobra sitio. La desalineación solo se ve en el segundo, porque con el
+  // teclado a tope de altura da igual cómo se alinee dentro de su columna.
+  for (final (nombre, size) in const <(String, Size)>[
+    ('un teléfono tumbado', Size(844, 390)),
+    ('una ventana amplia', Size(1080, 956)),
+  ]) {
+    testWidgets('en apaisado, en $nombre, las dos columnas se alinean', (
+      tester,
+    ) async {
+      await pumpApp(tester, size: size);
 
-    await tester.tap(find.text('Agregar'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Agregar'));
+      await tester.pumpAndSettle();
 
-    // El teclado a la derecha de la columna de campos y no debajo: en la
-    // altura de un teléfono tumbado, en una sola columna no cabe.
-    final title = tester.getRect(find.text('Nuevo gasto'));
-    final keypad = tester.getRect(find.byType(AmountKeypad));
-    expect(keypad.left, greaterThan(title.right));
-    expect(tester.takeException(), isNull);
+      final header = tester.getRect(find.text('Nuevo gasto'));
+      final category = tester.getRect(find.text('Categoría'));
+      final keypad = tester.getRect(find.byType(AmountKeypad));
 
-    appRouter.go(RouteNames.home);
-    await tester.pumpAndSettle();
-  });
+      // El teclado a la derecha de los campos y no debajo: en la altura de un
+      // teléfono tumbado, en una sola columna no cabe.
+      expect(keypad.left, greaterThan(category.right));
+
+      // Y arrancando a la altura de la columna izquierda, bajo la cabecera que
+      // cruza las dos. Antes la columna de la derecha se estiraba hasta el
+      // fondo y centraba el teclado en su propio alto, que no coincidía con
+      // nada de lo que tenía al lado.
+      expect(keypad.top, greaterThan(header.bottom), reason: 'bajo cabecera');
+      expect(
+        keypad.top,
+        lessThan(category.top),
+        reason: 'a la par del importe',
+      );
+
+      // La cabecera cruza las dos columnas: el botón de cerrar va al borde
+      // derecho del contenido, no a media pantalla donde acaba la izquierda.
+      expect(header.right, greaterThan(keypad.left));
+      expect(tester.takeException(), isNull);
+
+      appRouter.go(RouteNames.home);
+      await tester.pumpAndSettle();
+    });
+  }
 
   testWidgets('crear una cuenta la refleja en el saldo total', (tester) async {
     await pumpApp(tester);

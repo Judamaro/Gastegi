@@ -99,31 +99,36 @@ class _LandscapeLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     watchScreen(context);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: 20.r,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: 12.r,
       children: [
+        // La cabecera cruza las dos columnas en vez de vivir dentro de la
+        // izquierda: si no, el botón de cerrar cae a media pantalla, donde
+        // termina esa columna, y no en la esquina donde se busca.
+        const _Header(),
         Expanded(
-          // Solo la columna de campos se desplaza: el teclado y Guardar tienen
-          // que quedarse quietos, que es lo que se está tocando.
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: 12.r,
-              children: [
-                const _Header(),
-                const _AmountDisplay(),
-                const _Fields(),
-              ],
-            ),
-          ),
-        ),
-        Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: 12.r,
-            children: [const _Keypad()],
+          child: Row(
+            // Las dos columnas arrancan a la misma altura, justo debajo de la
+            // cabecera. Sin esto la de la derecha se estira hasta el fondo y
+            // centra el teclado en su propio alto, que no coincide con nada de
+            // lo que tiene al lado.
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 20.r,
+            children: [
+              Expanded(
+                // Solo la columna de campos se desplaza: el teclado y Guardar
+                // tienen que quedarse quietos, que es lo que se está tocando.
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    spacing: 12.r,
+                    children: [const _AmountDisplay(), const _Fields()],
+                  ),
+                ),
+              ),
+              const Expanded(child: _Keypad()),
+            ],
           ),
         ),
       ],
