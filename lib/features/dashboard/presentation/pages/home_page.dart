@@ -57,7 +57,7 @@ class HomePage extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 spacing: 8.r,
                 children: [
-                  // Con moneda y decimales, un importe de siete cifras no cabe
+                  // Con moneda y decimales, la cifra más larga no cabe
                   // al lado del texto: mejor encogerlo que desbordar.
                   Flexible(
                     child: FittedBox(

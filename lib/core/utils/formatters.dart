@@ -7,8 +7,13 @@ library;
 /// Dígitos como máximo a cada lado del separador decimal.
 ///
 /// Un solo tope para las tres vías de entrada: el teclado propio del gasto y
-/// los campos de saldo y de transferencia. Con dos decimales, `9.999.999,99`.
-const int maxIntegerDigits = 7;
+/// los campos de saldo y de transferencia. Con dos decimales, `999.999.999,99`.
+///
+/// Subirlo alarga la cifra más larga que la app puede llegar a pintar, que es
+/// la que decide si las pantallas desbordan: al tocarlo hay que mover con él
+/// los importes de los tests de desbordamiento, o dejarían de probar el peor
+/// caso sin que nada avise.
+const int maxIntegerDigits = 9;
 const int maxFractionDigits = 2;
 
 /// Menos tipográfico (U+2212).

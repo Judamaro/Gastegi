@@ -16,13 +16,19 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Con el teclado del sistema abierto, el `Scaffold` encoge el cuerpo por
+    // arriba del teclado. Si la barra de pestañas se quedara, se comería la
+    // franja que le queda al formulario —y con ella el botón de guardar— para
+    // ofrecer una navegación que nadie va a usar mientras escribe.
+    final tecladoAbierto = MediaQuery.viewInsetsOf(context).bottom > 0;
+
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
         child: Column(
           children: [
             Expanded(child: ContentWidth(child: navigationShell)),
-            AppTabBar(navigationShell: navigationShell),
+            if (!tecladoAbierto) AppTabBar(navigationShell: navigationShell),
           ],
         ),
       ),

@@ -10,7 +10,7 @@ import 'package:gastegi/core/utils/l10n_context.dart';
 ///
 /// La app tiene su propio teclado en vez de un campo de texto: así el importe
 /// se teclea sin que suba el teclado del sistema y tape la pantalla, y las
-/// reglas de entrada (un solo separador decimal, siete enteros y dos
+/// reglas de entrada (un solo separador decimal, y el tope de enteros y
 /// decimales) las decide el estado y no el sistema operativo.
 class AmountKeypad extends StatelessWidget {
   const AmountKeypad({super.key, required this.onKey, this.fillHeight = false});

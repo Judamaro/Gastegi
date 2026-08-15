@@ -82,15 +82,16 @@ void main() {
     },
   );
 
-  test('el teclado limita la parte entera a 7 dígitos', () async {
+  test('el teclado limita la parte entera al tope de dígitos', () async {
     final container = await buildLoadedContainer(db);
     final form = container.read(addExpenseProvider.notifier);
 
-    for (var i = 0; i < 10; i++) {
+    // Dos de más: el tope tiene que aguantar aunque se siga pulsando.
+    for (var i = 0; i < maxIntegerDigits + 2; i++) {
       form.keypadTap('9');
     }
 
-    expect(container.read(addExpenseProvider).amount, '9999999');
+    expect(container.read(addExpenseProvider).amount, '9' * maxIntegerDigits);
   });
 
   test('sin descripción se usa el nombre de la categoría', () async {

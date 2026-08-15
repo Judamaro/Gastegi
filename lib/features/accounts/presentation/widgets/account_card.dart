@@ -71,7 +71,7 @@ class AccountCard extends ConsumerWidget {
                 ],
               ),
             ),
-            // Pegado a la derecha y encogible: un saldo de siete cifras con
+            // Pegado a la derecha y encogible: el saldo más largo con
             // moneda y decimales no cabe junto al nombre de la cuenta.
             Expanded(
               flex: 2,

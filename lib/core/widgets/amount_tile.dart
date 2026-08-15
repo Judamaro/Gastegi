@@ -64,11 +64,24 @@ class AmountTile extends StatelessWidget {
               ],
             ),
           ),
-          Text(
-            amount,
-            style: TextStyle(
-              fontSize: AppFontSize.body,
-              fontWeight: FontWeight.w500,
+          // Acotado y encogible: el importe va sin `Expanded` para que el
+          // título se quede con todo lo que sobre, pero sin tope se lleva la
+          // fila por delante en cuanto la cifra es larga —el máximo con signo,
+          // moneda y decimales pasa de diecisiete caracteres— y más aún con el
+          // tamaño de letra del sistema subido.
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 150.r),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: Text(
+                amount,
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: AppFontSize.body,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
           ),
         ],

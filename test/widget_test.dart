@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gastegi/app/app.dart';
 import 'package:gastegi/app/router/app_router.dart';
+import 'package:gastegi/app/router/app_tab_bar.dart';
 import 'package:gastegi/app/router/route_names.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
+import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:gastegi/features/dashboard/presentation/pages/home_page.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
@@ -90,17 +92,18 @@ void main() {
     expect(find.text('Saldo total'.toUpperCase()), findsOneWidget);
   });
 
-  testWidgets('un importe de siete cifras no desborda ninguna pantalla', (
+  testWidgets('un importe del máximo de cifras no desborda ninguna pantalla', (
     tester,
   ) async {
-    // Con moneda y dos decimales, la cifra más larga pasa de nueve caracteres
-    // a dieciocho. Las pantallas que la enseñan en grande la ponen al lado de
-    // otro texto, y sin encogerla el `Row` desborda con las rayas amarillas.
+    // La cifra más larga que admite la app —`maxIntegerDigits` enteros y dos
+    // decimales— con su moneda puesta. Las pantallas que la enseñan en grande
+    // la ponen al lado de otro texto, y sin encogerla el `Row` desborda con
+    // las rayas amarillas.
     final accountId = await AccountRepositoryImpl(db).create(
       name: 'Efectivo',
       kind: 'Dinero en mano',
       iconKey: 'money',
-      initialBalance: 9999999.99,
+      initialBalance: 999999999.99,
     );
     final categoryId =
         (await db.query('categories', limit: 1)).single['id']! as String;
@@ -109,7 +112,7 @@ void main() {
       description: 'Coche',
       categoryId: categoryId,
       accountId: accountId,
-      amount: 1234567.89,
+      amount: 123456789.89,
     );
 
     await pumpApp(tester);
@@ -124,11 +127,11 @@ void main() {
 
     await tester.tap(find.text('Agregar'));
     await tester.pumpAndSettle();
-    for (final key in ['9', '9', '9', '9', '9', '9', '9', ',', '9', '9']) {
+    for (final key in [...List.filled(maxIntegerDigits, '9'), ',', '9', '9']) {
       await tester.tap(find.text(key));
       await tester.pump();
     }
-    expect(find.text('9.999.999,99\u00A0€'), findsOneWidget);
+    expect(find.text('999.999.999,99\u00A0€'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     // `appRouter` es una instancia global y conserva la ruta entre tests: sin
@@ -223,6 +226,24 @@ void main() {
       await tester.pumpAndSettle();
     });
   }
+
+  testWidgets('el teclado del sistema oculta la barra de pestañas', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    expect(find.byType(AppTabBar), findsOneWidget);
+
+    // Lo que hace el sistema al abrir su teclado. El `Scaffold` encoge el
+    // cuerpo hasta el borde del teclado, y con la barra puesta al formulario
+    // de la cuenta no le quedaba sitio ni para el botón de guardar.
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300 * 3);
+    await tester.pumpAndSettle();
+    expect(find.byType(AppTabBar), findsNothing);
+
+    tester.view.viewInsets = FakeViewPadding.zero;
+    await tester.pumpAndSettle();
+    expect(find.byType(AppTabBar), findsOneWidget);
+  });
 
   testWidgets('crear una cuenta la refleja en el saldo total', (tester) async {
     await pumpApp(tester);

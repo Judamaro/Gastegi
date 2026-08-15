@@ -117,73 +117,74 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('un importe de siete cifras no desborda con la tipografía real', (
-    tester,
-  ) async {
-    // El mismo caso está cubierto en `test/widget_test.dart`, pero allí el
-    // entorno de pruebas usa una tipografía de ancho fijo que mide muy distinto
-    // de la real. Esta es la única comprobación del ancho de verdad.
-    //
-    // Y con el viewport de teléfono (390×844): la ventana del escritorio es
-    // mucho más ancha, y ahí no cabría nada mal.
-    tester.view.physicalSize = const Size(390 * 3, 844 * 3);
-    tester.view.devicePixelRatio = 3;
-    addTearDown(tester.view.reset);
+  testWidgets(
+    'un importe del máximo de cifras no desborda con la tipografía real',
+    (tester) async {
+      // El mismo caso está cubierto en `test/widget_test.dart`, pero allí el
+      // entorno de pruebas usa una tipografía de ancho fijo que mide muy distinto
+      // de la real. Esta es la única comprobación del ancho de verdad.
+      //
+      // Y con el viewport de teléfono (390×844): la ventana del escritorio es
+      // mucho más ancha, y ahí no cabría nada mal.
+      tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
 
-    tester.platformDispatcher.localesTestValue = const [Locale('es')];
-    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+      tester.platformDispatcher.localesTestValue = const [Locale('es')];
+      addTearDown(tester.platformDispatcher.clearLocalesTestValue);
 
-    final accountId = await AccountRepositoryImpl(db).create(
-      name: 'Cuenta corriente',
-      kind: 'Banco',
-      iconKey: 'bank',
-      initialBalance: 9999999.99,
-    );
-    final categoryId =
-        (await db.query('categories', limit: 1)).single['id']! as String;
-    await ExpenseRepositoryImpl(db).create(
-      date: DateTime.now(),
-      description: 'Coche',
-      categoryId: categoryId,
-      accountId: accountId,
-      amount: 1234567.89,
-    );
+      final accountId = await AccountRepositoryImpl(db).create(
+        name: 'Cuenta corriente',
+        kind: 'Banco',
+        iconKey: 'bank',
+        initialBalance: 999999999.99,
+      );
+      final categoryId =
+          (await db.query('categories', limit: 1)).single['id']! as String;
+      await ExpenseRepositoryImpl(db).create(
+        date: DateTime.now(),
+        description: 'Coche',
+        categoryId: categoryId,
+        accountId: accountId,
+        amount: 1234567.89,
+      );
 
-    final container = ProviderContainer(
-      overrides: [databaseProvider.overrideWithValue(db)],
-    );
-    addTearDown(container.dispose);
-    await container.read(appDataProvider.notifier).load();
+      final container = ProviderContainer(
+        overrides: [databaseProvider.overrideWithValue(db)],
+      );
+      addTearDown(container.dispose);
+      await container.read(appDataProvider.notifier).load();
 
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: const GastegiApp(),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    // Inicio: total del mes, centro de la dona y leyenda por categoría.
-    expect(find.text('1.234.567,89\u00A0€'), findsWidgets);
-    expect(tester.takeException(), isNull);
-
-    for (final tab in ['Historial', 'Presupuesto', 'Cuentas']) {
-      await tester.tap(find.text(tab).last);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const GastegiApp(),
+        ),
+      );
       await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull, reason: tab);
-    }
-    expect(find.text('8.765.432,10\u00A0€'), findsWidgets);
 
-    await tester.tap(find.text('Agregar'));
-    await tester.pumpAndSettle();
-    for (final key in ['9', '9', '9', '9', '9', '9', '9', ',', '9', '9']) {
-      await tester.tap(find.text(key));
-      await tester.pump();
-    }
-    expect(find.text('9.999.999,99\u00A0€'), findsOneWidget);
-    expect(tester.takeException(), isNull);
+      // Inicio: total del mes, centro de la dona y leyenda por categoría.
+      expect(find.text('1.234.567,89\u00A0€'), findsWidgets);
+      expect(tester.takeException(), isNull);
 
-    appRouter.go(RouteNames.home);
-    await tester.pumpAndSettle();
-  });
+      for (final tab in ['Historial', 'Presupuesto', 'Cuentas']) {
+        await tester.tap(find.text(tab).last);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: tab);
+      }
+      expect(find.text('8.765.432,10\u00A0€'), findsWidgets);
+
+      await tester.tap(find.text('Agregar'));
+      await tester.pumpAndSettle();
+      for (final key in ['9', '9', '9', '9', '9', '9', '9', ',', '9', '9']) {
+        await tester.tap(find.text(key));
+        await tester.pump();
+      }
+      expect(find.text('9.999.999,99\u00A0€'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      appRouter.go(RouteNames.home);
+      await tester.pumpAndSettle();
+    },
+  );
 }

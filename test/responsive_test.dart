@@ -48,13 +48,13 @@ void main() {
       testWidgets('$nombre con texto al $textScale× no desborda', (
         tester,
       ) async {
-        // Datos de verdad en todas las pantallas, y con la cifra más larga que
-        // admite la app: sin ellos, media interfaz no llega a pintarse.
+        // Datos de verdad en todas las pantallas, y con la cifra más larga
+        // que admite la app: sin ellos, media interfaz no llega a pintarse.
         final accountId = await AccountRepositoryImpl(db).create(
           name: 'Efectivo',
           kind: 'Dinero en mano',
           iconKey: 'money',
-          initialBalance: 9999999.99,
+          initialBalance: 999999999.99,
         );
         final categoryId =
             (await db.query('categories', limit: 1)).single['id']! as String;
@@ -63,7 +63,7 @@ void main() {
           description: 'Coche',
           categoryId: categoryId,
           accountId: accountId,
-          amount: 1234567.89,
+          amount: 123456789.89,
         );
 
         tester.view.physicalSize = size * 3;

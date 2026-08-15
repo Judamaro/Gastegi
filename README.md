@@ -100,7 +100,7 @@ has tocado" dejaría saldos viejos en pantalla **sin lanzar ningún error**.
   decisión de diseño: la app no interrumpe, muestra la consecuencia donde
   estaba mirando el usuario.
 - **El teclado del importe es propio.** No sube el del sistema, y las reglas de
-  entrada (un solo separador decimal, siete enteros y dos decimales) las decide
+  entrada (un solo separador decimal, y el tope de enteros y decimales) las decide
   la app.
 - **Los importes se guardan en canónico y se pintan en el idioma del
   dispositivo.** El estado de un formulario guarda `1234.56`, con punto y sin
