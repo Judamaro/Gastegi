@@ -24,7 +24,7 @@ class AccountCard extends ConsumerWidget {
       onTap: () => form.open(account),
       borderRadius: BorderRadius.circular(AppRadius.md),
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.space3),
+        padding: AppSpacing.card,
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.md),
