@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/core/utils/l10n_context.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
@@ -29,11 +30,11 @@ class TransferForm extends ConsumerWidget {
         Kicker(l10n.transferTitle),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 5,
+          spacing: 5.r,
           children: [
             FieldLabel(l10n.transferFrom),
             Wrap(
-              spacing: 6,
+              spacing: 6.r,
               runSpacing: 6,
               children: [
                 for (final a in accounts)
@@ -48,11 +49,11 @@ class TransferForm extends ConsumerWidget {
         ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 5,
+          spacing: 5.r,
           children: [
             FieldLabel(l10n.transferTo),
             Wrap(
-              spacing: 6,
+              spacing: 6.r,
               runSpacing: 6,
               children: [
                 for (final a in accounts)
@@ -67,7 +68,7 @@ class TransferForm extends ConsumerWidget {
         ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 5,
+          spacing: 5.r,
           children: [
             FieldLabel(l10n.transferAmount),
             MoneyInput(
@@ -78,11 +79,13 @@ class TransferForm extends ConsumerWidget {
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
-          spacing: 8,
+          spacing: 8.r,
           children: [
             SecondaryButton(label: l10n.commonCancel, onTap: form.close),
-            SizedBox(
-              width: 110,
+            // Ancho mínimo y no fijo: el botón conserva su presencia y crece
+            // con la etiqueta cuando el tamaño de letra del sistema la alarga.
+            ConstrainedBox(
+              constraints: BoxConstraints(minWidth: 110.r),
               child: PrimaryButton(
                 label: l10n.transferSubmit,
                 onTap: form.submit,

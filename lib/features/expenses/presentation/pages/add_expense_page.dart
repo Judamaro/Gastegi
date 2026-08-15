@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:gastegi/app/router/route_names.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
+import 'package:gastegi/app/theme/app_typography.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/utils/date_utils.dart';
 import 'package:gastegi/core/utils/l10n_context.dart';
+import 'package:gastegi/core/utils/screen.dart';
 import 'package:gastegi/core/widgets/app_chip.dart';
 import 'package:gastegi/core/widgets/app_icon_button.dart';
 import 'package:gastegi/core/widgets/app_input.dart';
@@ -23,6 +26,7 @@ class AddExpensePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    watchScreen(context);
     final data = ref.watch(appDataProvider);
     final state = ref.watch(addExpenseProvider);
     final form = ref.read(addExpenseProvider.notifier);
@@ -44,18 +48,18 @@ class AddExpensePage extends ConsumerWidget {
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
               child: IntrinsicHeight(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                  padding: EdgeInsets.fromLTRB(20.r, 12.r, 20.r, 16.r),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                    spacing: 12,
+                    spacing: 12.r,
                     children: [
                       Row(
                         children: [
                           Expanded(
                             child: Text(
                               l10n.addExpenseTitle,
-                              style: const TextStyle(
-                                fontSize: 20,
+                              style: TextStyle(
+                                fontSize: AppFontSize.title,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -71,7 +75,7 @@ class AddExpensePage extends ConsumerWidget {
                         ],
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(top: 8, bottom: 4),
+                        padding: EdgeInsets.only(top: 8.r, bottom: 4.r),
                         // El máximo tecleable con moneda y decimales roza el
                         // ancho de la pantalla: se encoge en vez de desbordar.
                         child: FittedBox(
@@ -79,11 +83,8 @@ class AddExpensePage extends ConsumerWidget {
                           child: Text(
                             context.money.typed(state.amount),
                             textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 44,
-                              fontWeight: FontWeight.w500,
-                              letterSpacing: -0.88,
-                              height: 1,
+                            style: AppTextStyles.hero(
+                              AppFontSize.displayXl,
                               color: state.amountValue > 0
                                   ? AppColors.text
                                   : AppColors.neutral700,
@@ -93,12 +94,12 @@ class AddExpensePage extends ConsumerWidget {
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        spacing: 5,
+                        spacing: 5.r,
                         children: [
                           FieldLabel(l10n.addExpenseCategory),
                           Wrap(
-                            spacing: 6,
-                            runSpacing: 6,
+                            spacing: 6.r,
+                            runSpacing: 6.r,
                             children: [
                               for (final c in data.categories)
                                 AppChip(
@@ -114,7 +115,7 @@ class AddExpensePage extends ConsumerWidget {
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        spacing: 5,
+                        spacing: 5.r,
                         children: [
                           FieldLabel(l10n.addExpenseAccount),
                           // Sin cuentas no se puede guardar nada: explicarlo y dar
@@ -123,12 +124,12 @@ class AddExpensePage extends ConsumerWidget {
                           if (data.accounts.isEmpty)
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              spacing: 8,
+                              spacing: 8.r,
                               children: [
                                 Text(
                                   l10n.addExpenseNeedsAccount,
-                                  style: const TextStyle(
-                                    fontSize: 12,
+                                  style: TextStyle(
+                                    fontSize: AppFontSize.label,
                                     color: AppColors.neutral500,
                                   ),
                                 ),
@@ -140,8 +141,8 @@ class AddExpensePage extends ConsumerWidget {
                             )
                           else
                             Wrap(
-                              spacing: 6,
-                              runSpacing: 6,
+                              spacing: 6.r,
+                              runSpacing: 6.r,
                               children: [
                                 for (final a in data.accounts)
                                   AppChip(
@@ -155,12 +156,12 @@ class AddExpensePage extends ConsumerWidget {
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        spacing: 5,
+                        spacing: 5.r,
                         children: [
                           FieldLabel(l10n.addExpenseDate),
                           Wrap(
-                            spacing: 6,
-                            runSpacing: 6,
+                            spacing: 6.r,
+                            runSpacing: 6.r,
                             children: [
                               AppChip(
                                 label: l10n.commonToday,

@@ -136,6 +136,28 @@ void main() {
     await tester.pumpAndSettle();
   });
 
+  testWidgets('girar la pantalla reescala la interfaz', (tester) async {
+    await pumpApp(tester);
+    await tester.tap(find.text('Presupuesto'));
+    await tester.pumpAndSettle();
+
+    double titleSize() =>
+        tester.widget<Text>(find.text('Presupuestos')).style!.fontSize!;
+    expect(titleSize(), closeTo(20, 0.01));
+
+    tester.view.physicalSize = const Size(844 * 3, 390 * 3);
+    await tester.pumpAndSettle();
+
+    // 20 × min(844/390, 700/844) = 16.59. Si sale 20, la pantalla no se ha
+    // reconstruido y arrastra la escala del retrato: es lo que pasa sin la
+    // llamada a `watchScreen`, porque go_router cachea el Navigator de cada
+    // rama del shell y solo lo rehace si cambia la ruta.
+    expect(titleSize(), closeTo(16.59, 0.05));
+
+    appRouter.go(RouteNames.home);
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('crear una cuenta la refleja en el saldo total', (tester) async {
     await pumpApp(tester);
 

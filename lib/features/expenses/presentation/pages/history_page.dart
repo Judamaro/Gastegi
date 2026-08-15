@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
+import 'package:gastegi/app/theme/app_spacing.dart';
+import 'package:gastegi/app/theme/app_typography.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/utils/l10n_context.dart';
+import 'package:gastegi/core/utils/screen.dart';
 import 'package:gastegi/core/widgets/amount_tile.dart';
 import 'package:gastegi/core/widgets/app_chip.dart';
 import 'package:gastegi/core/widgets/app_input.dart';
@@ -16,6 +20,7 @@ class HistoryPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    watchScreen(context);
     final data = ref.watch(appDataProvider);
     final filter = ref.watch(historyFilterProvider);
     final filters = ref.read(historyFilterProvider.notifier);
@@ -30,19 +35,22 @@ class HistoryPage extends ConsumerWidget {
     };
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      padding: AppSpacing.page,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 12,
+        spacing: 12.r,
         children: [
           Text(
             l10n.historyTitle,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontSize: AppFontSize.title,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           AppInput(hint: l10n.historySearchHint, onChanged: filters.setSearch),
           Wrap(
-            spacing: 6,
-            runSpacing: 6,
+            spacing: 6.r,
+            runSpacing: 6.r,
             children: [
               for (final range in HistoryRange.values)
                 AppChip(
@@ -53,8 +61,8 @@ class HistoryPage extends ConsumerWidget {
             ],
           ),
           Wrap(
-            spacing: 6,
-            runSpacing: 6,
+            spacing: 6.r,
+            runSpacing: 6.r,
             children: [
               // `null` es "todas": el chip lleva etiqueta, pero el filtro no
               // guarda texto de interfaz.
@@ -74,11 +82,11 @@ class HistoryPage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(top: 6, bottom: 4),
+                  padding: EdgeInsets.only(top: 6.r, bottom: 4.r),
                   child: Text(
                     dates.dayLabel(day, data.today).toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 11,
+                    style: TextStyle(
+                      fontSize: AppFontSize.caption,
                       letterSpacing: 0.9,
                       color: AppColors.neutral500,
                     ),
@@ -99,7 +107,7 @@ class HistoryPage extends ConsumerWidget {
             ),
           if (groups.isEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
+              padding: EdgeInsets.symmetric(vertical: 24.r),
               child: Text(
                 // Distinguir "no hay nada" de "los filtros no encuentran nada":
                 // en una app recién instalada el segundo mensaje despista.
@@ -107,8 +115,8 @@ class HistoryPage extends ConsumerWidget {
                     ? l10n.historyEmptyEver
                     : l10n.historyEmptyForFilters,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 13,
+                style: TextStyle(
+                  fontSize: AppFontSize.bodySm,
                   color: AppColors.neutral600,
                 ),
               ),

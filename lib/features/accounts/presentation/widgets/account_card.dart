@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_elevation.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/app/theme/app_spacing.dart';
+import 'package:gastegi/app/theme/app_typography.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/utils/l10n_context.dart';
 import 'package:gastegi/core/widgets/app_icon_button.dart';
@@ -31,18 +33,18 @@ class AccountCard extends ConsumerWidget {
           border: Border.all(color: AppElevation.smBorder),
         ),
         child: Row(
-          spacing: 12,
+          spacing: 12.r,
           children: [
             Container(
-              width: 38,
-              height: 38,
+              width: 38.r,
+              height: 38.r,
               decoration: BoxDecoration(
                 color: AppColors.neutral900,
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: Icon(
                 account.icon,
-                size: 19,
+                size: 19.r,
                 color: negative ? AppColors.neutral500 : AppColors.accent300,
               ),
             ),
@@ -54,15 +56,15 @@ class AccountCard extends ConsumerWidget {
                     account.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 14),
+                    style: TextStyle(fontSize: AppFontSize.body),
                   ),
                   if (account.kind.isNotEmpty)
                     Text(
                       account.kind,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 11,
+                      style: TextStyle(
+                        fontSize: AppFontSize.caption,
                         color: AppColors.neutral600,
                       ),
                     ),
@@ -79,7 +81,7 @@ class AccountCard extends ConsumerWidget {
                 child: Text(
                   context.money.formatSigned(account.balance),
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: AppFontSize.subtitle,
                     fontWeight: FontWeight.w500,
                     color: negative ? AppColors.neutral500 : AppColors.text,
                   ),

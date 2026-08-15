@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_spacing.dart';
+import 'package:gastegi/app/theme/app_typography.dart';
 import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/core/utils/l10n_context.dart';
 
@@ -31,11 +33,11 @@ class AmountKeypad extends StatelessWidget {
     ];
 
     return Column(
-      spacing: 8,
+      spacing: 8.r,
       children: [
         for (var row = 0; row < 4; row++)
           Row(
-            spacing: 8,
+            spacing: 8.r,
             children: [
               for (final (label, token) in keys.sublist(row * 3, row * 3 + 3))
                 Expanded(
@@ -60,14 +62,14 @@ class _Key extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.md),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: EdgeInsets.symmetric(vertical: 12.r),
         decoration: BoxDecoration(
           color: AppColors.surface,
           border: Border.all(color: AppColors.divider),
           borderRadius: BorderRadius.circular(AppRadius.md),
         ),
         alignment: Alignment.center,
-        child: Text(label, style: const TextStyle(fontSize: 20)),
+        child: Text(label, style: TextStyle(fontSize: AppFontSize.title)),
       ),
     );
   }

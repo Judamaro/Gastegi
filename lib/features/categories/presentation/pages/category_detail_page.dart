@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:gastegi/app/router/route_names.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
+import 'package:gastegi/app/theme/app_spacing.dart';
+import 'package:gastegi/app/theme/app_typography.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/core/utils/l10n_context.dart';
+import 'package:gastegi/core/utils/screen.dart';
 import 'package:gastegi/core/widgets/amount_tile.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/app_icon_button.dart';
@@ -26,6 +30,7 @@ class CategoryDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    watchScreen(context);
     final cat = ref.watch(categoryByNameProvider(categoryName));
     // La categoría puede haber desaparecido bajo los pies de la pantalla.
     if (cat == null) return const SizedBox.shrink();
@@ -39,13 +44,13 @@ class CategoryDetailPage extends ConsumerWidget {
     final monthName = dates.monthName(state.monthAnchor);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      padding: AppSpacing.page,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 14,
+        spacing: 14.r,
         children: [
           Row(
-            spacing: 8,
+            spacing: 8.r,
             children: [
               AppIconButton(
                 icon: AppIcons.caretLeft,
@@ -54,8 +59,8 @@ class CategoryDetailPage extends ConsumerWidget {
               Expanded(
                 child: Text(
                   cat.name,
-                  style: const TextStyle(
-                    fontSize: 20,
+                  style: TextStyle(
+                    fontSize: AppFontSize.title,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -70,7 +75,7 @@ class CategoryDetailPage extends ConsumerWidget {
                 // Alineación por abajo y no por línea base: un `FittedBox` no
                 // expone la suya, y con `baseline` el `Row` se cae.
                 crossAxisAlignment: CrossAxisAlignment.end,
-                spacing: 8,
+                spacing: 8.r,
                 children: [
                   // Con moneda y decimales, un importe de siete cifras no cabe
                   // al lado del texto: mejor encogerlo que desbordar.
@@ -80,12 +85,7 @@ class CategoryDetailPage extends ConsumerWidget {
                       alignment: Alignment.centerLeft,
                       child: Text(
                         money.format(catTotal),
-                        style: const TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: -0.64,
-                          height: 1,
-                        ),
+                        style: AppTextStyles.hero(AppFontSize.displaySm),
                       ),
                     ),
                   ),
@@ -96,18 +96,18 @@ class CategoryDetailPage extends ConsumerWidget {
                         percentOf(catTotal, state.total),
                       ),
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 13,
+                      style: TextStyle(
+                        fontSize: AppFontSize.bodySm,
                         color: AppColors.neutral500,
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10.r),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                spacing: 4,
+                spacing: 4.r,
                 children: [
                   ProgressBar(
                     // Un presupuesto a 0 daría una fracción NaN y reventaría el
@@ -120,8 +120,8 @@ class CategoryDetailPage extends ConsumerWidget {
                       money.format(catTotal),
                       money.format(cat.budget),
                     ),
-                    style: const TextStyle(
-                      fontSize: 11,
+                    style: TextStyle(
+                      fontSize: AppFontSize.caption,
                       color: AppColors.neutral500,
                     ),
                   ),
@@ -148,15 +148,15 @@ class CategoryDetailPage extends ConsumerWidget {
           ),
           if (expenses.isEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: EdgeInsets.symmetric(vertical: 16.r),
               child: Text(
                 l10n.categoryNoExpenses(
                   cat.name.toLowerCase(),
                   monthName.toLowerCase(),
                 ),
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 13,
+                style: TextStyle(
+                  fontSize: AppFontSize.bodySm,
                   color: AppColors.neutral600,
                 ),
               ),

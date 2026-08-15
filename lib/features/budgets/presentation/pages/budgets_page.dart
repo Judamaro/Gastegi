@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
+import 'package:gastegi/app/theme/app_spacing.dart';
+import 'package:gastegi/app/theme/app_typography.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/utils/l10n_context.dart';
+import 'package:gastegi/core/utils/screen.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/color_dot.dart';
 import 'package:gastegi/core/widgets/progress_bar.dart';
@@ -15,19 +19,23 @@ class BudgetsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    watchScreen(context);
     final state = ref.watch(appDataProvider);
     final l10n = context.l10n;
     final dates = context.dates;
     final money = context.money;
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      padding: AppSpacing.page,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 14,
+        spacing: 14.r,
         children: [
           Text(
             l10n.budgetsTitle,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontSize: AppFontSize.title,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           Text(
             l10n.budgetsSummary(
@@ -35,51 +43,54 @@ class BudgetsPage extends ConsumerWidget {
               money.format(state.total),
               money.format(state.totalBudget),
             ),
-            style: const TextStyle(fontSize: 13, color: AppColors.neutral500),
+            style: TextStyle(
+              fontSize: AppFontSize.bodySm,
+              color: AppColors.neutral500,
+            ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: 12,
+            spacing: 12.r,
             children: [
               for (final b in state.budgetRows)
                 AppCard(
                   gap: 8,
                   children: [
                     Row(
-                      spacing: 8,
+                      spacing: 8.r,
                       children: [
                         ColorDot(b.category.color),
                         Expanded(
                           child: Text(
                             b.category.name,
-                            style: const TextStyle(fontSize: 14),
+                            style: TextStyle(fontSize: AppFontSize.body),
                           ),
                         ),
                         if (b.alert)
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 3,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 10.r,
+                              vertical: 3.r,
                             ),
                             decoration: BoxDecoration(
                               border: Border.all(color: AppColors.accent),
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(6.r),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
-                              spacing: 4,
+                              spacing: 4.r,
                               children: [
-                                const Icon(
+                                Icon(
                                   AppIcons.warning,
-                                  size: 11,
+                                  size: 11.r,
                                   color: AppColors.accent,
                                 ),
                                 Text(
                                   b.over
                                       ? l10n.budgetsAlertOver
                                       : l10n.budgetsAlertNear,
-                                  style: const TextStyle(
-                                    fontSize: 11,
+                                  style: TextStyle(
+                                    fontSize: AppFontSize.caption,
                                     color: AppColors.accent,
                                   ),
                                 ),
@@ -96,8 +107,8 @@ class BudgetsPage extends ConsumerWidget {
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 12,
+                            style: TextStyle(
+                              fontSize: AppFontSize.label,
                               color: AppColors.neutral500,
                             ),
                           ),
@@ -114,8 +125,8 @@ class BudgetsPage extends ConsumerWidget {
                               money.format(b.category.budget - b.spent),
                               (b.ratio * 100).round(),
                             ),
-                      style: const TextStyle(
-                        fontSize: 11,
+                      style: TextStyle(
+                        fontSize: AppFontSize.caption,
                         color: AppColors.neutral600,
                       ),
                     ),

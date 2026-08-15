@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:gastegi/app/router/route_names.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
+import 'package:gastegi/app/theme/app_spacing.dart';
+import 'package:gastegi/app/theme/app_typography.dart';
 import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/core/utils/l10n_context.dart';
+import 'package:gastegi/core/utils/screen.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/charts/bar_chart.dart';
 import 'package:gastegi/core/widgets/charts/compare_bar.dart';
@@ -23,6 +27,7 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    watchScreen(context);
     final state = ref.watch(appDataProvider);
     final total = state.total;
     final catTotals = state.catTotals;
@@ -36,21 +41,21 @@ class HomePage extends ConsumerWidget {
     final prevMonthName = dates.monthName(state.prevMonthAnchor);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      padding: AppSpacing.page,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 16,
+        spacing: 16.r,
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Kicker(dates.monthTitle(state.monthAnchor), size: 11),
-              const SizedBox(height: 4),
+              SizedBox(height: 4.r),
               Row(
                 // Alineación por abajo y no por línea base: un `FittedBox` no
                 // expone la suya, y con `baseline` el `Row` se cae.
                 crossAxisAlignment: CrossAxisAlignment.end,
-                spacing: 8,
+                spacing: 8.r,
                 children: [
                   // Con moneda y decimales, un importe de siete cifras no cabe
                   // al lado del texto: mejor encogerlo que desbordar.
@@ -60,12 +65,7 @@ class HomePage extends ConsumerWidget {
                       alignment: Alignment.centerLeft,
                       child: Text(
                         money.format(total),
-                        style: const TextStyle(
-                          fontSize: 38,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: -0.76,
-                          height: 1,
-                        ),
+                        style: AppTextStyles.hero(AppFontSize.displayLg),
                       ),
                     ),
                   ),
@@ -73,8 +73,8 @@ class HomePage extends ConsumerWidget {
                     child: Text(
                       l10n.homeSpentThisMonth,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 13,
+                      style: TextStyle(
+                        fontSize: AppFontSize.bodySm,
                         color: AppColors.neutral500,
                       ),
                     ),
@@ -84,10 +84,10 @@ class HomePage extends ConsumerWidget {
               // Sin mes anterior con datos no hay nada que comparar, y las
               // fracciones saldrían 0/0.
               if (state.canCompare) ...[
-                const SizedBox(height: 12),
+                SizedBox(height: 12.r),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  spacing: 5,
+                  spacing: 5.r,
                   children: [
                     CompareBar(
                       fraction: state.cmpNowFrac,
@@ -109,8 +109,8 @@ class HomePage extends ConsumerWidget {
                               money.format(state.prevTotal),
                             ),
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 11,
+                            style: TextStyle(
+                              fontSize: AppFontSize.caption,
                               color: AppColors.neutral500,
                             ),
                           ),
@@ -122,8 +122,8 @@ class HomePage extends ConsumerWidget {
                               prevMonthName.toLowerCase(),
                             ),
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 11,
+                            style: TextStyle(
+                              fontSize: AppFontSize.caption,
                               color: AppColors.accent300,
                             ),
                           ),
@@ -144,8 +144,8 @@ class HomePage extends ConsumerWidget {
                   state.hasNoExpensesAtAll
                       ? l10n.homeNeverAnyExpense
                       : l10n.homeNoExpensesInMonth(monthName.toLowerCase()),
-                  style: const TextStyle(
-                    fontSize: 13,
+                  style: TextStyle(
+                    fontSize: AppFontSize.bodySm,
                     color: AppColors.neutral500,
                   ),
                 ),
@@ -161,7 +161,7 @@ class HomePage extends ConsumerWidget {
               children: [
                 Kicker(l10n.homeByCategory),
                 Row(
-                  spacing: 16,
+                  spacing: 16.r,
                   children: [
                     Flexible(
                       child: FittedBox(
@@ -179,7 +179,7 @@ class HomePage extends ConsumerWidget {
                     ),
                     Expanded(
                       child: Column(
-                        spacing: 7,
+                        spacing: 7.r,
                         children: [
                           for (final c in state.categories)
                             InkWell(
@@ -187,7 +187,7 @@ class HomePage extends ConsumerWidget {
                                 RouteNames.categoryDetailOf(c.name),
                               ),
                               child: Row(
-                                spacing: 7,
+                                spacing: 7.r,
                                 children: [
                                   ColorDot(c.color),
                                   // La leyenda va en la mitad estrecha, al
@@ -202,7 +202,9 @@ class HomePage extends ConsumerWidget {
                                       c.name,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 12),
+                                      style: TextStyle(
+                                        fontSize: AppFontSize.label,
+                                      ),
                                     ),
                                   ),
                                   Expanded(
@@ -212,20 +214,24 @@ class HomePage extends ConsumerWidget {
                                       alignment: Alignment.centerRight,
                                       child: Text(
                                         money.format(catTotals[c.name] ?? 0),
-                                        style: const TextStyle(
-                                          fontSize: 12,
+                                        style: TextStyle(
+                                          fontSize: AppFontSize.label,
                                           color: AppColors.neutral400,
                                         ),
                                       ),
                                     ),
                                   ),
-                                  SizedBox(
-                                    width: 30,
+                                  // Ancho mínimo y no fijo: alinea la columna
+                                  // de porcentajes mientras caben, y la deja
+                                  // crecer cuando el tamaño de letra del
+                                  // sistema los hace más anchos.
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(minWidth: 30.r),
                                     child: Text(
                                       '${percentOf(catTotals[c.name] ?? 0, total)}%',
                                       textAlign: TextAlign.right,
-                                      style: const TextStyle(
-                                        fontSize: 12,
+                                      style: TextStyle(
+                                        fontSize: AppFontSize.label,
                                         color: AppColors.neutral600,
                                       ),
                                     ),
@@ -248,11 +254,11 @@ class HomePage extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(l10n.homeAxisDay(1, monthAbbr), style: _axisStyle),
-                    Text(l10n.homeAxisDay(15, monthAbbr), style: _axisStyle),
+                    Text(l10n.homeAxisDay(1, monthAbbr), style: _axisStyle()),
+                    Text(l10n.homeAxisDay(15, monthAbbr), style: _axisStyle()),
                     Text(
                       l10n.homeAxisDay(state.daysInCurrentMonth, monthAbbr),
-                      style: _axisStyle,
+                      style: _axisStyle(),
                     ),
                   ],
                 ),
@@ -287,7 +293,7 @@ class HomePage extends ConsumerWidget {
   }
 }
 
-const TextStyle _axisStyle = TextStyle(
-  fontSize: 10,
-  color: AppColors.neutral600,
-);
+/// Una función y no una constante de nivel superior: `AppFontSize` necesita la
+/// pantalla ya medida, y un `final` aquí se evaluaría al importar el archivo.
+TextStyle _axisStyle() =>
+    TextStyle(fontSize: AppFontSize.micro, color: AppColors.neutral600);
