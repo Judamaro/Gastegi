@@ -14,6 +14,13 @@ abstract final class AppConfig {
   /// el que se precarga en `intl` antes del primer `DateFormat`.
   static const Locale fallbackLocale = Locale('es');
 
+  /// Código ISO 4217 de la moneda con la que se llevan las cuentas.
+  ///
+  /// Se guarda el código y no el símbolo: `intl` traduce `EUR` a `€` igual que
+  /// `DateFormat` traduce un mes a su nombre. Escribir el símbolo a mano sería
+  /// texto para el usuario fuera de `lib/l10n/`.
+  static const String currencyCode = 'EUR';
+
   /// Nombre del fichero de la base de datos.
   ///
   /// Cambia por entorno para que una compilación de desarrollo no escriba

@@ -72,17 +72,22 @@ class AddExpensePage extends ConsumerWidget {
                       ),
                       Padding(
                         padding: const EdgeInsets.only(top: 8, bottom: 4),
-                        child: Text(
-                          state.amount.isEmpty ? '0' : state.amount,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 44,
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: -0.88,
-                            height: 1,
-                            color: state.amountValue > 0
-                                ? AppColors.text
-                                : AppColors.neutral700,
+                        // El máximo tecleable con moneda y decimales roza el
+                        // ancho de la pantalla: se encoge en vez de desbordar.
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            context.money.typed(state.amount),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 44,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: -0.88,
+                              height: 1,
+                              color: state.amountValue > 0
+                                  ? AppColors.text
+                                  : AppColors.neutral700,
+                            ),
                           ),
                         ),
                       ),

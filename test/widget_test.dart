@@ -2,8 +2,11 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gastegi/app/app.dart';
+import 'package:gastegi/app/router/app_router.dart';
+import 'package:gastegi/app/router/route_names.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
+import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -73,6 +76,54 @@ void main() {
     expect(find.text('Saldo total'.toUpperCase()), findsOneWidget);
   });
 
+  testWidgets('un importe de siete cifras no desborda ninguna pantalla', (
+    tester,
+  ) async {
+    // Con moneda y dos decimales, la cifra más larga pasa de nueve caracteres
+    // a dieciocho. Las pantallas que la enseñan en grande la ponen al lado de
+    // otro texto, y sin encogerla el `Row` desborda con las rayas amarillas.
+    final accountId = await AccountRepositoryImpl(db).create(
+      name: 'Efectivo',
+      kind: 'Dinero en mano',
+      iconKey: 'money',
+      initialBalance: 9999999.99,
+    );
+    final categoryId =
+        (await db.query('categories', limit: 1)).single['id']! as String;
+    await ExpenseRepositoryImpl(db).create(
+      date: testNow,
+      description: 'Coche',
+      categoryId: categoryId,
+      accountId: accountId,
+      amount: 1234567.89,
+    );
+
+    await pumpApp(tester);
+    // Inicio: total del mes, dona y leyenda por categoría.
+    expect(tester.takeException(), isNull);
+
+    for (final tab in ['Historial', 'Presupuesto', 'Cuentas']) {
+      await tester.tap(find.text(tab).last);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: tab);
+    }
+
+    await tester.tap(find.text('Agregar'));
+    await tester.pumpAndSettle();
+    for (final key in ['9', '9', '9', '9', '9', '9', '9', ',', '9', '9']) {
+      await tester.tap(find.text(key));
+      await tester.pump();
+    }
+    expect(find.text('9.999.999,99\u00A0€'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    // `appRouter` es una instancia global y conserva la ruta entre tests: sin
+    // volver a una pestaña, el siguiente arranca en /add y no encuentra la
+    // barra de navegación.
+    appRouter.go(RouteNames.home);
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('crear una cuenta la refleja en el saldo total', (tester) async {
     await pumpApp(tester);
 
@@ -94,7 +145,9 @@ void main() {
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
 
-    expect(find.text('480'), findsWidgets);
+    // Con la secuencia de escape a propósito: el espacio antes del símbolo es
+    // duro (U+00A0), y escrito a mano no coincidiría.
+    expect(find.text('480,00\u00A0€'), findsWidgets);
     expect(find.text('Efectivo'), findsOneWidget);
   });
 
@@ -113,8 +166,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Nuevo gasto'), findsOneWidget);
 
-    // Hay que repintar entre pulsaciones: hasta que el importe no cambia, el
-    // display sigue mostrando "0" y colisionaría con la tecla "0".
+    // Hay que repintar entre pulsaciones para que los chips reaccionen. El
+    // display ya no colisiona con la tecla "0": lleva el símbolo puesto.
     await tester.tap(find.text('5'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('0'));

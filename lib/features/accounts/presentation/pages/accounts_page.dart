@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
-import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/core/utils/l10n_context.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/app_icon_button.dart';
@@ -53,13 +52,19 @@ class AccountsPage extends ConsumerWidget {
             children: [
               Kicker(l10n.accountsTotalBalance, size: 11),
               const SizedBox(height: 4),
-              Text(
-                formatAmount(data.patrimonio),
-                style: const TextStyle(
-                  fontSize: 34,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: -0.68,
-                  height: 1,
+              // El patrimonio es la cifra más larga de la app: puede ser
+              // negativo y de siete dígitos, y ahora lleva moneda y decimales.
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  context.money.formatSigned(data.patrimonio),
+                  style: const TextStyle(
+                    fontSize: 34,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: -0.68,
+                    height: 1,
+                  ),
                 ),
               ),
             ],

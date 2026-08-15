@@ -18,6 +18,9 @@ class AmountTile extends StatelessWidget {
 
   final String title;
   final String subtitle;
+
+  /// Ya formateado **y con su signo**: quien llama sabe si es un gasto o un
+  /// ingreso, y el signo forma parte del importe en cada idioma.
   final String amount;
   final IconData? icon;
   final Color? iconColor;
@@ -60,7 +63,7 @@ class AmountTile extends StatelessWidget {
             ),
           ),
           Text(
-            '−$amount',
+            amount,
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           ),
         ],

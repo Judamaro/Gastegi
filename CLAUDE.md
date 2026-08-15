@@ -128,6 +128,24 @@ app instalada — nunca en el tuyo, que crea la BD de cero.
 > Por qué: una app recién instalada calcula `0 / 0`, y `double.nan.round()`
 > lanza `UnsupportedError`.
 
+**El estado guarda importes canónicos; el texto del idioma solo existe en la
+página.** Un notifier guarda `'1234.56'` —punto decimal, sin miles ni símbolo—
+y la página lo traduce con `context.money` (`lib/core/utils/money.dart`).
+
+> Por qué: un notifier no tiene `BuildContext`, así que no puede saber si la
+> coma de `12,5` es decimal o de miles. Si el estado guardara lo que se ve, el
+> mismo importe significaría dos cosas distintas según el idioma del
+> dispositivo, y nada fallaría al compilar.
+
+**El símbolo de la moneda nunca se escribe a mano.** Sale de
+`AppConfig.currencyCode` a través de `intl`, igual que el nombre del mes sale
+de `DateFormat`.
+
+> Por qué: escribirlo sería texto para el usuario fuera de `lib/l10n/`, y
+> además el sitio del símbolo cambia con el idioma (`1.234,56 €` frente a
+> `€1,234.56`). Ojo con el espacio de antes: es duro (U+00A0), y una aserción
+> de test escrita con un espacio normal no encuentra el importe.
+
 ### Texto
 
 **Cero texto para el usuario fuera de `lib/l10n/`.** Y eso incluye a los

@@ -30,6 +30,7 @@ class HomePage extends ConsumerWidget {
     final hasHistory = bars.any((b) => b.$2 > 0);
     final l10n = context.l10n;
     final dates = context.dates;
+    final money = context.money;
     final monthAbbr = dates.monthAbbr(state.monthAnchor).toLowerCase();
     final monthName = dates.monthName(state.monthAnchor);
     final prevMonthName = dates.monthName(state.prevMonthAnchor);
@@ -46,17 +47,26 @@ class HomePage extends ConsumerWidget {
               Kicker(dates.monthTitle(state.monthAnchor), size: 11),
               const SizedBox(height: 4),
               Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
+                // Alineación por abajo y no por línea base: un `FittedBox` no
+                // expone la suya, y con `baseline` el `Row` se cae.
+                crossAxisAlignment: CrossAxisAlignment.end,
                 spacing: 8,
                 children: [
-                  Text(
-                    formatAmount(total),
-                    style: const TextStyle(
-                      fontSize: 38,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: -0.76,
-                      height: 1,
+                  // Con moneda y decimales, un importe de siete cifras no cabe
+                  // al lado del texto: mejor encogerlo que desbordar.
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        money.format(total),
+                        style: const TextStyle(
+                          fontSize: 38,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: -0.76,
+                          height: 1,
+                        ),
+                      ),
                     ),
                   ),
                   Flexible(
@@ -94,9 +104,9 @@ class HomePage extends ConsumerWidget {
                           child: Text(
                             l10n.homeMonthComparison(
                               monthName,
-                              formatAmount(total),
+                              money.format(total),
                               prevMonthName,
-                              formatAmount(state.prevTotal),
+                              money.format(state.prevTotal),
                             ),
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -162,7 +172,7 @@ class HomePage extends ConsumerWidget {
                               if ((catTotals[c.name] ?? 0) > 0)
                                 (catTotals[c.name]! / total, c.color),
                           ],
-                          centerTitle: formatAmount(total),
+                          centerTitle: money.format(total),
                           centerSubtitle: l10n.homeThisMonth,
                         ),
                       ),
@@ -180,17 +190,33 @@ class HomePage extends ConsumerWidget {
                                 spacing: 7,
                                 children: [
                                   ColorDot(c.color),
+                                  // La leyenda va en la mitad estrecha, al
+                                  // lado de la dona, y el importe con moneda y
+                                  // decimales ya no cabe junto al nombre: se
+                                  // reparte a propósito, con más sitio para la
+                                  // cifra, que es el dato. El nombre se corta
+                                  // antes que envolverse a tres líneas.
                                   Expanded(
+                                    flex: 2,
                                     child: Text(
                                       c.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(fontSize: 12),
                                     ),
                                   ),
-                                  Text(
-                                    formatAmount(catTotals[c.name] ?? 0),
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.neutral400,
+                                  Expanded(
+                                    flex: 3,
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      alignment: Alignment.centerRight,
+                                      child: Text(
+                                        money.format(catTotals[c.name] ?? 0),
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.neutral400,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                   SizedBox(

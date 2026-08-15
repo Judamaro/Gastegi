@@ -21,7 +21,10 @@ class AddExpenseState {
     this.description = '',
   });
 
-  /// Importe tal y como lo teclea el usuario, con coma decimal.
+  /// Importe canónico: dígitos y, como mucho, un punto decimal.
+  ///
+  /// Sin separadores de miles ni símbolo. Lo que ve el usuario lo compone
+  /// `MoneyLabels.typed` en la página, que sí conoce el idioma.
   final String amount;
 
   final String? categoryName;
@@ -77,15 +80,25 @@ class AddExpenseNotifier extends Notifier<AddExpenseState> {
     );
   }
 
-  /// Teclado propio: dígitos, una sola coma decimal y borrado, con máximo 7
-  /// dígitos.
+  /// Teclado propio: dígitos, un solo separador decimal y borrado, con
+  /// [maxIntegerDigits] enteros y [maxFractionDigits] decimales como máximo.
+  ///
+  /// El separador que llega es siempre [canonicalDecimalPoint], aunque en
+  /// español se vea una coma: el estado guarda texto canónico porque un
+  /// notifier no tiene contexto con el que resolver el idioma.
+  ///
+  /// El tope de decimales no es cosmético: sin él se puede teclear `12,999` y
+  /// guardar un importe que la pantalla enseña como `13,00 €`.
   void keypadTap(String key) {
     var a = state.amount;
-    if (key == '⌫') {
+    final at = a.indexOf(canonicalDecimalPoint);
+    if (key == backspaceKey) {
       a = a.isEmpty ? a : a.substring(0, a.length - 1);
-    } else if (key == ',') {
-      if (!a.contains(',')) a = '${a.isEmpty ? '0' : a},';
-    } else if (a.replaceAll(',', '').length < 7) {
+    } else if (key == canonicalDecimalPoint) {
+      if (at < 0) a = '${a.isEmpty ? '0' : a}$canonicalDecimalPoint';
+    } else if (at < 0
+        ? a.length < maxIntegerDigits
+        : a.length - at - 1 < maxFractionDigits) {
       a += key;
     }
     state = state.copyWith(amount: a);

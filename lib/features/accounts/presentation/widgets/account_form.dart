@@ -8,6 +8,7 @@ import 'package:gastegi/core/widgets/app_chip.dart';
 import 'package:gastegi/core/widgets/app_input.dart';
 import 'package:gastegi/core/widgets/field_label.dart';
 import 'package:gastegi/core/widgets/kicker.dart';
+import 'package:gastegi/core/widgets/money_input.dart';
 import 'package:gastegi/core/widgets/primary_button.dart';
 import 'package:gastegi/core/widgets/secondary_button.dart';
 import 'package:gastegi/features/accounts/presentation/account_failure_message.dart';
@@ -91,14 +92,12 @@ class AccountForm extends ConsumerWidget {
                   ? l10n.accountFormCurrentBalance
                   : l10n.accountFormInitialBalance,
             ),
-            AppInput(
+            MoneyInput(
               key: ValueKey('acct-balance-$formKey'),
               hint: l10n.accountFormAmountHint,
               initialValue: state.balance,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-                signed: true,
-              ),
+              // El saldo de una tarjeta de crédito es negativo.
+              allowNegative: true,
               onChanged: form.setBalance,
             ),
           ],

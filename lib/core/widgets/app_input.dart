@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_spacing.dart';
 
@@ -10,11 +11,20 @@ class AppInput extends StatelessWidget {
     required this.onChanged,
     this.keyboardType,
     this.initialValue,
+    this.inputFormatters,
+    this.prefixText,
+    this.suffixText,
   });
 
   final String hint;
   final ValueChanged<String> onChanged;
   final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
+
+  /// Adorno fijo a los lados del texto, para lo que no se edita: el símbolo de
+  /// la moneda, que cae a un lado o a otro según el idioma.
+  final String? prefixText;
+  final String? suffixText;
 
   /// Valor de partida al editar. Usa `TextFormField`, que gestiona su propio
   /// controlador; para que se repueble al cambiar de registro, el llamante debe
@@ -27,11 +37,16 @@ class AppInput extends StatelessWidget {
       initialValue: initialValue,
       onChanged: onChanged,
       keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
       cursorColor: AppColors.accent,
       style: const TextStyle(fontSize: 14, color: AppColors.text),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(fontSize: 14, color: AppColors.neutral600),
+        prefixText: prefixText,
+        suffixText: suffixText,
+        prefixStyle: const TextStyle(fontSize: 14, color: AppColors.text),
+        suffixStyle: const TextStyle(fontSize: 14, color: AppColors.text),
         isDense: true,
         filled: true,
         fillColor: AppColors.surface,

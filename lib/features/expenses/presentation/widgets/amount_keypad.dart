@@ -1,36 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_spacing.dart';
+import 'package:gastegi/core/utils/formatters.dart';
+import 'package:gastegi/core/utils/l10n_context.dart';
 
 /// Teclado numérico del nuevo gasto.
 ///
 /// La app tiene su propio teclado en vez de un campo de texto: así el importe
 /// se teclea sin que suba el teclado del sistema y tape la pantalla, y las
-/// reglas de entrada (una sola coma, máximo 7 dígitos) las decide el estado y
-/// no el sistema operativo.
+/// reglas de entrada (un solo separador decimal, siete enteros y dos
+/// decimales) las decide el estado y no el sistema operativo.
 class AmountKeypad extends StatelessWidget {
   const AmountKeypad({super.key, required this.onKey});
 
-  /// Recibe el dígito, la coma decimal o `⌫`.
+  /// Recibe el **token**: un dígito, [canonicalDecimalPoint] o [backspaceKey].
+  ///
+  /// La coma que se ve en español es solo la etiqueta. El estado no puede
+  /// depender del idioma porque el notifier no tiene contexto con el que
+  /// resolverlo, así que la traducción se queda aquí.
   final ValueChanged<String> onKey;
-
-  static const _keys = [
-    '1',
-    '2',
-    '3',
-    '4',
-    '5',
-    '6',
-    '7',
-    '8',
-    '9',
-    ',',
-    '0',
-    '⌫',
-  ];
 
   @override
   Widget build(BuildContext context) {
+    final keys = <(String label, String token)>[
+      for (final digit in ['1', '2', '3', '4', '5', '6', '7', '8', '9'])
+        (digit, digit),
+      (context.money.decimalSeparator, canonicalDecimalPoint),
+      ('0', '0'),
+      (backspaceKey, backspaceKey),
+    ];
+
     return Column(
       spacing: 8,
       children: [
@@ -38,9 +37,9 @@ class AmountKeypad extends StatelessWidget {
           Row(
             spacing: 8,
             children: [
-              for (final key in _keys.sublist(row * 3, row * 3 + 3))
+              for (final (label, token) in keys.sublist(row * 3, row * 3 + 3))
                 Expanded(
-                  child: _Key(label: key, onTap: () => onKey(key)),
+                  child: _Key(label: label, onTap: () => onKey(token)),
                 ),
             ],
           ),

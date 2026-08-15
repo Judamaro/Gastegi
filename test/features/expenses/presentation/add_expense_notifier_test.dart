@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
+import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
 import 'package:gastegi/features/expenses/presentation/providers/add_expense_notifier.dart';
@@ -55,24 +56,41 @@ void main() {
     expect(await ExpenseRepositoryImpl(db).count(), 0);
   });
 
-  test('el teclado limita a una coma y 7 dígitos', () async {
+  test(
+    'el teclado guarda canónico y admite un solo separador decimal',
+    () async {
+      final container = await buildLoadedContainer(db);
+      final form = container.read(addExpenseProvider.notifier);
+      String amount() => container.read(addExpenseProvider).amount;
+
+      // El token es siempre el punto, aunque en español se vea una coma: el
+      // estado no puede depender del idioma.
+      form.keypadTap(canonicalDecimalPoint);
+      expect(amount(), '0.');
+      form.keypadTap(canonicalDecimalPoint);
+      expect(amount(), '0.');
+
+      for (var i = 0; i < 10; i++) {
+        form.keypadTap('9');
+      }
+      // Dos decimales como mucho: sin el tope se podría teclear `12,999` y
+      // guardar un importe que la pantalla enseña como `13,00 €`.
+      expect(amount(), '0.99');
+
+      form.keypadTap(backspaceKey);
+      expect(amount(), '0.9');
+    },
+  );
+
+  test('el teclado limita la parte entera a 7 dígitos', () async {
     final container = await buildLoadedContainer(db);
     final form = container.read(addExpenseProvider.notifier);
-    String amount() => container.read(addExpenseProvider).amount;
-
-    form.keypadTap(',');
-    expect(amount(), '0,');
-    form.keypadTap(',');
-    expect(amount(), '0,');
 
     for (var i = 0; i < 10; i++) {
       form.keypadTap('9');
     }
-    // '0,' más siete dígitos: el límite cuenta dígitos, no caracteres.
-    expect(amount().replaceAll(',', '').length, 7);
 
-    form.keypadTap('⌫');
-    expect(amount().replaceAll(',', '').length, 6);
+    expect(container.read(addExpenseProvider).amount, '9999999');
   });
 
   test('sin descripción se usa el nombre de la categoría', () async {
