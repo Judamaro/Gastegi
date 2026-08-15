@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
+import 'package:gastegi/app/theme/app_spacing.dart';
+import 'package:gastegi/app/theme/app_typography.dart';
 import 'package:gastegi/core/utils/l10n_context.dart';
+import 'package:gastegi/core/utils/screen.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/app_icon_button.dart';
 import 'package:gastegi/core/widgets/kicker.dart';
@@ -21,6 +25,7 @@ class AccountsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    watchScreen(context);
     final data = ref.watch(appDataProvider);
     final form = ref.watch(accountFormProvider);
     final transferOpen = ref.watch(transferFormProvider.select((s) => s.open));
@@ -28,18 +33,18 @@ class AccountsPage extends ConsumerWidget {
     final l10n = context.l10n;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      padding: AppSpacing.page,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 14,
+        spacing: 14.r,
         children: [
           Row(
             children: [
               Expanded(
                 child: Text(
                   l10n.accountsTitle,
-                  style: const TextStyle(
-                    fontSize: 20,
+                  style: TextStyle(
+                    fontSize: AppFontSize.title,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -51,7 +56,7 @@ class AccountsPage extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Kicker(l10n.accountsTotalBalance, size: 11),
-              const SizedBox(height: 4),
+              SizedBox(height: 4.r),
               // El patrimonio es la cifra más larga de la app: puede ser
               // negativo y de siete dígitos, y ahora lleva moneda y decimales.
               FittedBox(
@@ -59,12 +64,7 @@ class AccountsPage extends ConsumerWidget {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   context.money.formatSigned(data.patrimonio),
-                  style: const TextStyle(
-                    fontSize: 34,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: -0.68,
-                    height: 1,
-                  ),
+                  style: AppTextStyles.hero(AppFontSize.displayMd),
                 ),
               ),
             ],
@@ -76,8 +76,8 @@ class AccountsPage extends ConsumerWidget {
                 Kicker(l10n.accountsEmptyKicker),
                 Text(
                   l10n.accountsEmptyBody,
-                  style: const TextStyle(
-                    fontSize: 13,
+                  style: TextStyle(
+                    fontSize: AppFontSize.bodySm,
                     color: AppColors.neutral500,
                   ),
                 ),
@@ -87,7 +87,7 @@ class AccountsPage extends ConsumerWidget {
           else
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: 10,
+              spacing: 10.r,
               children: [
                 for (final a in data.accounts) ...[
                   AccountCard(account: a),

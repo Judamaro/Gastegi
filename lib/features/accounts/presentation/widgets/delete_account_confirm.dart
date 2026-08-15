@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
+import 'package:gastegi/app/theme/app_typography.dart';
 import 'package:gastegi/core/utils/l10n_context.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/kicker.dart';
@@ -34,17 +36,22 @@ class DeleteAccountConfirm extends ConsumerWidget {
           n == 0
               ? l10n.deleteAccountConfirm
               : l10n.deleteAccountWithExpenses(n),
-          style: const TextStyle(fontSize: 12, color: AppColors.neutral500),
+          style: TextStyle(
+            fontSize: AppFontSize.label,
+            color: AppColors.neutral500,
+          ),
         ),
         if (n > 0)
           PrimaryButton(label: l10n.commonArchive, onTap: form.archivePending),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
-          spacing: 8,
+          spacing: 8.r,
           children: [
             SecondaryButton(label: l10n.commonCancel, onTap: form.cancelDelete),
-            SizedBox(
-              width: 110,
+            // Ancho mínimo y no fijo: el botón conserva su presencia y crece
+            // con la etiqueta cuando el tamaño de letra del sistema la alarga.
+            ConstrainedBox(
+              constraints: BoxConstraints(minWidth: 110.r),
               child: PrimaryButton(
                 label: l10n.commonDelete,
                 onTap: form.confirmDelete,

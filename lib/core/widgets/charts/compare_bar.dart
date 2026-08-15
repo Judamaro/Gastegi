@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 
 /// Barra de comparación del inicio: rectángulo redondeado de ancho fraccional.
 class CompareBar extends StatelessWidget {
@@ -14,10 +15,10 @@ class CompareBar extends StatelessWidget {
       child: FractionallySizedBox(
         widthFactor: fraction.clamp(0.0, 1.0),
         child: Container(
-          height: 8,
+          height: 8.r,
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(3),
+            borderRadius: BorderRadius.circular(3.r),
           ),
         ),
       ),

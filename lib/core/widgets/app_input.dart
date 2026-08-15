@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_spacing.dart';
+import 'package:gastegi/app/theme/app_typography.dart';
 
 /// Campo de texto estilo .input del diseño.
 class AppInput extends StatelessWidget {
@@ -39,18 +41,27 @@ class AppInput extends StatelessWidget {
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       cursorColor: AppColors.accent,
-      style: const TextStyle(fontSize: 14, color: AppColors.text),
+      style: TextStyle(fontSize: AppFontSize.body, color: AppColors.text),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(fontSize: 14, color: AppColors.neutral600),
+        hintStyle: TextStyle(
+          fontSize: AppFontSize.body,
+          color: AppColors.neutral600,
+        ),
         prefixText: prefixText,
         suffixText: suffixText,
-        prefixStyle: const TextStyle(fontSize: 14, color: AppColors.text),
-        suffixStyle: const TextStyle(fontSize: 14, color: AppColors.text),
+        prefixStyle: TextStyle(
+          fontSize: AppFontSize.body,
+          color: AppColors.text,
+        ),
+        suffixStyle: TextStyle(
+          fontSize: AppFontSize.body,
+          color: AppColors.text,
+        ),
         isDense: true,
         filled: true,
         fillColor: AppColors.surface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+        contentPadding: EdgeInsets.symmetric(horizontal: 10.r, vertical: 9.r),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: const BorderSide(color: AppColors.divider),

@@ -22,13 +22,13 @@ lib/
 │   ├── app.dart           #   MaterialApp.router
 │   ├── bootstrap.dart     #   único punto de composición
 │   ├── router/            #   go_router: rutas, shell y barra de pestañas
-│   ├── theme/             #   colores, espaciado, elevación, iconos
+│   ├── theme/             #   colores, espaciado, tipografía, iconos
 │   ├── state/             #   AppData: la foto de datos compartida
 │   └── config/            #   entorno y configuración global
 ├── core/                  # compartido, sin dueño
 │   ├── errors/            #   exceptions (técnicos) y failures (de dominio)
 │   ├── storage/           #   base de datos, esquema, siembra, saldos
-│   ├── utils/             #   fechas, formateadores, providers raíz
+│   ├── utils/             #   fechas, formateadores, pantalla, providers
 │   ├── widgets/           #   componentes genéricos y gráficas
 │   └── network/           #   reservado (ver su README)
 ├── features/              # una carpeta por funcionalidad
@@ -100,7 +100,7 @@ has tocado" dejaría saldos viejos en pantalla **sin lanzar ningún error**.
   decisión de diseño: la app no interrumpe, muestra la consecuencia donde
   estaba mirando el usuario.
 - **El teclado del importe es propio.** No sube el del sistema, y las reglas de
-  entrada (un solo separador decimal, siete enteros y dos decimales) las decide
+  entrada (un solo separador decimal, y el tope de enteros y decimales) las decide
   la app.
 - **Los importes se guardan en canónico y se pintan en el idioma del
   dispositivo.** El estado de un formulario guarda `1234.56`, con punto y sin
@@ -112,6 +112,21 @@ has tocado" dejaría saldos viejos en pantalla **sin lanzar ningún error**.
   un saldo erróneo. El saldo se recalcula desde los movimientos.
 - **Los borrados son lógicos.** La fila sobrevive como tombstone para que el
   borrado se pueda propagar cuando exista sincronización.
+- **La interfaz se mide en dp del diseño, no en píxeles.** El lienzo es un
+  teléfono de 390×844 y `flutter_screenutil_plus` reescala esas medidas al
+  dispositivo real, texto incluido. La regla es `.r` para componentes y `.sp`
+  para fuentes; `.w` escalaría por ancho y en apaisado multiplicaría por 2.16.
+- **El tamaño de letra del sistema se respeta, con un tope de 1.3×.** Por encima
+  de ahí las cifras grandes y las teclas del importe dejan de caber aunque
+  encojan. La única excepción son los dos textos del centro de la dona, que
+  salen del diámetro: el hueco es geométrico y honrar el ajuste los sacaría del
+  círculo.
+- **En tableta el contenido se acota a 600 dp y se centra**, en vez de estirarse:
+  una columna de 700 dp no se lee, la vista salta de un extremo al otro de cada
+  línea.
+- **«Nuevo gasto» se reparte en dos columnas en apaisado.** En la altura de un
+  teléfono tumbado no cabe en una sola, y desplazarse para llegar al teclado
+  convierte en dos gestos lo que era uno.
 - **Las abreviaturas de mes están escritas a mano** en los `.arb`: el CLDR
   español devuelve `ago.` y `sept.`, con punto y hasta cuatro letras, que
   desbordan las etiquetas estrechas de las gráficas.

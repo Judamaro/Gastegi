@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/core/utils/money.dart';
 import 'package:gastegi/l10n/generated/app_localizations.dart';
 
@@ -83,7 +84,7 @@ void main() {
 
   test('canonical recorta a los topes de dígitos', () {
     expect(es.canonical('12,999'), '12.99');
-    expect(es.canonical('123456789'), '1234567');
+    expect(es.canonical('9' * (maxIntegerDigits + 2)), '9' * maxIntegerDigits);
   });
 
   test('canonical solo admite el signo si se le permite y abre el texto', () {

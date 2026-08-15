@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_spacing.dart';
+import 'package:gastegi/app/theme/app_typography.dart';
 import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/core/utils/l10n_context.dart';
 
@@ -8,10 +10,10 @@ import 'package:gastegi/core/utils/l10n_context.dart';
 ///
 /// La app tiene su propio teclado en vez de un campo de texto: así el importe
 /// se teclea sin que suba el teclado del sistema y tape la pantalla, y las
-/// reglas de entrada (un solo separador decimal, siete enteros y dos
+/// reglas de entrada (un solo separador decimal, y el tope de enteros y
 /// decimales) las decide el estado y no el sistema operativo.
 class AmountKeypad extends StatelessWidget {
-  const AmountKeypad({super.key, required this.onKey});
+  const AmountKeypad({super.key, required this.onKey, this.fillHeight = false});
 
   /// Recibe el **token**: un dígito, [canonicalDecimalPoint] o [backspaceKey].
   ///
@@ -19,6 +21,14 @@ class AmountKeypad extends StatelessWidget {
   /// depender del idioma porque el notifier no tiene contexto con el que
   /// resolverlo, así que la traducción se queda aquí.
   final ValueChanged<String> onKey;
+
+  /// Reparte el alto recibido entre las cuatro filas en vez de que cada tecla
+  /// mida lo que su contenido.
+  ///
+  /// Lo usa el apaisado, donde el teclado ocupa media pantalla y las teclas
+  /// pequeñas dejarían un hueco muerto debajo. Quien lo activa tiene que
+  /// acotar el alto: sin tope, en una ventana alta salen teclas de 200 dp.
+  final bool fillHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -31,21 +41,26 @@ class AmountKeypad extends StatelessWidget {
     ];
 
     return Column(
-      spacing: 8,
+      mainAxisSize: fillHeight ? MainAxisSize.max : MainAxisSize.min,
+      spacing: 8.r,
       children: [
         for (var row = 0; row < 4; row++)
-          Row(
-            spacing: 8,
-            children: [
-              for (final (label, token) in keys.sublist(row * 3, row * 3 + 3))
-                Expanded(
-                  child: _Key(label: label, onTap: () => onKey(token)),
-                ),
-            ],
+          _maybeExpanded(
+            Row(
+              spacing: 8.r,
+              children: [
+                for (final (label, token) in keys.sublist(row * 3, row * 3 + 3))
+                  Expanded(
+                    child: _Key(label: label, onTap: () => onKey(token)),
+                  ),
+              ],
+            ),
           ),
       ],
     );
   }
+
+  Widget _maybeExpanded(Widget row) => fillHeight ? Expanded(child: row) : row;
 }
 
 class _Key extends StatelessWidget {
@@ -60,14 +75,14 @@ class _Key extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.md),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: EdgeInsets.symmetric(vertical: 12.r),
         decoration: BoxDecoration(
           color: AppColors.surface,
           border: Border.all(color: AppColors.divider),
           borderRadius: BorderRadius.circular(AppRadius.md),
         ),
         alignment: Alignment.center,
-        child: Text(label, style: const TextStyle(fontSize: 20)),
+        child: Text(label, style: TextStyle(fontSize: AppFontSize.title)),
       ),
     );
   }

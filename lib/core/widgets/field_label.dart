@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
+import 'package:gastegi/app/theme/app_typography.dart';
 
 /// Etiqueta de campo de formulario (.field > label).
 class FieldLabel extends StatelessWidget {
@@ -12,7 +13,7 @@ class FieldLabel extends StatelessWidget {
     return Text(
       text,
       style: TextStyle(
-        fontSize: 12,
+        fontSize: AppFontSize.label,
         color: AppColors.text.withValues(alpha: 0.7),
       ),
     );

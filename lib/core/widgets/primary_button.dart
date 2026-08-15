@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_spacing.dart';
+import 'package:gastegi/app/theme/app_typography.dart';
 
 /// Botón .btn-primary del diseño: texto y borde en acento, fondo transparente.
 class PrimaryButton extends StatelessWidget {
@@ -24,24 +26,29 @@ class PrimaryButton extends StatelessWidget {
       child: InkWell(
         onTap: disabled ? null : onTap,
         borderRadius: BorderRadius.circular(AppRadius.md),
+        // Sin `width: double.infinity`: era redundante —a pantalla completa
+        // siempre cuelga de un `Column(crossAxisAlignment: stretch)`, que ya da
+        // la restricción ajustada— y además impedía acotarlo por abajo. Los
+        // formularios lo envuelven en un `ConstrainedBox(minWidth:)` para que
+        // crezca con su etiqueta, y con el ancho infinito eso reventaba.
         child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: EdgeInsets.symmetric(vertical: 8.r),
           decoration: BoxDecoration(
             border: Border.all(color: AppColors.accent),
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            spacing: 6,
+            mainAxisSize: MainAxisSize.min,
+            spacing: 6.r,
             children: [
-              if (icon != null) Icon(icon, size: 16, color: AppColors.accent),
+              if (icon != null) Icon(icon, size: 16.r, color: AppColors.accent),
               Flexible(
                 child: Text(
                   label,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
+                  style: TextStyle(
+                    fontSize: AppFontSize.body,
                     fontWeight: FontWeight.w500,
                     color: AppColors.accent,
                   ),

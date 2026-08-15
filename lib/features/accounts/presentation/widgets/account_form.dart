@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
+import 'package:gastegi/app/theme/app_typography.dart';
 import 'package:gastegi/core/utils/l10n_context.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/app_chip.dart';
@@ -39,7 +41,7 @@ class AccountForm extends ConsumerWidget {
         ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 5,
+          spacing: 5.r,
           children: [
             FieldLabel(l10n.accountFormName),
             AppInput(
@@ -52,7 +54,7 @@ class AccountForm extends ConsumerWidget {
         ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 5,
+          spacing: 5.r,
           children: [
             FieldLabel(l10n.accountFormKind),
             AppInput(
@@ -65,11 +67,11 @@ class AccountForm extends ConsumerWidget {
         ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 5,
+          spacing: 5.r,
           children: [
             FieldLabel(l10n.accountFormIcon),
             Wrap(
-              spacing: 6,
+              spacing: 6.r,
               runSpacing: 6,
               children: [
                 for (final key in AppIcons.accountIconKeys)
@@ -85,7 +87,7 @@ class AccountForm extends ConsumerWidget {
         ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 5,
+          spacing: 5.r,
           children: [
             FieldLabel(
               state.isEditing
@@ -105,15 +107,20 @@ class AccountForm extends ConsumerWidget {
         if (state.failure != null)
           Text(
             accountFailureMessage(l10n, state.failure!),
-            style: const TextStyle(fontSize: 12, color: AppColors.accent),
+            style: TextStyle(
+              fontSize: AppFontSize.label,
+              color: AppColors.accent,
+            ),
           ),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
-          spacing: 8,
+          spacing: 8.r,
           children: [
             SecondaryButton(label: l10n.commonCancel, onTap: form.close),
-            SizedBox(
-              width: 110,
+            // Ancho mínimo y no fijo: el botón conserva su presencia y crece
+            // con la etiqueta cuando el tamaño de letra del sistema la alarga.
+            ConstrainedBox(
+              constraints: BoxConstraints(minWidth: 110.r),
               child: PrimaryButton(label: l10n.commonSave, onTap: form.submit),
             ),
           ],

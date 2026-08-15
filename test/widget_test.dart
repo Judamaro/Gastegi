@@ -3,10 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gastegi/app/app.dart';
 import 'package:gastegi/app/router/app_router.dart';
+import 'package:gastegi/app/router/app_tab_bar.dart';
 import 'package:gastegi/app/router/route_names.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
+import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
+import 'package:gastegi/features/dashboard/presentation/pages/home_page.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
+import 'package:gastegi/features/expenses/presentation/widgets/amount_keypad.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -25,11 +29,23 @@ void main() {
   setUp(() async => db = await openTestDb());
   tearDown(() async => db.close());
 
-  // Viewport de teléfono (390×844), como el marco iOS del diseño.
-  Future<ProviderContainer> pumpApp(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+  /// Monta la app en un viewport concreto.
+  ///
+  /// Por defecto, el teléfono de 390×844 del marco iOS del diseño, donde la
+  /// escala vale 1 y las medidas coinciden con las escritas en el código.
+  /// [textScale] es el ajuste de tamaño de letra del sistema, que la app acota
+  /// a 1.3× por su cuenta.
+  Future<ProviderContainer> pumpApp(
+    WidgetTester tester, {
+    Size size = const Size(390, 844),
+    double textScale = 1,
+  }) async {
+    tester.view.physicalSize = size * 3;
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
+
+    tester.platformDispatcher.textScaleFactorTestValue = textScale;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
     // Sin esto la app arrancaría en inglés: el dispositivo de prueba dice
     // en_US y ya no hay un `locale` fijo en MaterialApp.
@@ -76,17 +92,18 @@ void main() {
     expect(find.text('Saldo total'.toUpperCase()), findsOneWidget);
   });
 
-  testWidgets('un importe de siete cifras no desborda ninguna pantalla', (
+  testWidgets('un importe del máximo de cifras no desborda ninguna pantalla', (
     tester,
   ) async {
-    // Con moneda y dos decimales, la cifra más larga pasa de nueve caracteres
-    // a dieciocho. Las pantallas que la enseñan en grande la ponen al lado de
-    // otro texto, y sin encogerla el `Row` desborda con las rayas amarillas.
+    // La cifra más larga que admite la app —`maxIntegerDigits` enteros y dos
+    // decimales— con su moneda puesta. Las pantallas que la enseñan en grande
+    // la ponen al lado de otro texto, y sin encogerla el `Row` desborda con
+    // las rayas amarillas.
     final accountId = await AccountRepositoryImpl(db).create(
       name: 'Efectivo',
       kind: 'Dinero en mano',
       iconKey: 'money',
-      initialBalance: 9999999.99,
+      initialBalance: 999999999.99,
     );
     final categoryId =
         (await db.query('categories', limit: 1)).single['id']! as String;
@@ -95,7 +112,7 @@ void main() {
       description: 'Coche',
       categoryId: categoryId,
       accountId: accountId,
-      amount: 1234567.89,
+      amount: 123456789.89,
     );
 
     await pumpApp(tester);
@@ -110,11 +127,11 @@ void main() {
 
     await tester.tap(find.text('Agregar'));
     await tester.pumpAndSettle();
-    for (final key in ['9', '9', '9', '9', '9', '9', '9', ',', '9', '9']) {
+    for (final key in [...List.filled(maxIntegerDigits, '9'), ',', '9', '9']) {
       await tester.tap(find.text(key));
       await tester.pump();
     }
-    expect(find.text('9.999.999,99\u00A0€'), findsOneWidget);
+    expect(find.text('999.999.999,99\u00A0€'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     // `appRouter` es una instancia global y conserva la ruta entre tests: sin
@@ -122,6 +139,110 @@ void main() {
     // barra de navegación.
     appRouter.go(RouteNames.home);
     await tester.pumpAndSettle();
+  });
+
+  testWidgets('girar la pantalla reescala la interfaz', (tester) async {
+    await pumpApp(tester);
+    await tester.tap(find.text('Presupuesto'));
+    await tester.pumpAndSettle();
+
+    double titleSize() =>
+        tester.widget<Text>(find.text('Presupuestos')).style!.fontSize!;
+    expect(titleSize(), closeTo(20, 0.01));
+
+    tester.view.physicalSize = const Size(844 * 3, 390 * 3);
+    await tester.pumpAndSettle();
+
+    // 20 × min(844/390, 700/844) = 16.59. Si sale 20, la pantalla no se ha
+    // reconstruido y arrastra la escala del retrato: es lo que pasa sin la
+    // llamada a `watchScreen`, porque go_router cachea el Navigator de cada
+    // rama del shell y solo lo rehace si cambia la ruta.
+    expect(titleSize(), closeTo(16.59, 0.05));
+
+    appRouter.go(RouteNames.home);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('en tableta el contenido se acota y se centra', (tester) async {
+    await pumpApp(tester, size: const Size(768, 1024));
+
+    // Sin tope, Inicio ocuparía los 768 dp de ancho y las líneas de texto
+    // saldrían ilegibles de tan largas.
+    final home = tester.getRect(find.byType(HomePage));
+    expect(home.width, 600);
+    expect(home.center.dx, closeTo(384, 0.01), reason: 'centrado');
+  });
+
+  // Dos apaisados con holgura vertical muy distinta: el del teléfono tumbado,
+  // donde el teclado llena el alto disponible, y una ventana grande, donde
+  // sobra sitio. La desalineación solo se ve en el segundo, porque con el
+  // teclado a tope de altura da igual cómo se alinee dentro de su columna.
+  for (final (nombre, size, altoMinTeclado) in const <(String, Size, double)>[
+    ('un teléfono tumbado', Size(844, 390), 250),
+    ('una ventana amplia', Size(1080, 956), 380),
+  ]) {
+    testWidgets('en apaisado, en $nombre, las dos columnas se alinean', (
+      tester,
+    ) async {
+      await pumpApp(tester, size: size);
+
+      await tester.tap(find.text('Agregar'));
+      await tester.pumpAndSettle();
+
+      final header = tester.getRect(find.text('Nuevo gasto'));
+      final category = tester.getRect(find.text('Categoría'));
+      final keypad = tester.getRect(find.byType(AmountKeypad));
+
+      // El teclado a la derecha de los campos y no debajo: en la altura de un
+      // teléfono tumbado, en una sola columna no cabe.
+      expect(keypad.left, greaterThan(category.right));
+
+      // Y arrancando a la altura de la columna izquierda, bajo la cabecera que
+      // cruza las dos. Antes la columna de la derecha se estiraba hasta el
+      // fondo y centraba el teclado en su propio alto, que no coincidía con
+      // nada de lo que tenía al lado.
+      expect(keypad.top, greaterThan(header.bottom), reason: 'bajo cabecera');
+      expect(
+        keypad.top,
+        lessThan(category.top),
+        reason: 'a la par del importe',
+      );
+
+      // La cabecera cruza las dos columnas: el botón de cerrar va al borde
+      // derecho del contenido, no a media pantalla donde acaba la izquierda.
+      expect(header.right, greaterThan(keypad.left));
+
+      // El teclado se queda con el alto sobrante en vez de dejarlo muerto al
+      // pie: con teclas del tamaño mínimo mediría unos 265 en las dos, y lo
+      // que se comprueba aquí es justo que crezca cuando hay sitio.
+      expect(
+        keypad.height,
+        greaterThan(altoMinTeclado),
+        reason: 'el teclado aprovecha el alto disponible',
+      );
+      expect(tester.takeException(), isNull);
+
+      appRouter.go(RouteNames.home);
+      await tester.pumpAndSettle();
+    });
+  }
+
+  testWidgets('el teclado del sistema oculta la barra de pestañas', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    expect(find.byType(AppTabBar), findsOneWidget);
+
+    // Lo que hace el sistema al abrir su teclado. El `Scaffold` encoge el
+    // cuerpo hasta el borde del teclado, y con la barra puesta al formulario
+    // de la cuenta no le quedaba sitio ni para el botón de guardar.
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300 * 3);
+    await tester.pumpAndSettle();
+    expect(find.byType(AppTabBar), findsNothing);
+
+    tester.view.viewInsets = FakeViewPadding.zero;
+    await tester.pumpAndSettle();
+    expect(find.byType(AppTabBar), findsOneWidget);
   });
 
   testWidgets('crear una cuenta la refleja en el saldo total', (tester) async {
