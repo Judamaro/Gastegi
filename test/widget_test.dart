@@ -8,6 +8,7 @@ import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:gastegi/features/dashboard/presentation/pages/home_page.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
+import 'package:gastegi/features/expenses/presentation/widgets/amount_keypad.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -167,6 +168,23 @@ void main() {
     final home = tester.getRect(find.byType(HomePage));
     expect(home.width, 600);
     expect(home.center.dx, closeTo(384, 0.01), reason: 'centrado');
+  });
+
+  testWidgets('en apaisado el nuevo gasto va en dos columnas', (tester) async {
+    await pumpApp(tester, size: const Size(844, 390));
+
+    await tester.tap(find.text('Agregar'));
+    await tester.pumpAndSettle();
+
+    // El teclado a la derecha de la columna de campos y no debajo: en la
+    // altura de un teléfono tumbado, en una sola columna no cabe.
+    final title = tester.getRect(find.text('Nuevo gasto'));
+    final keypad = tester.getRect(find.byType(AmountKeypad));
+    expect(keypad.left, greaterThan(title.right));
+    expect(tester.takeException(), isNull);
+
+    appRouter.go(RouteNames.home);
+    await tester.pumpAndSettle();
   });
 
   testWidgets('crear una cuenta la refleja en el saldo total', (tester) async {
