@@ -1,10 +1,10 @@
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' hide Category;
+import 'package:gastegi/app/state/budget_row.dart';
 import 'package:gastegi/core/utils/date_utils.dart';
 import 'package:gastegi/features/accounts/domain/entities/account.dart';
 import 'package:gastegi/features/budgets/domain/budget_rules.dart';
-import 'package:gastegi/features/budgets/presentation/models/budget_row.dart';
 import 'package:gastegi/features/categories/domain/entities/category.dart';
 import 'package:gastegi/features/expenses/domain/entities/expense.dart';
 
