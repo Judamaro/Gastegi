@@ -17,12 +17,38 @@ import 'package:gastegi/features/categories/presentation/category_failure_messag
 import 'package:gastegi/features/categories/presentation/providers/category_form_notifier.dart';
 import 'package:gastegi/l10n/generated/app_localizations.dart';
 
-/// Alta y edición de una categoría con su presupuesto, en línea bajo la lista.
-class CategoryForm extends ConsumerWidget {
+/// Alta y edición de una categoría con su presupuesto, en línea bajo su tarjeta.
+class CategoryForm extends ConsumerStatefulWidget {
   const CategoryForm({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CategoryForm> createState() => _CategoryFormState();
+}
+
+class _CategoryFormState extends ConsumerState<CategoryForm> {
+  @override
+  void initState() {
+    super.initState();
+    // El formulario nace bajo la tarjeta que se ha tocado, y esa tarjeta puede
+    // estar al pie de la ventana: mide 430 dp de alto, así que abrirlo desde la
+    // mitad de abajo lo dejaría fuera de pantalla y parecería que el toque no
+    // ha hecho nada. Quien llama le pone una `key` por categoría, de modo que
+    // saltar de una a otra crea un estado nuevo y esto vuelve a correr.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // Después del frame: durante el `build` todavía no hay geometría que
+      // consultar.
+      Scrollable.ensureVisible(
+        context,
+        alignment: 0.5,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(categoryFormProvider);
     final form = ref.read(categoryFormProvider.notifier);
     final l10n = context.l10n;

@@ -26,6 +26,10 @@ import 'package:gastegi/features/categories/presentation/widgets/delete_category
 class BudgetsPage extends ConsumerWidget {
   const BudgetsPage({super.key});
 
+  /// Distingue el formulario de alta del de edición, que van en sitios
+  /// distintos del árbol.
+  static const Key _newKey = ValueKey('cat-form-new');
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     watchScreen(context);
@@ -66,6 +70,10 @@ class BudgetsPage extends ConsumerWidget {
               color: AppColors.neutral500,
             ),
           ),
+          // El alta va aquí arriba, pegada al «+» que la abre: al final de seis
+          // tarjetas quedaría fuera de pantalla y parecería que no ha pasado
+          // nada. La edición, por lo mismo, va bajo su propia tarjeta.
+          if (form.open && !form.isEditing) const CategoryForm(key: _newKey),
           // Sin categorías no hay nada que presupuestar. Solo pasa si se han
           // borrado todas: la siembra crea seis.
           if (state.categories.isEmpty && !form.open)
@@ -90,12 +98,16 @@ class BudgetsPage extends ConsumerWidget {
               children: [
                 for (final b in state.budgetRows) ...[
                   BudgetCard(row: b),
+                  // La key ata el formulario a la categoría que edita: sin
+                  // ella, al saltar de una tarjeta a otra Flutter reutilizaría
+                  // el mismo elemento y los campos conservarían lo anterior.
+                  if (form.editingId == b.category.id)
+                    CategoryForm(key: ValueKey('cat-form-${b.category.id}')),
                   if (form.pendingDeleteId == b.category.id)
                     DeleteCategoryConfirm(category: b.category),
                 ],
               ],
             ),
-          if (form.open) const CategoryForm(),
         ],
       ),
     );

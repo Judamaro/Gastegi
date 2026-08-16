@@ -11,6 +11,8 @@ import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:gastegi/features/categories/presentation/pages/budgets_page.dart';
 import 'package:gastegi/features/categories/presentation/pages/category_detail_page.dart';
+import 'package:gastegi/features/categories/presentation/widgets/budget_card.dart';
+import 'package:gastegi/features/categories/presentation/widgets/category_form.dart';
 import 'package:gastegi/features/dashboard/presentation/pages/home_page.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
 import 'package:gastegi/features/expenses/presentation/widgets/amount_field.dart';
@@ -397,6 +399,45 @@ void main() {
 
     expect(container.read(appDataProvider).categoryOf('Comida')!.budget, 600);
     expect(container.read(appDataProvider).totalBudget, 2040);
+
+    appRouter.go(RouteNames.home);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('el formulario se abre bajo su categoría y a la vista', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await tester.tap(find.text('Presupuesto').last);
+    await tester.pumpAndSettle();
+
+    // El peor caso, y el recorrido de una persona: se baja la lista y se toca
+    // la última tarjeta donde haya quedado, al pie de la ventana.
+    await tester.drag(find.byType(BudgetCard).first, const Offset(0, -400));
+    await tester.pumpAndSettle();
+    // El nombre acotado a la tarjeta: las etiquetas de los iconos del
+    // formulario repiten los nombres de las categorías de la siembra.
+    final title = find.descendant(
+      of: find.byType(BudgetCard),
+      matching: find.text('Compras'),
+    );
+    expect(tester.getRect(title).center.dy, greaterThan(600), reason: 'al pie');
+
+    await tester.tap(title);
+    await tester.pumpAndSettle();
+
+    final card = tester.getRect(find.widgetWithText(BudgetCard, 'Compras'));
+    final form = tester.getRect(find.byType(CategoryForm));
+    expect(
+      form.top,
+      greaterThanOrEqualTo(card.bottom),
+      reason: 'debajo de su tarjeta',
+    );
+    expect(form.top - card.bottom, lessThan(20), reason: 'y pegado a ella');
+    // Y entero dentro de la ventana de 844: abrirlo desde el pie sin llevarlo
+    // a la vista lo dejaba casi todo por debajo del borde.
+    expect(form.top, greaterThanOrEqualTo(0));
+    expect(form.bottom, lessThanOrEqualTo(844), reason: 'sin desplazarse');
 
     appRouter.go(RouteNames.home);
     await tester.pumpAndSettle();
