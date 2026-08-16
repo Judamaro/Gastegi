@@ -27,4 +27,18 @@ abstract final class AppColors {
   static const Color accent700 = Color(0xFF5D5294);
   static const Color accent800 = Color(0xFF423A6A);
   static const Color accent900 = Color(0xFF2B2741);
+
+  /// Colores elegibles al crear o editar una categoría.
+  ///
+  /// Son los seis de la siembra, y no la paleta entera: los tonos claros de la
+  /// serie 100–200 se pierden sobre la superficie de las tarjetas, y la app
+  /// pinta con ellos porciones de dona de pocos píxeles.
+  static const List<Color> categoryPalette = [
+    accent400,
+    Color(0xFF9690C9),
+    accent300,
+    accent600,
+    neutral400,
+    neutral600,
+  ];
 }

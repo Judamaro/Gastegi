@@ -6,8 +6,11 @@ import 'package:gastegi/app/router/app_router.dart';
 import 'package:gastegi/app/router/app_tab_bar.dart';
 import 'package:gastegi/app/router/route_names.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
+import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
+import 'package:gastegi/features/categories/presentation/pages/budgets_page.dart';
+import 'package:gastegi/features/categories/presentation/pages/category_detail_page.dart';
 import 'package:gastegi/features/dashboard/presentation/pages/home_page.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
 import 'package:gastegi/features/expenses/presentation/widgets/amount_field.dart';
@@ -344,6 +347,94 @@ void main() {
     // duro (U+00A0), y escrito a mano no coincidiría.
     expect(find.text('480,00\u00A0€'), findsWidgets);
     expect(find.text('Efectivo'), findsOneWidget);
+  });
+
+  testWidgets('crear una categoría y cambiar su presupuesto', (tester) async {
+    final container = await pumpApp(tester);
+
+    await tester.tap(find.text('Presupuesto').last);
+    await tester.pumpAndSettle();
+    // Los seis de la siembra: 500 + 180 + 400 + 200 + 120 + 240.
+    expect(container.read(appDataProvider).totalBudget, 1640);
+
+    // El «+» de la cabecera, no el de la pestaña «Agregar», que usa el mismo
+    // icono.
+    await tester.tap(
+      find.descendant(
+        of: find.byType(BudgetsPage),
+        matching: find.byIcon(AppIcons.plusCircle),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const ValueKey('cat-name-new')),
+      'Viajes',
+    );
+    await tester.enterText(find.byKey(const ValueKey('cat-budget-new')), '300');
+    // El formulario nace al final de la lista, fuera de pantalla.
+    await tester.ensureVisible(find.text('Guardar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+
+    expect(container.read(appDataProvider).totalBudget, 1940);
+    // El espacio antes del símbolo es duro (U+00A0).
+    expect(find.textContaining('1.940,00 €'), findsOneWidget);
+
+    // Y editar el presupuesto de una que ya existía: tocar su tarjeta abre el
+    // formulario con el importe puesto.
+    final comidaId = container.read(appDataProvider).categoryOf('Comida')!.id;
+    await tester.ensureVisible(find.text('Comida'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Comida'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(ValueKey('cat-budget-$comidaId')), '600');
+    await tester.ensureVisible(find.text('Guardar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+
+    expect(container.read(appDataProvider).categoryOf('Comida')!.budget, 600);
+    expect(container.read(appDataProvider).totalBudget, 2040);
+
+    appRouter.go(RouteNames.home);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('renombrar una categoría saca de su detalle', (tester) async {
+    // El detalle vive en la rama de Inicio y se navega por nombre, así que
+    // sobrevive dentro del `IndexedStack` mientras se renombra desde la pestaña
+    // de Presupuesto. Sin la salida, la pestaña se quedaba en blanco y sin
+    // botón de volver, que es parte de esa misma página.
+    final container = await pumpApp(tester);
+    appRouter.go(RouteNames.categoryDetailOf('Ocio'));
+    await tester.pumpAndSettle();
+    expect(find.byType(CategoryDetailPage), findsOneWidget);
+
+    await tester.tap(find.text('Presupuesto').last);
+    await tester.pumpAndSettle();
+    final ocioId = container.read(appDataProvider).categoryOf('Ocio')!.id;
+    await tester.ensureVisible(find.text('Ocio'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ocio'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(ValueKey('cat-name-$ocioId')),
+      'Tiempo libre',
+    );
+    await tester.ensureVisible(find.text('Guardar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Inicio').last);
+    await tester.pumpAndSettle();
+    expect(find.byType(CategoryDetailPage), findsNothing);
+    expect(find.text('gastado este mes'), findsOneWidget);
+
+    appRouter.go(RouteNames.home);
+    await tester.pumpAndSettle();
   });
 
   testWidgets('el gasto se guarda, aparece bajo HOY y baja el saldo', (

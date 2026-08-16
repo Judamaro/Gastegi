@@ -63,4 +63,14 @@ abstract final class AppIcons {
     'bank',
     'wallet',
   ];
+
+  /// Iconos elegibles al crear o editar una categoría.
+  static const List<String> categoryIconKeys = [
+    'forkKnife',
+    'bus',
+    'houseLine',
+    'popcorn',
+    'heartbeat',
+    'shoppingBag',
+  ];
 }

@@ -178,6 +178,36 @@
   },
   "budgetsAlertOver": "Excedido",
   "budgetsAlertNear": "Alerta",
+  "budgetsCreate": "Crear categoría",
+  "budgetsEmptyKicker": "Sin categorías",
+  "budgetsEmptyBody": "Crea una categoría con su presupuesto mensual y aquí verás cuánto llevas gastado de él.",
+
+  "categoryFormNewTitle": "Nueva categoría",
+  "categoryFormEditTitle": "Editar categoría",
+  "categoryFormName": "Nombre",
+  "categoryFormNameHint": "Viajes",
+  "categoryFormIcon": "Icono",
+  "categoryFormColor": "Color",
+  "categoryFormBudget": "Presupuesto mensual",
+  "categoryFormEmptyName": "Ponle un nombre a la categoría",
+  "categoryFormDuplicateName": "Ya tienes una categoría con ese nombre",
+
+  "categoryIconFood": "Comida",
+  "categoryIconTransport": "Transporte",
+  "categoryIconHome": "Hogar",
+  "categoryIconLeisure": "Ocio",
+  "categoryIconHealth": "Salud",
+  "categoryIconShopping": "Compras",
+
+  "deleteCategoryTitle": "Eliminar {name}",
+  "@deleteCategoryTitle": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "deleteCategoryConfirm": "¿Seguro que quieres eliminar esta categoría?",
+  "deleteCategoryHasExpenses": "{count, plural, one{Esta categoría tiene {count} gasto y no se puede eliminar.} other{Esta categoría tiene {count} gastos y no se puede eliminar.}} Todo gasto pertenece a una categoría; si ya no la usas, ponle el presupuesto a cero.",
+  "@deleteCategoryHasExpenses": {
+    "placeholders": { "count": { "type": "int" } }
+  },
 
   "categoryShareOfTotal": "en {month} · {percent}% del total",
   "@categoryShareOfTotal": {
