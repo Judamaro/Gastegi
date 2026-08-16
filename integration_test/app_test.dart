@@ -9,6 +9,7 @@ import 'package:gastegi/core/storage/app_database.dart';
 import 'package:gastegi/core/storage/database_provider.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
+import 'package:gastegi/features/expenses/presentation/widgets/amount_field.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:sqflite/sqflite.dart';
@@ -82,12 +83,9 @@ void main() {
     await tester.tap(find.text('Agregar'));
     await tester.pumpAndSettle();
 
-    // Hay que repintar entre pulsaciones para que los chips reaccionen. El
-    // display ya no colisiona con la tecla "0": lleva el símbolo puesto.
-    for (final key in ['4', '0']) {
-      await tester.tap(find.text(key));
-      await tester.pumpAndSettle();
-    }
+    await tester.enterText(find.byKey(amountFieldKey), '40');
+    await tester.pumpAndSettle();
+    // Hay que repintar entre pulsaciones para que los chips reaccionen.
     await tester.tap(find.text('Comida'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Efectivo'));
@@ -176,12 +174,19 @@ void main() {
 
       await tester.tap(find.text('Agregar'));
       await tester.pumpAndSettle();
-      for (final key in ['9', '9', '9', '9', '9', '9', '9', ',', '9', '9']) {
-        await tester.tap(find.text(key));
-        await tester.pump();
-      }
-      expect(find.text('9.999.999,99\u00A0€'), findsOneWidget);
+      await tester.enterText(find.byKey(amountFieldKey), '9999999,99');
+      await tester.pumpAndSettle();
+      // La cifra y el símbolo son widgets distintos: el símbolo va en un `Text`
+      // al lado del campo.
+      expect(find.text('9.999.999,99'), findsOneWidget);
       expect(tester.takeException(), isNull);
+
+      // Lo que de verdad se prueba aquí: que la medición con la tipografía real
+      // deje la cifra dentro del ancho de la pantalla.
+      expect(
+        tester.getRect(find.byType(AmountField)).width,
+        lessThanOrEqualTo(390),
+      );
 
       appRouter.go(RouteNames.home);
       await tester.pumpAndSettle();

@@ -6,8 +6,8 @@ library;
 
 /// Dígitos como máximo a cada lado del separador decimal.
 ///
-/// Un solo tope para las tres vías de entrada: el teclado propio del gasto y
-/// los campos de saldo y de transferencia. Con dos decimales, `999.999.999,99`.
+/// Un solo tope para los tres campos de importe: el del gasto, el del saldo y
+/// el de la transferencia. Con dos decimales, `999.999.999,99`.
 ///
 /// Subirlo alarga la cifra más larga que la app puede llegar a pintar, que es
 /// la que decide si las pantallas desbordan: al tocarlo hay que mover con él
@@ -21,12 +21,6 @@ const int maxFractionDigits = 2;
 /// El CLDR devuelve el guion ASCII, más corto y más alto que las cifras: en un
 /// importe grande se lee como un tropiezo. `AppData.deltaLabel` ya usa este.
 const String minusSign = '−';
-
-/// Token de borrado del teclado propio.
-///
-/// Vive aquí y no en el widget porque quien lo interpreta es el estado, y así
-/// el notifier no tiene que importar una pantalla para reconocer una tecla.
-const String backspaceKey = '⌫';
 
 /// Separador decimal del texto *canónico*: el que guardan los notifiers.
 ///

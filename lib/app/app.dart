@@ -17,8 +17,8 @@ class GastegiApp extends StatelessWidget {
   /// Tope de la escala de texto del sistema.
   ///
   /// La preferencia de accesibilidad se respeta, pero por encima de 1.3 las
-  /// cifras grandes de Inicio y las teclas del importe dejan de caber aunque
-  /// encojan: el `FittedBox` las reduciría hasta lo ilegible.
+  /// cifras grandes dejan de caber aunque encojan: el `FittedBox` de Inicio y
+  /// la medición del importe de «Nuevo gasto» las reducirían hasta lo ilegible.
   static const double _maxTextScale = 1.3;
 
   @override

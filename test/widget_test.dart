@@ -10,7 +10,7 @@ import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:gastegi/features/dashboard/presentation/pages/home_page.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
-import 'package:gastegi/features/expenses/presentation/widgets/amount_keypad.dart';
+import 'package:gastegi/features/expenses/presentation/widgets/amount_field.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -127,12 +127,31 @@ void main() {
 
     await tester.tap(find.text('Agregar'));
     await tester.pumpAndSettle();
-    for (final key in [...List.filled(maxIntegerDigits, '9'), ',', '9', '9']) {
-      await tester.tap(find.text(key));
-      await tester.pump();
-    }
-    expect(find.text('999.999.999,99\u00A0€'), findsOneWidget);
+    await tester.enterText(
+      find.byKey(amountFieldKey),
+      '${'9' * maxIntegerDigits},99',
+    );
+    await tester.pumpAndSettle();
+    // La cifra y el símbolo ya no son el mismo widget: el símbolo va en un
+    // `Text` al lado del campo, con el espacio duro que trae el idioma.
+    expect(find.text('999.999.999,99'), findsOneWidget);
+    expect(find.text('\u00A0€'), findsOneWidget);
     expect(tester.takeException(), isNull);
+
+    // `takeException` no ve un texto encogido, así que la cifra se comprueba
+    // aparte: en 390×844 la escala vale 1 y `displayXl` son 44 exactos. Que
+    // haya bajado es lo que prueba la medición que sustituyó al `FittedBox`.
+    final size = tester
+        .widget<EditableText>(
+          find.descendant(
+            of: find.byKey(amountFieldKey),
+            matching: find.byType(EditableText),
+          ),
+        )
+        .style
+        .fontSize!;
+    expect(size, lessThan(44), reason: 'la cifra se ha encogido');
+    expect(size, greaterThanOrEqualTo(20), reason: 'sin llegar al suelo');
 
     // `appRouter` es una instancia global y conserva la ruta entre tests: sin
     // volver a una pestaña, el siguiente arranca en /add y no encuentra la
@@ -173,59 +192,114 @@ void main() {
     expect(home.center.dx, closeTo(384, 0.01), reason: 'centrado');
   });
 
-  // Dos apaisados con holgura vertical muy distinta: el del teléfono tumbado,
-  // donde el teclado llena el alto disponible, y una ventana grande, donde
-  // sobra sitio. La desalineación solo se ve en el segundo, porque con el
-  // teclado a tope de altura da igual cómo se alinee dentro de su columna.
-  for (final (nombre, size, altoMinTeclado) in const <(String, Size, double)>[
-    ('un teléfono tumbado', Size(844, 390), 250),
-    ('una ventana amplia', Size(1080, 956), 380),
+  testWidgets('el importe máximo cabe en el móvil pequeño al 1.3× de texto', (
+    tester,
+  ) async {
+    // El peor caso del catálogo, y el que `responsive_test.dart` no ve: allí
+    // nadie teclea la cifra más larga. El cuerpo del visor tiene suelo, así que
+    // llega un punto en el que encoger ya no basta y lo único que evita las
+    // rayas amarillas es que el campo se acote y se desplace por dentro.
+    await pumpApp(tester, size: const Size(320, 568), textScale: 1.3);
+
+    await tester.tap(find.text('Agregar'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(amountFieldKey),
+      '${'9' * maxIntegerDigits},99',
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+
+    // La tipografía de las pruebas mide cada glifo como un cuadrado, mucho más
+    // ancha que la real: este es el caso en el que el suelo se toca de verdad.
+    final field = tester.getRect(find.byType(AmountField));
+    final editable = tester.getRect(
+      find.descendant(
+        of: find.byKey(amountFieldKey),
+        matching: find.byType(EditableText),
+      ),
+    );
+    expect(editable.left, greaterThanOrEqualTo(field.left));
+    expect(editable.right, lessThanOrEqualTo(field.right));
+
+    appRouter.go(RouteNames.home);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('en apaisado, «Nuevo gasto» va en una sola columna', (
+    tester,
+  ) async {
+    await pumpApp(tester, size: const Size(844, 390));
+
+    await tester.tap(find.text('Agregar'));
+    await tester.pumpAndSettle();
+
+    // Antes los campos vivían en una columna y el teclado propio en otra, a su
+    // derecha. Sin teclado, todo baja en una sola columna que se desplaza.
+    final amount = tester.getRect(find.byType(AmountField));
+    final category = tester.getRect(find.text('Categoría'));
+    expect(category.top, greaterThan(amount.bottom), reason: 'bajo el importe');
+    expect(category.left, lessThan(amount.right), reason: 'misma columna');
+    expect(tester.takeException(), isNull);
+
+    appRouter.go(RouteNames.home);
+    await tester.pumpAndSettle();
+  });
+
+  // El teclado del sistema come alto, y esta pantalla está fuera del shell de
+  // pestañas, así que no le vale el ajuste que esconde la barra: lo único que
+  // la salva es que la columna se desplace.
+  for (final (nombre, size) in const <(String, Size)>[
+    ('en vertical', Size(390, 844)),
+    ('en apaisado', Size(844, 390)),
   ]) {
-    testWidgets('en apaisado, en $nombre, las dos columnas se alinean', (
-      tester,
-    ) async {
-      await pumpApp(tester, size: size);
+    testWidgets(
+      'con el teclado del sistema puesto se llega a Guardar, $nombre',
+      (tester) async {
+        await pumpApp(tester, size: size);
 
-      await tester.tap(find.text('Agregar'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Agregar'));
+        await tester.pumpAndSettle();
 
-      final header = tester.getRect(find.text('Nuevo gasto'));
-      final category = tester.getRect(find.text('Categoría'));
-      final keypad = tester.getRect(find.byType(AmountKeypad));
+        const teclado = 200.0;
+        tester.view.viewInsets = const FakeViewPadding(bottom: teclado * 3);
+        await tester.pumpAndSettle();
 
-      // El teclado a la derecha de los campos y no debajo: en la altura de un
-      // teléfono tumbado, en una sola columna no cabe.
-      expect(keypad.left, greaterThan(category.right));
+        await tester.ensureVisible(find.text('Guardar gasto'));
+        await tester.pumpAndSettle();
+        expect(
+          tester.getRect(find.text('Guardar gasto')).bottom,
+          lessThanOrEqualTo(size.height - teclado),
+          reason: 'por encima del teclado',
+        );
+        expect(tester.takeException(), isNull);
 
-      // Y arrancando a la altura de la columna izquierda, bajo la cabecera que
-      // cruza las dos. Antes la columna de la derecha se estiraba hasta el
-      // fondo y centraba el teclado en su propio alto, que no coincidía con
-      // nada de lo que tenía al lado.
-      expect(keypad.top, greaterThan(header.bottom), reason: 'bajo cabecera');
-      expect(
-        keypad.top,
-        lessThan(category.top),
-        reason: 'a la par del importe',
-      );
-
-      // La cabecera cruza las dos columnas: el botón de cerrar va al borde
-      // derecho del contenido, no a media pantalla donde acaba la izquierda.
-      expect(header.right, greaterThan(keypad.left));
-
-      // El teclado se queda con el alto sobrante en vez de dejarlo muerto al
-      // pie: con teclas del tamaño mínimo mediría unos 265 en las dos, y lo
-      // que se comprueba aquí es justo que crezca cuando hay sitio.
-      expect(
-        keypad.height,
-        greaterThan(altoMinTeclado),
-        reason: 'el teclado aprovecha el alto disponible',
-      );
-      expect(tester.takeException(), isNull);
-
-      appRouter.go(RouteNames.home);
-      await tester.pumpAndSettle();
-    });
+        tester.view.viewInsets = FakeViewPadding.zero;
+        appRouter.go(RouteNames.home);
+        await tester.pumpAndSettle();
+      },
+    );
   }
+
+  testWidgets('el campo del importe arranca enfocado', (tester) async {
+    await pumpApp(tester);
+
+    await tester.tap(find.text('Agregar'));
+    await tester.pumpAndSettle();
+
+    // El teclado del sistema sube al abrir: teclear el importe es lo primero
+    // que se hace aquí, y esperar un toque más sería un gesto de más.
+    final field = tester.widget<EditableText>(
+      find.descendant(
+        of: find.byKey(amountFieldKey),
+        matching: find.byType(EditableText),
+      ),
+    );
+    expect(field.focusNode.hasFocus, isTrue);
+
+    appRouter.go(RouteNames.home);
+    await tester.pumpAndSettle();
+  });
 
   testWidgets('el teclado del sistema oculta la barra de pestañas', (
     tester,
@@ -287,12 +361,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Nuevo gasto'), findsOneWidget);
 
-    // Hay que repintar entre pulsaciones para que los chips reaccionen. El
-    // display ya no colisiona con la tecla "0": lleva el símbolo puesto.
-    await tester.tap(find.text('5'));
+    await tester.enterText(find.byKey(amountFieldKey), '50');
     await tester.pumpAndSettle();
-    await tester.tap(find.text('0'));
-    await tester.pumpAndSettle();
+    // Hay que repintar entre pulsaciones para que los chips reaccionen.
     await tester.tap(find.text('Comida'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Efectivo'));
@@ -305,5 +376,16 @@ void main() {
     expect(find.text('HOY'), findsOneWidget);
     expect(find.text('Comida · Efectivo'), findsOneWidget);
     expect(container.read(appDataProvider).patrimonio, 150);
+
+    // Y el formulario vuelve limpio. El controlador del campo no se entera solo
+    // de que `save()` ha vaciado el estado: sin la sincronización, al volver
+    // aquí seguiría escrito el importe del gasto anterior.
+    await tester.tap(find.text('Agregar'));
+    await tester.pumpAndSettle();
+    expect(find.text('50'), findsNothing);
+    expect(find.text('0'), findsOneWidget, reason: 'el cero de la pista');
+
+    appRouter.go(RouteNames.home);
+    await tester.pumpAndSettle();
   });
 }

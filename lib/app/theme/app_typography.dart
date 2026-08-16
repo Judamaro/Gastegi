@@ -28,7 +28,7 @@ abstract final class AppFontSize {
   /// Total de una categoría.
   static double get displaySm => 32.sp;
 
-  /// Título de pantalla, y tecla del teclado del importe.
+  /// Título de pantalla, y suelo al que puede encoger la cifra del importe.
   static double get title => 20.sp;
 
   /// Saldo de una cuenta en su fila.

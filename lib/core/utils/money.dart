@@ -12,7 +12,7 @@ import 'package:intl/intl.dart';
 ///
 /// La frontera con el estado: un notifier guarda texto **canónico**
 /// (`[-]?dígitos[.dígitos]`, sin miles ni símbolo) y es la página la que lo
-/// traduce con [typed] o [typedNumber], y de vuelta con [canonical].
+/// traduce con [typedNumber], y de vuelta con [canonical].
 class MoneyLabels {
   const MoneyLabels(this._l10n);
 
@@ -39,7 +39,8 @@ class MoneyLabels {
   String formatSigned(double n) =>
       n < 0 ? '$minusSign${format(-n)}' : format(n);
 
-  /// Separador decimal del idioma, para la tecla del teclado propio.
+  /// Separador decimal del idioma: lo que el usuario teclea y [canonical]
+  /// traduce a punto.
   String get decimalSeparator => _f.currency.symbols.DECIMAL_SEP;
 
   /// Separador de miles del idioma: lo pone la app, no el usuario, y por eso
@@ -51,16 +52,6 @@ class MoneyLabels {
   /// símbolo dentro de lo editable.
   String get symbolPrefix => _f.prefix;
   String get symbolSuffix => _f.suffix;
-
-  /// Lo tecleado hasta ahora, con símbolo y con el cero de partida.
-  ///
-  /// Para el visor del nuevo gasto, donde un importe vacío se enseña como cero.
-  String typed(String canonical) {
-    final negative = canonical.startsWith('-');
-    final body = negative ? canonical.substring(1) : canonical;
-    return '${negative ? minusSign : ''}'
-        '$symbolPrefix${_grouped(body)}$symbolSuffix';
-  }
 
   /// Lo tecleado hasta ahora, sin símbolo y sin cero de relleno.
   ///

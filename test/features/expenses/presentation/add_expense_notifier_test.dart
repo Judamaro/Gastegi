@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
-import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
 import 'package:gastegi/features/expenses/presentation/providers/add_expense_notifier.dart';
@@ -28,8 +27,7 @@ void main() {
 
     form.pickCategory('Comida');
     form.pickAccount(accountId);
-    form.keypadTap('5');
-    form.keypadTap('0');
+    form.setAmount('50');
     expect(container.read(addExpenseProvider).saveDisabled, isFalse);
 
     expect(await form.save(), isTrue);
@@ -49,49 +47,33 @@ void main() {
     final form = container.read(addExpenseProvider.notifier);
 
     form.pickCategory('Comida');
-    form.keypadTap('5');
+    form.setAmount('5');
 
     expect(container.read(addExpenseProvider).saveDisabled, isTrue);
     expect(await form.save(), isFalse);
     expect(await ExpenseRepositoryImpl(db).count(), 0);
   });
 
-  test(
-    'el teclado guarda canónico y admite un solo separador decimal',
-    () async {
-      final container = await buildLoadedContainer(db);
-      final form = container.read(addExpenseProvider.notifier);
-      String amount() => container.read(addExpenseProvider).amount;
-
-      // El token es siempre el punto, aunque en español se vea una coma: el
-      // estado no puede depender del idioma.
-      form.keypadTap(canonicalDecimalPoint);
-      expect(amount(), '0.');
-      form.keypadTap(canonicalDecimalPoint);
-      expect(amount(), '0.');
-
-      for (var i = 0; i < 10; i++) {
-        form.keypadTap('9');
-      }
-      // Dos decimales como mucho: sin el tope se podría teclear `12,999` y
-      // guardar un importe que la pantalla enseña como `13,00 €`.
-      expect(amount(), '0.99');
-
-      form.keypadTap(backspaceKey);
-      expect(amount(), '0.9');
-    },
-  );
-
-  test('el teclado limita la parte entera al tope de dígitos', () async {
+  // Los topes de dígitos y la regla del único separador decimal ya no viven
+  // aquí: las aplica `MoneyInputFormatter` sobre `MoneyLabels.canonical`, y las
+  // prueban `money_test.dart` y `money_input_formatter_test.dart`. Lo que sí
+  // decide este estado es cuándo el importe basta para guardar.
+  test('un importe a medio escribir no habilita Guardar', () async {
+    final accountId = await AccountRepositoryImpl(
+      db,
+    ).create(name: 'Efectivo', kind: '', iconKey: 'money', initialBalance: 100);
     final container = await buildLoadedContainer(db);
     final form = container.read(addExpenseProvider.notifier);
 
-    // Dos de más: el tope tiene que aguantar aunque se siga pulsando.
-    for (var i = 0; i < maxIntegerDigits + 2; i++) {
-      form.keypadTap('9');
-    }
+    form.pickCategory('Comida');
+    form.pickAccount(accountId);
 
-    expect(container.read(addExpenseProvider).amount, '9' * maxIntegerDigits);
+    // Lo que deja el campo cuando solo se ha tecleado la coma.
+    form.setAmount('.');
+    expect(container.read(addExpenseProvider).saveDisabled, isTrue);
+
+    form.setAmount('12.');
+    expect(container.read(addExpenseProvider).saveDisabled, isFalse);
   });
 
   test('sin descripción se usa el nombre de la categoría', () async {
@@ -103,7 +85,7 @@ void main() {
 
     form.pickCategory('Comida');
     form.pickAccount(accountId);
-    form.keypadTap('9');
+    form.setAmount('9');
     await form.save();
 
     expect(container.read(appDataProvider).expenses.single.desc, 'Comida');
