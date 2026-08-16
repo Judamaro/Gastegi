@@ -54,6 +54,21 @@ void main() {
     expect(result.text, '12,34');
   });
 
+  test('un punto recién tecleado en español es el separador decimal', () {
+    // Los teclados numéricos del móvil ofrecen el punto sea cual sea el idioma.
+    // Sin esta traducción el punto se descartaba por separador de miles y
+    // `12.5` acababa valiendo 125, cien veces más, sin que nada avisara.
+    expect(es.formatEditUpdate(_value('12'), _value('12.')).text, '12,');
+    expect(es.formatEditUpdate(_value('12,'), _value('12,5')).text, '12,5');
+  });
+
+  test('los miles que pone la app no se confunden con un decimal', () {
+    // El texto de partida ya viene agrupado por la pasada anterior: si el punto
+    // de `1.234` se tradujera, la cifra se convertiría en 1,234.
+    final result = es.formatEditUpdate(_value('1.234'), _value('1.2345'));
+    expect(result.text, '12.345');
+  });
+
   test('el campo vacío se queda vacío, para que se vea el hint', () {
     final result = es.formatEditUpdate(_value('1'), _value(''));
     expect(result.text, '');

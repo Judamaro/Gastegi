@@ -23,6 +23,26 @@ class MoneyInputFormatter extends TextInputFormatter {
     var cursor = newValue.selection.end;
     if (cursor < 0 || cursor > text.length) cursor = text.length;
 
+    // Un punto recién tecleado en un idioma que separa decimales con coma es un
+    // decimal, no un separador de miles.
+    //
+    // Los teclados numéricos del móvil ofrecen el punto sea cual sea el idioma,
+    // y en español el punto es el separador de miles: sin esto, `12.5` se
+    // descartaría a `125` y se guardaría un importe cien veces mayor **sin que
+    // nada avise**. El separador de miles no hay que teclearlo nunca —lo pone
+    // este formateador desde la primera cifra—, así que un punto que escribe el
+    // usuario solo puede querer decir «decimal».
+    //
+    // Solo el carácter recién insertado: los separadores de miles que ya trae
+    // el texto los ha puesto la app en la pasada anterior, y traducirlos
+    // convertiría `1.234` en un importe con tres decimales.
+    if (_money.decimalSeparator != _typedDecimalPoint &&
+        text.length == oldValue.text.length + 1 &&
+        cursor > 0 &&
+        text[cursor - 1] == _typedDecimalPoint) {
+      text = text.replaceRange(cursor - 1, cursor, _money.decimalSeparator);
+    }
+
     // Borrar un separador de miles no cambia ningún dígito: se repondría
     // intacto y la tecla de borrado parecería muerta. Cuando pasa, se borra el
     // dígito de su izquierda, que es lo que el usuario quería.
@@ -69,6 +89,10 @@ class MoneyInputFormatter extends TextInputFormatter {
     }
     return -1;
   }
+
+  /// El punto que ofrece el teclado numérico del sistema, que no siempre
+  /// coincide con el separador decimal del idioma.
+  static const String _typedDecimalPoint = '.';
 
   static bool _isDigit(String ch) {
     final code = ch.codeUnitAt(0);

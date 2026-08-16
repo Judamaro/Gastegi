@@ -80,29 +80,14 @@ class AddExpenseNotifier extends Notifier<AddExpenseState> {
     );
   }
 
-  /// Teclado propio: dígitos, un solo separador decimal y borrado, con
-  /// [maxIntegerDigits] enteros y [maxFractionDigits] decimales como máximo.
+  /// El importe, ya canónico.
   ///
-  /// El separador que llega es siempre [canonicalDecimalPoint], aunque en
-  /// español se vea una coma: el estado guarda texto canónico porque un
-  /// notifier no tiene contexto con el que resolver el idioma.
-  ///
-  /// El tope de decimales no es cosmético: sin él se puede teclear `12,999` y
-  /// guardar un importe que la pantalla enseña como `13,00 €`.
-  void keypadTap(String key) {
-    var a = state.amount;
-    final at = a.indexOf(canonicalDecimalPoint);
-    if (key == backspaceKey) {
-      a = a.isEmpty ? a : a.substring(0, a.length - 1);
-    } else if (key == canonicalDecimalPoint) {
-      if (at < 0) a = '${a.isEmpty ? '0' : a}$canonicalDecimalPoint';
-    } else if (at < 0
-        ? a.length < maxIntegerDigits
-        : a.length - at - 1 < maxFractionDigits) {
-      a += key;
-    }
-    state = state.copyWith(amount: a);
-  }
+  /// No valida nada a propósito: lo que llega viene del campo del visor, que
+  /// pasa cada pulsación por `MoneyInputFormatter` y este por
+  /// `MoneyLabels.canonical`, donde viven el tope de enteros, el de decimales y
+  /// la regla del único separador decimal. Repetirlas aquí las pondría en dos
+  /// sitios, y solo uno de los dos se acordaría de cambiarlas.
+  void setAmount(String value) => state = state.copyWith(amount: value);
 
   void pickCategory(String name) => state = state.copyWith(categoryName: name);
 

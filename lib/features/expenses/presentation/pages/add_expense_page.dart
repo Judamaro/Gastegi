@@ -18,131 +18,67 @@ import 'package:gastegi/core/widgets/field_label.dart';
 import 'package:gastegi/core/widgets/primary_button.dart';
 import 'package:gastegi/core/widgets/secondary_button.dart';
 import 'package:gastegi/features/expenses/presentation/providers/add_expense_notifier.dart';
-import 'package:gastegi/features/expenses/presentation/widgets/amount_keypad.dart';
+import 'package:gastegi/features/expenses/presentation/widgets/amount_field.dart';
 import 'package:go_router/go_router.dart';
 
-/// Nuevo gasto: monto con teclado propio, categoría, cuenta y descripción.
+/// Nuevo gasto: el importe se teclea con el teclado del sistema sobre la cifra
+/// grande, y debajo van categoría, cuenta, fecha y descripción.
 ///
-/// En apaisado se reparte en dos columnas —campos a la izquierda, teclado y
-/// Guardar a la derecha—: en vertical, la pantalla entera no cabe en la altura
-/// de un teléfono tumbado, y obligar a desplazarse para llegar al teclado
-/// convierte en dos gestos lo que era uno.
+/// Una sola columna en las dos orientaciones: con el teclado del sistema puesto,
+/// en apaisado desaparece media pantalla, y una segunda columna quedaría detrás
+/// de él.
 class AddExpensePage extends ConsumerWidget {
   const AddExpensePage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final screen = watchScreen(context);
+    watchScreen(context);
 
     // Scaffold propio: esta pantalla es una ruta de nivel superior, fuera del
     // shell de pestañas, así que nadie más se lo pone.
+    //
+    // `resizeToAvoidBottomInset` se queda en su valor por defecto: el `Scaffold`
+    // encoge el cuerpo hasta el borde del teclado, el `LayoutBuilder` de abajo
+    // ve el alto reducido, el `Spacer` colapsa y el desplazamiento alcanza el
+    // botón. Apagándolo, el teclado taparía Guardar sin salida posible.
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
-        // En apaisado el contenido se reparte en dos columnas, así que puede
-        // aprovechar más ancho que una pantalla de lectura en vertical.
         child: ContentWidth(
-          maxWidth: screen.isLandscape ? 840 : kTabletBreakpoint,
           child: Padding(
             padding: EdgeInsets.fromLTRB(20.r, 12.r, 20.r, 16.r),
-            // La decisión se toma con la pantalla y no con las restricciones
-            // del `LayoutBuilder`: aquí dentro el ancho ya viene recortado por
-            // `ContentWidth`, y en una tableta tumbada comparar ancho contra
-            // alto daría el resultado contrario al que se ve.
-            child: screen.isLandscape
-                ? const _LandscapeLayout()
-                : const _PortraitLayout(),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Una sola columna, con el teclado empujado al fondo.
-class _PortraitLayout extends StatelessWidget {
-  const _PortraitLayout();
-
-  @override
-  Widget build(BuildContext context) {
-    watchScreen(context);
-    return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        // `IntrinsicHeight` + `Spacer` sobre la altura mínima de la ventana:
-        // así el teclado se pega abajo cuando sobra sitio, y la pantalla se
-        // desplaza cuando no lo hay.
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: constraints.maxHeight),
-          child: IntrinsicHeight(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: 12.r,
-              children: [
-                const _Header(),
-                const _AmountDisplay(),
-                const _Fields(),
-                const Spacer(),
-                const _Keypad(),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Dos columnas: los campos a la izquierda, el teclado a la derecha.
-class _LandscapeLayout extends StatelessWidget {
-  const _LandscapeLayout();
-
-  @override
-  Widget build(BuildContext context) {
-    watchScreen(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 12.r,
-      children: [
-        // La cabecera cruza las dos columnas en vez de vivir dentro de la
-        // izquierda: si no, el botón de cerrar cae a media pantalla, donde
-        // termina esa columna, y no en la esquina donde se busca.
-        const _Header(),
-        Expanded(
-          // El bloque de las dos columnas se centra en vertical: lo que sobra
-          // se reparte arriba y abajo en vez de amontonarse al pie. Se centra
-          // el bloque entero, no cada columna por su cuenta, que es lo que las
-          // desalineaba.
-          child: Center(
-            child: Row(
-              // Las dos columnas arrancan a la misma altura.
-              crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: 20.r,
-              children: [
-                Expanded(
-                  // Solo la columna de campos se desplaza: el teclado y Guardar
-                  // tienen que quedarse quietos, que es lo que se está tocando.
-                  child: SingleChildScrollView(
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                // `IntrinsicHeight` + `Spacer` sobre la altura mínima de la
+                // ventana: así Guardar se pega abajo cuando sobra sitio, y la
+                // pantalla se desplaza cuando no lo hay.
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       spacing: 12.r,
-                      children: [const _AmountDisplay(), const _Fields()],
+                      children: [
+                        const _Header(),
+                        Padding(
+                          padding: EdgeInsets.only(top: 8.r, bottom: 4.r),
+                          // El ancho se mide aquí y baja como parámetro: el
+                          // campo no puede montar su propio `LayoutBuilder`
+                          // colgando de un `IntrinsicHeight`.
+                          child: AmountField(maxWidth: constraints.maxWidth),
+                        ),
+                        const _Fields(),
+                        const Spacer(),
+                        const _SaveButton(),
+                      ],
                     ),
                   ),
                 ),
-                Expanded(
-                  // El teclado se queda con el alto sobrante, hasta un tope:
-                  // sin él, en una ventana alta salen teclas de 200 dp, que no
-                  // se tocan mejor por ser enormes.
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxHeight: 420.r),
-                    child: const _Keypad(fillHeight: true),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -173,37 +109,6 @@ class _Header extends StatelessWidget {
               context.canPop() ? context.pop() : context.go(RouteNames.home),
         ),
       ],
-    );
-  }
-}
-
-/// La cifra que se está tecleando.
-class _AmountDisplay extends ConsumerWidget {
-  const _AmountDisplay();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    watchScreen(context);
-    // Solo el importe: observar el estado entero repintaba la cifra en cada
-    // pulsación de la descripción.
-    final (amount, amountValue) = ref.watch(
-      addExpenseProvider.select((s) => (s.amount, s.amountValue)),
-    );
-    return Padding(
-      padding: EdgeInsets.only(top: 8.r, bottom: 4.r),
-      // El máximo tecleable con moneda y decimales roza el ancho de la
-      // pantalla: se encoge en vez de desbordar.
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Text(
-          context.money.typed(amount),
-          textAlign: TextAlign.center,
-          style: AppTextStyles.hero(
-            AppFontSize.displayXl,
-            color: amountValue > 0 ? AppColors.text : AppColors.neutral700,
-          ),
-        ),
-      ),
     );
   }
 }
@@ -344,12 +249,9 @@ class _Fields extends ConsumerWidget {
   }
 }
 
-/// Teclado numérico y botón de guardar.
-class _Keypad extends ConsumerWidget {
-  const _Keypad({this.fillHeight = false});
-
-  /// Reparte el alto disponible entre las teclas. Ver [AmountKeypad.fillHeight].
-  final bool fillHeight;
+/// Guardar el gasto.
+class _SaveButton extends ConsumerWidget {
+  const _SaveButton();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -358,24 +260,13 @@ class _Keypad extends ConsumerWidget {
       addExpenseProvider.select((s) => s.saveDisabled),
     );
     final form = ref.read(addExpenseProvider.notifier);
-    return Column(
-      mainAxisSize: fillHeight ? MainAxisSize.max : MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 12.r,
-      children: [
-        if (fillHeight)
-          Expanded(child: AmountKeypad(onKey: form.keypadTap, fillHeight: true))
-        else
-          AmountKeypad(onKey: form.keypadTap),
-        PrimaryButton(
-          label: context.l10n.addExpenseSave,
-          disabled: saveDisabled,
-          onTap: () async {
-            if (!await form.save()) return;
-            if (context.mounted) context.go(RouteNames.history);
-          },
-        ),
-      ],
+    return PrimaryButton(
+      label: context.l10n.addExpenseSave,
+      disabled: saveDisabled,
+      onTap: () async {
+        if (!await form.save()) return;
+        if (context.mounted) context.go(RouteNames.history);
+      },
     );
   }
 }

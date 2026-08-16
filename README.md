@@ -99,9 +99,14 @@ has tocado" dejaría saldos viejos en pantalla **sin lanzar ningún error**.
   transferencia y la confirmación de borrado se pintan bajo la lista. Es una
   decisión de diseño: la app no interrumpe, muestra la consecuencia donde
   estaba mirando el usuario.
-- **El teclado del importe es propio.** No sube el del sistema, y las reglas de
-  entrada (un solo separador decimal, y el tope de enteros y decimales) las decide
-  la app.
+- **El importe se teclea con el teclado del sistema.** La cifra grande de «Nuevo
+  gasto» *es* el campo, y el teclado sube al abrir la pantalla. Las reglas de
+  entrada —un solo separador decimal, el tope de enteros y el de decimales— las
+  aplica `MoneyInputFormatter` sobre `MoneyLabels.canonical`, el mismo camino
+  que los campos de saldo y de transferencia: una sola regla para las tres.
+  Un punto tecleado en español cuenta como decimal, porque los teclados
+  numéricos del móvil ofrecen el punto sea cual sea el idioma y el separador de
+  miles no hay que teclearlo nunca: lo pone la app.
 - **Los importes se guardan en canónico y se pintan en el idioma del
   dispositivo.** El estado de un formulario guarda `1234.56`, con punto y sin
   separadores de miles; la página lo traduce a `1.234,56 €` en español o
@@ -117,16 +122,18 @@ has tocado" dejaría saldos viejos en pantalla **sin lanzar ningún error**.
   dispositivo real, texto incluido. La regla es `.r` para componentes y `.sp`
   para fuentes; `.w` escalaría por ancho y en apaisado multiplicaría por 2.16.
 - **El tamaño de letra del sistema se respeta, con un tope de 1.3×.** Por encima
-  de ahí las cifras grandes y las teclas del importe dejan de caber aunque
-  encojan. La única excepción son los dos textos del centro de la dona, que
+  de ahí las cifras grandes dejan de caber aunque encojan: el `FittedBox` de
+  Inicio y la medición del importe de «Nuevo gasto» —que deriva el cuerpo de la
+  cifra midiendo el texto contra el ancho disponible— las reducirían hasta lo
+  ilegible. La única excepción son los dos textos del centro de la dona, que
   salen del diámetro: el hueco es geométrico y honrar el ajuste los sacaría del
   círculo.
 - **En tableta el contenido se acota a 600 dp y se centra**, en vez de estirarse:
   una columna de 700 dp no se lee, la vista salta de un extremo al otro de cada
   línea.
-- **«Nuevo gasto» se reparte en dos columnas en apaisado.** En la altura de un
-  teléfono tumbado no cabe en una sola, y desplazarse para llegar al teclado
-  convierte en dos gestos lo que era uno.
+- **«Nuevo gasto» es una sola columna con desplazamiento**, también en apaisado.
+  Con el teclado del sistema puesto desaparece media pantalla, y una segunda
+  columna quedaría detrás de él.
 - **Las abreviaturas de mes están escritas a mano** en los `.arb`: el CLDR
   español devuelve `ago.` y `sept.`, con punto y hasta cuatro letras, que
   desbordan las etiquetas estrechas de las gráficas.

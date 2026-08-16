@@ -54,25 +54,16 @@ void main() {
     expect(en.symbolSuffix, '');
   });
 
-  test('typed enseña lo tecleado sin completar decimales', () {
-    // Formatear el `double` parseado destruiría estos estados intermedios:
-    // `12.` se vería `12` y `12.50` se vería `12,5`.
-    expect(es.typed(''), '0 €');
-    expect(es.typed('12'), '12 €');
-    expect(es.typed('12.'), '12, €');
-    expect(es.typed('12.5'), '12,5 €');
-    expect(es.typed('1234.50'), '1.234,50 €');
-    expect(es.typed('-1234.50'), '−1.234,50 €');
-    expect(en.typed('1234.50'), '€1,234.50');
-    expect(en.typed('-1234.50'), '−€1,234.50');
-  });
-
   test('typedNumber deja el campo vacío vacío', () {
     // Si devolviera `0`, el hint del campo no llegaría a verse nunca.
     expect(es.typedNumber(''), '');
     expect(es.typedNumber('-'), '−');
     expect(es.typedNumber('1234.5'), '1.234,5');
     expect(en.typedNumber('1234.5'), '1,234.5');
+    // Formatear el `double` parseado destruiría estos estados intermedios:
+    // `12.` se vería `12` y `12.50` se vería `12,5`.
+    expect(es.typedNumber('12.'), '12,');
+    expect(es.typedNumber('1234.50'), '1.234,50');
   });
 
   test('canonical entiende el texto del idioma', () {
