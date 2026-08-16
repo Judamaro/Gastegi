@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/core/utils/date_utils.dart';
 import 'package:gastegi/features/expenses/domain/entities/expense.dart';
+import 'package:gastegi/features/expenses/presentation/models/history_item.dart';
 import 'package:gastegi/features/expenses/presentation/models/history_range.dart';
 
 /// Filtros del historial.
@@ -101,4 +102,19 @@ final historyGroupsProvider = Provider<List<(DateTime, List<Expense>)>>((ref) {
   }
   final days = byDay.keys.toList()..sort((a, b) => b.compareTo(a));
   return [for (final d in days) (d, byDay[d]!)];
+});
+
+/// Los grupos aplanados a una sola lista indexable.
+///
+/// Es lo que consume `SliverList.builder` en la página: una lista perezosa
+/// necesita `itemCount` y un índice, y recorrer grupos anidados obligaría a
+/// construirlos todos para saber en cuál cae la fila N.
+final historyItemsProvider = Provider<List<HistoryItem>>((ref) {
+  final groups = ref.watch(historyGroupsProvider);
+  return [
+    for (final (day, items) in groups) ...[
+      HistoryDay(day),
+      for (final e in items) HistoryEntry(e),
+    ],
+  ];
 });
