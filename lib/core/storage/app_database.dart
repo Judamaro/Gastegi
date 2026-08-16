@@ -150,9 +150,18 @@ const List<String> _ddlV1 = [
     value TEXT NOT NULL
   )
   ''',
-  'CREATE INDEX idx_expenses_spent_on ON expenses(spent_on)',
+  // Índices **cubrientes**: llevan `deleted_at` y `amount` detrás de la columna
+  // por la que se busca, así que las consultas agregadas se resuelven dentro
+  // del índice y no bajan a la tabla fila a fila. `recomputeBalances` corre en
+  // cada escritura y recorre todo el histórico, que es el único recorrido de
+  // esta app que crece sin límite.
+  'CREATE INDEX idx_expenses_spent_on ON expenses(spent_on, deleted_at, amount)',
   'CREATE INDEX idx_expenses_category_id ON expenses(category_id)',
-  'CREATE INDEX idx_expenses_account_id ON expenses(account_id)',
+  'CREATE INDEX idx_expenses_account_id ON expenses(account_id, deleted_at, amount)',
   'CREATE INDEX idx_expenses_updated_at ON expenses(updated_at)',
-  'CREATE INDEX idx_transfers_accounts ON transfers(from_account_id, to_account_id)',
+  // Uno por sentido, y no un solo `(from_account_id, to_account_id)`: ese solo
+  // sirve de prefijo para las salientes, y dejaba las entrantes en un `SCAN`
+  // completo de la tabla.
+  'CREATE INDEX idx_transfers_from ON transfers(from_account_id, deleted_at, amount)',
+  'CREATE INDEX idx_transfers_to ON transfers(to_account_id, deleted_at, amount)',
 ];

@@ -94,10 +94,16 @@ class AppData {
   }();
 
   /// Gasto por día del mes (índice 0 = día 1).
-  late final List<double> dailyTotals = List.generate(
-    daysInCurrentMonth,
-    (i) => expenses.where((e) => e.day == i + 1).fold(0.0, (a, e) => a + e.val),
-  );
+  ///
+  /// Una sola pasada acumulando: recorrer los gastos una vez por día era
+  /// O(días × gastos) para un resultado que sale en O(gastos).
+  late final List<double> dailyTotals = () {
+    final totals = List.filled(daysInCurrentMonth, 0.0);
+    for (final e in expenses) {
+      totals[e.day - 1] += e.val;
+    }
+    return totals;
+  }();
 
   /// Barras de los últimos 6 meses; el mes en curso usa el total en vivo.
   ///

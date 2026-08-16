@@ -184,7 +184,11 @@ class _AmountDisplay extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     watchScreen(context);
-    final state = ref.watch(addExpenseProvider);
+    // Solo el importe: observar el estado entero repintaba la cifra en cada
+    // pulsación de la descripción.
+    final (amount, amountValue) = ref.watch(
+      addExpenseProvider.select((s) => (s.amount, s.amountValue)),
+    );
     return Padding(
       padding: EdgeInsets.only(top: 8.r, bottom: 4.r),
       // El máximo tecleable con moneda y decimales roza el ancho de la
@@ -192,13 +196,11 @@ class _AmountDisplay extends ConsumerWidget {
       child: FittedBox(
         fit: BoxFit.scaleDown,
         child: Text(
-          context.money.typed(state.amount),
+          context.money.typed(amount),
           textAlign: TextAlign.center,
           style: AppTextStyles.hero(
             AppFontSize.displayXl,
-            color: state.amountValue > 0
-                ? AppColors.text
-                : AppColors.neutral700,
+            color: amountValue > 0 ? AppColors.text : AppColors.neutral700,
           ),
         ),
       ),
@@ -214,13 +216,18 @@ class _Fields extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     watchScreen(context);
     final data = ref.watch(appDataProvider);
-    final state = ref.watch(addExpenseProvider);
+    // La descripción no se pinta aquí, pero `setDescription` emite estado nuevo
+    // en cada pulsación: sin el `select`, los trece chips se reconstruían por
+    // tecla tecleada.
+    final (categoryName, accountId, date) = ref.watch(
+      addExpenseProvider.select((s) => (s.categoryName, s.accountId, s.date)),
+    );
     final form = ref.read(addExpenseProvider.notifier);
     final l10n = context.l10n;
 
     final today = data.today;
-    final isToday = sameDay(state.date, today);
-    final isYesterday = sameDay(state.date, daysBefore(today, 1));
+    final isToday = sameDay(date, today);
+    final isYesterday = sameDay(date, daysBefore(today, 1));
     final isPreset = isToday || isYesterday;
 
     return Column(
@@ -241,7 +248,7 @@ class _Fields extends ConsumerWidget {
                     label: c.name,
                     icon: c.icon,
                     color: c.color,
-                    active: state.categoryName == c.name,
+                    active: categoryName == c.name,
                     onTap: () => form.pickCategory(c.name),
                   ),
               ],
@@ -282,7 +289,7 @@ class _Fields extends ConsumerWidget {
                   for (final a in data.accounts)
                     AppChip(
                       label: a.name,
-                      active: state.accountId == a.id,
+                      active: accountId == a.id,
                       onTap: () => form.pickAccount(a.id),
                     ),
                 ],
@@ -311,12 +318,12 @@ class _Fields extends ConsumerWidget {
                 AppChip(
                   label: isPreset
                       ? l10n.addExpenseOtherDate
-                      : context.dates.dayLabelShort(state.date, today),
+                      : context.dates.dayLabelShort(date, today),
                   active: !isPreset,
                   onTap: () async {
                     final picked = await showDatePicker(
                       context: context,
-                      initialDate: state.date,
+                      initialDate: date,
                       firstDate: DateTime(2020),
                       // No tiene sentido registrar gastos futuros.
                       lastDate: today,
