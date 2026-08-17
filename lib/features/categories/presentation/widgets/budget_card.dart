@@ -20,9 +20,14 @@ import 'package:gastegi/features/categories/presentation/providers/category_form
 /// No usa `AppCard` porque la tarjeta entera abre el formulario, y eso pide un
 /// `InkWell` por fuera del relleno para que el destello cubra todo el recuadro.
 class BudgetCard extends ConsumerWidget {
-  const BudgetCard({super.key, required this.row});
+  const BudgetCard({super.key, required this.row, this.selected = false});
 
   final BudgetRow row;
+
+  /// La está editando el formulario de justo debajo. El recuadro y el borde de
+  /// acento los pone entonces el grupo que envuelve a los dos, así que la
+  /// tarjeta se pinta sin los suyos para no dibujar una caja dentro de otra.
+  final bool selected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -32,15 +37,21 @@ class BudgetCard extends ConsumerWidget {
     final category = row.category;
 
     return InkWell(
+      // Vuelve a abrir la misma categoría, que es inofensivo, y cierra la que
+      // hubiera abierta de otra.
       onTap: () => form.open(category),
-      borderRadius: BorderRadius.circular(AppRadius.md),
+      // Sin radio cuando va dentro del grupo: el destello lo recorta el
+      // recuadro de fuera, y redondearlo aquí lo dejaría a medias.
+      borderRadius: selected ? null : BorderRadius.circular(AppRadius.md),
       child: Container(
         padding: AppSpacing.card,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: AppElevation.smBorder),
-        ),
+        decoration: selected
+            ? null
+            : BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(color: AppElevation.smBorder),
+              ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           spacing: 8.r,

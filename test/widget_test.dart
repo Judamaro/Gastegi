@@ -6,6 +6,7 @@ import 'package:gastegi/app/router/app_router.dart';
 import 'package:gastegi/app/router/app_tab_bar.dart';
 import 'package:gastegi/app/router/route_names.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
+import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
@@ -13,6 +14,7 @@ import 'package:gastegi/features/categories/presentation/pages/budgets_page.dart
 import 'package:gastegi/features/categories/presentation/pages/category_detail_page.dart';
 import 'package:gastegi/features/categories/presentation/widgets/budget_card.dart';
 import 'package:gastegi/features/categories/presentation/widgets/category_form.dart';
+import 'package:gastegi/features/categories/presentation/widgets/delete_category_confirm.dart';
 import 'package:gastegi/features/dashboard/presentation/pages/home_page.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
 import 'package:gastegi/features/expenses/presentation/widgets/amount_field.dart';
@@ -433,11 +435,45 @@ void main() {
       greaterThanOrEqualTo(card.bottom),
       reason: 'debajo de su tarjeta',
     );
-    expect(form.top - card.bottom, lessThan(20), reason: 'y pegado a ella');
+    expect(
+      form.top - card.bottom,
+      lessThanOrEqualTo(2),
+      reason: 'pegado a ella, solo el filete de separación',
+    );
+    // Y los dos dentro del mismo recuadro, con el borde en acento: es lo que
+    // dice cuál se está editando.
+    expect(find.byWidgetPredicate(_accentFramed), findsOneWidget);
     // Y entero dentro de la ventana de 844: abrirlo desde el pie sin llevarlo
     // a la vista lo dejaba casi todo por debajo del borde.
     expect(form.top, greaterThanOrEqualTo(0));
     expect(form.bottom, lessThanOrEqualTo(844), reason: 'sin desplazarse');
+
+    appRouter.go(RouteNames.home);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('pedir el borrado cierra el formulario de edición', (
+    tester,
+  ) async {
+    // `askDelete` apaga `open` pero conserva `editingId`: sin mirar los dos,
+    // la tarjeta enseñaba a la vez el formulario y la confirmación.
+    await pumpApp(tester);
+    await tester.tap(find.text('Presupuesto').last);
+    await tester.pumpAndSettle();
+
+    final card = find.widgetWithText(BudgetCard, 'Ocio');
+    await tester.tap(find.descendant(of: card, matching: find.text('Ocio')));
+    await tester.pumpAndSettle();
+    expect(find.byType(CategoryForm), findsOneWidget);
+
+    await tester.tap(
+      find.descendant(of: card, matching: find.byIcon(AppIcons.x)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CategoryForm), findsNothing);
+    expect(find.byType(DeleteCategoryConfirm), findsOneWidget);
+    expect(find.byWidgetPredicate(_accentFramed), findsNothing);
 
     appRouter.go(RouteNames.home);
     await tester.pumpAndSettle();
@@ -521,3 +557,11 @@ void main() {
     await tester.pumpAndSettle();
   });
 }
+
+/// El recuadro que agrupa la categoría en edición con su formulario, que es el
+/// único con el borde en acento.
+bool _accentFramed(Widget w) =>
+    w is Container &&
+    w.decoration is BoxDecoration &&
+    ((w.decoration! as BoxDecoration).border as Border?)?.top.color ==
+        AppColors.accent400;

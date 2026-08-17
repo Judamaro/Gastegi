@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
+import 'package:gastegi/app/state/budget_row.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/app/theme/app_spacing.dart';
@@ -97,17 +98,62 @@ class BudgetsPage extends ConsumerWidget {
               spacing: 12.r,
               children: [
                 for (final b in state.budgetRows) ...[
-                  BudgetCard(row: b),
-                  // La key ata el formulario a la categoría que edita: sin
-                  // ella, al saltar de una tarjeta a otra Flutter reutilizaría
-                  // el mismo elemento y los campos conservarían lo anterior.
-                  if (form.editingId == b.category.id)
-                    CategoryForm(key: ValueKey('cat-form-${b.category.id}')),
+                  // `open` además del id: `askDelete` cierra el formulario pero
+                  // conserva `editingId`, así que sin esto la tarjeta que se
+                  // estaba editando enseñaría a la vez el formulario y la
+                  // confirmación de borrado.
+                  if (form.open && form.editingId == b.category.id)
+                    _EditingGroup(row: b)
+                  else
+                    BudgetCard(row: b),
                   if (form.pendingDeleteId == b.category.id)
                     DeleteCategoryConfirm(category: b.category),
                 ],
               ],
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// La categoría que se está editando y su formulario, dentro de un solo
+/// recuadro con el borde en acento.
+///
+/// Comparten caja a propósito: pegados y con el mismo contorno se leen como una
+/// cosa —«esta es la que estás tocando»—, y no como una tarjeta cualquiera con
+/// un panel suelto debajo. Por eso las dos piezas se pintan sin recuadro
+/// propio; el de fuera es el único.
+class _EditingGroup extends StatelessWidget {
+  const _EditingGroup({required this.row});
+
+  final BudgetRow row;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      // El destello del `InkWell` de la tarjeta se sale del borde redondeado si
+      // no se recorta aquí.
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        // Más claro que el acento a secas, que es el del aviso de presupuesto:
+        // el borde dice «editando», no «cuidado».
+        border: Border.all(color: AppColors.accent400, width: 1.5.r),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          BudgetCard(row: row, selected: true),
+          Divider(height: 1.r, thickness: 1.r, color: AppColors.divider),
+          // La key ata el formulario a la categoría que edita: sin ella, al
+          // saltar de una tarjeta a otra Flutter reutilizaría el mismo elemento
+          // y los campos conservarían lo anterior.
+          CategoryForm(
+            key: ValueKey('cat-form-${row.category.id}'),
+            attached: true,
+          ),
         ],
       ),
     );
