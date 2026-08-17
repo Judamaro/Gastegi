@@ -8,6 +8,7 @@ import 'package:gastegi/app/router/route_names.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
+import 'package:gastegi/app/theme/app_typography.dart';
 import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:gastegi/features/categories/presentation/pages/budgets_page.dart';
@@ -148,17 +149,25 @@ void main() {
     // `takeException` no ve un texto encogido, así que la cifra se comprueba
     // aparte: en 390×844 la escala vale 1 y `displayXl` son 44 exactos. Que
     // haya bajado es lo que prueba la medición que sustituyó al `FittedBox`.
-    final size = tester
+    final style = tester
         .widget<EditableText>(
           find.descendant(
             of: find.byKey(amountFieldKey),
             matching: find.byType(EditableText),
           ),
         )
-        .style
-        .fontSize!;
-    expect(size, lessThan(44), reason: 'la cifra se ha encogido');
-    expect(size, greaterThanOrEqualTo(20), reason: 'sin llegar al suelo');
+        .style;
+    expect(style.fontSize!, lessThan(44), reason: 'la cifra se ha encogido');
+    expect(
+      style.fontSize!,
+      greaterThanOrEqualTo(20),
+      reason: 'sin llegar al suelo',
+    );
+    // Y con la caja de línea del visor, no la apretada de `hero`: el
+    // `EditableText` recorta a su caja y con 1 em la cifra pierde la parte de
+    // arriba. Con la tipografía de repuesto de los tests no se ve, así que se
+    // comprueba el estilo.
+    expect(style.height, AppTextStyles.heroInputHeight);
 
     // `appRouter` es una instancia global y conserva la ruta entre tests: sin
     // volver a una pestaña, el siguiente arranca en /add y no encuentra la

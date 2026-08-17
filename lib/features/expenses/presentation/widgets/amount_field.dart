@@ -107,7 +107,7 @@ class _AmountFieldState extends ConsumerState<AmountField> {
           if (money.symbolPrefix.isNotEmpty)
             Text(
               money.symbolPrefix,
-              style: AppTextStyles.hero(size, color: color),
+              style: AppTextStyles.heroInput(size, color: color),
             ),
           SizedBox(
             width: width,
@@ -120,7 +120,7 @@ class _AmountFieldState extends ConsumerState<AmountField> {
               autofocus: true,
               textAlign: TextAlign.center,
               cursorColor: AppColors.accent,
-              style: AppTextStyles.hero(size, color: AppColors.text),
+              style: AppTextStyles.heroInput(size, color: AppColors.text),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
@@ -133,7 +133,7 @@ class _AmountFieldState extends ConsumerState<AmountField> {
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.zero,
                 hintText: zero,
-                hintStyle: AppTextStyles.hero(
+                hintStyle: AppTextStyles.heroInput(
                   size,
                   color: AppColors.neutral700,
                 ),
@@ -146,7 +146,7 @@ class _AmountFieldState extends ConsumerState<AmountField> {
           if (money.symbolSuffix.isNotEmpty)
             Text(
               money.symbolSuffix,
-              style: AppTextStyles.hero(size, color: color),
+              style: AppTextStyles.heroInput(size, color: color),
             ),
         ],
       ),
@@ -167,7 +167,9 @@ double _widthOf(
   TextScaler scaler,
   TextDirection direction,
 ) => (TextPainter(
-  text: TextSpan(text: text, style: AppTextStyles.hero(size)),
+  // El mismo estilo con el que se pinta: el alto de línea no cambia el ancho,
+  // pero medir con otro invita a que se separen.
+  text: TextSpan(text: text, style: AppTextStyles.heroInput(size)),
   textDirection: direction,
   textScaler: scaler,
   maxLines: 1,
