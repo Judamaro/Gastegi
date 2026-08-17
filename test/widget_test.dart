@@ -149,14 +149,12 @@ void main() {
     // `takeException` no ve un texto encogido, así que la cifra se comprueba
     // aparte: en 390×844 la escala vale 1 y `displayXl` son 44 exactos. Que
     // haya bajado es lo que prueba la medición que sustituyó al `FittedBox`.
-    final style = tester
-        .widget<EditableText>(
-          find.descendant(
-            of: find.byKey(amountFieldKey),
-            matching: find.byType(EditableText),
-          ),
-        )
-        .style;
+    final editableFinder = find.descendant(
+      of: find.byKey(amountFieldKey),
+      matching: find.byType(EditableText),
+    );
+    final editable = tester.widget<EditableText>(editableFinder);
+    final style = editable.style;
     expect(style.fontSize!, lessThan(44), reason: 'la cifra se ha encogido');
     expect(
       style.fontSize!,
@@ -168,6 +166,31 @@ void main() {
     // arriba. Con la tipografía de repuesto de los tests no se ve, así que se
     // comprueba el estilo.
     expect(style.height, AppTextStyles.heroInputHeight);
+
+    // Y el campo cabe la cifra que pinta.
+    //
+    // El ajuste medía con un estilo sin familia tipográfica —la pone el tema y
+    // el `TextField` la hereda—, o sea con la del sistema. En Android es
+    // Roboto, más estrecha que Inter: la medida se quedaba corta, el ajuste
+    // creía que la cifra más larga cabía a cuerpo entero y el campo salía
+    // estrecho. Como el campo se desplaza por dentro para no perder de vista el
+    // cursor, que está al final, lo que desaparecía era el primer dígito.
+    //
+    // Aquí no se descarga ninguna tipografía, así que medir y pintar caen las
+    // dos en la de repuesto y esta aserción no reproduce el fallo por sí sola:
+    // lo que fija es la invariante y la familia con la que se mide.
+    expect(style.fontFamily, isNotNull, reason: 'mide con la del tema');
+    final pintada = (TextPainter(
+      text: TextSpan(text: editable.controller.text, style: style),
+      textDirection: TextDirection.ltr,
+      textScaler: MediaQuery.textScalerOf(tester.element(editableFinder)),
+      maxLines: 1,
+    )..layout()).width;
+    expect(
+      tester.getRect(editableFinder).width,
+      greaterThanOrEqualTo(pintada),
+      reason: 'la cifra no se desplaza por dentro',
+    );
 
     // `appRouter` es una instancia global y conserva la ruta entre tests: sin
     // volver a una pestaña, el siguiente arranca en /add y no encuentra la
