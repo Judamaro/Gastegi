@@ -4,7 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gastegi/app/app.dart';
 import 'package:gastegi/app/router/app_router.dart';
 import 'package:gastegi/app/router/route_names.dart';
+import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
+import 'package:gastegi/features/categories/presentation/pages/budgets_page.dart';
+import 'package:gastegi/features/categories/presentation/widgets/budget_card.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -91,6 +94,31 @@ void main() {
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull, reason: tab);
         }
+
+        // El formulario de categoría no se ve hasta que se abre, y es el
+        // layout nuevo más apretado: dos `Wrap` y un campo de importe.
+        await tester.tap(find.text('Presupuesto').last);
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.descendant(
+            of: find.byType(BudgetsPage),
+            matching: find.byIcon(AppIcons.plusCircle),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: 'Nueva categoría');
+
+        // Y la edición, que mete la tarjeta y el formulario en un mismo
+        // recuadro. El nombre acotado a la tarjeta: las etiquetas de los
+        // iconos del formulario repiten los nombres de la siembra.
+        await tester.tap(
+          find.descendant(
+            of: find.byType(BudgetCard),
+            matching: find.text('Transporte'),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: 'Editar categoría');
 
         await tester.tap(find.text('Agregar'));
         await tester.pumpAndSettle();

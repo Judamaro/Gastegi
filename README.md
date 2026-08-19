@@ -33,8 +33,8 @@ lib/
 │   └── network/           #   reservado (ver su README)
 ├── features/              # una carpeta por funcionalidad
 │   ├── accounts/          #   cuentas y transferencias
-│   ├── budgets/           #   presupuestos
-│   ├── categories/        #   categorías y su detalle
+│   ├── budgets/           #   la regla de aviso de los presupuestos
+│   ├── categories/        #   categorías, su detalle y sus presupuestos
 │   ├── dashboard/         #   Inicio
 │   └── expenses/          #   nuevo gasto e historial
 └── l10n/                  # catálogos .arb
@@ -57,8 +57,14 @@ features/<nombre>/
     └── providers/        estado (Riverpod)
 ```
 
-`dashboard` y `budgets` no tienen `data/`: son agregadores de solo lectura
-sobre los datos de las demás.
+`dashboard` no tiene `data/`: es un agregador de solo lectura sobre los datos de
+las demás.
+
+`budgets` se quedó en una sola regla de dominio —a partir de qué fracción del
+presupuesto se avisa—. El presupuesto es una columna de la categoría, así que la
+pantalla que lo edita vive en `categories`: necesita su repositorio, y la regla 2
+no deja que una funcionalidad alcance el `data/` de otra. La pestaña sigue
+llamándose Presupuesto y la ruta sigue siendo `/budgets`.
 
 ### Las dos reglas
 

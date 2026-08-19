@@ -72,8 +72,23 @@ class _AmountFieldState extends ConsumerState<AmountField> {
     final scaler = MediaQuery.textScalerOf(context);
     final direction = Directionality.of(context);
     final symbols = '${money.symbolPrefix}${money.symbolSuffix}';
+
+    // Medir con la tipografía con la que se pinta, y no con la del sistema.
+    //
+    // `AppTextStyles.hero` no lleva familia: la pone el tema, y el `TextField`
+    // la hereda de ahí. Midiendo con el estilo a secas se mide con la del
+    // dispositivo, que tiene otras anchuras —Roboto es más estrecha que Inter—,
+    // así que el ajuste creía que la cifra más larga cabía a cuerpo entero. El
+    // campo salía corto, el campo se desplazaba por dentro para no perder de
+    // vista el cursor —que está al final— y el primer dígito desaparecía por la
+    // izquierda.
+    final base = Theme.of(context).textTheme.bodyLarge ?? const TextStyle();
+    TextStyle styleOf(double size, {Color? color}) =>
+        base.merge(AppTextStyles.heroInput(size, color: color));
+
     final size = _fittedSize(
       '${money.symbolPrefix}$shown${money.symbolSuffix}',
+      styleOf,
       widget.maxWidth - _caret,
       scaler,
       direction,
@@ -87,8 +102,8 @@ class _AmountFieldState extends ConsumerState<AmountField> {
     // el `Row` desborda con las rayas amarillas; acotado, el campo se desplaza
     // por dentro, que es lo que hace cualquier campo de texto.
     final width = math.min(
-      _widthOf(shown, size, scaler, direction) + _caret,
-      widget.maxWidth - _widthOf(symbols, size, scaler, direction),
+      _widthOf(shown, styleOf(size), scaler, direction) + _caret,
+      widget.maxWidth - _widthOf(symbols, styleOf(size), scaler, direction),
     );
 
     return GestureDetector(
@@ -105,10 +120,7 @@ class _AmountFieldState extends ConsumerState<AmountField> {
           // despegado en el borde; y solo lo pinta cuando el campo tiene foco o
           // contenido, así que parpadearía al vaciar la cifra.
           if (money.symbolPrefix.isNotEmpty)
-            Text(
-              money.symbolPrefix,
-              style: AppTextStyles.hero(size, color: color),
-            ),
+            Text(money.symbolPrefix, style: styleOf(size, color: color)),
           SizedBox(
             width: width,
             child: TextField(
@@ -120,7 +132,7 @@ class _AmountFieldState extends ConsumerState<AmountField> {
               autofocus: true,
               textAlign: TextAlign.center,
               cursorColor: AppColors.accent,
-              style: AppTextStyles.hero(size, color: AppColors.text),
+              style: styleOf(size, color: AppColors.text),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
@@ -133,10 +145,7 @@ class _AmountFieldState extends ConsumerState<AmountField> {
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.zero,
                 hintText: zero,
-                hintStyle: AppTextStyles.hero(
-                  size,
-                  color: AppColors.neutral700,
-                ),
+                hintStyle: styleOf(size, color: AppColors.neutral700),
               ),
               onChanged: (value) => ref
                   .read(addExpenseProvider.notifier)
@@ -144,10 +153,7 @@ class _AmountFieldState extends ConsumerState<AmountField> {
             ),
           ),
           if (money.symbolSuffix.isNotEmpty)
-            Text(
-              money.symbolSuffix,
-              style: AppTextStyles.hero(size, color: color),
-            ),
+            Text(money.symbolSuffix, style: styleOf(size, color: color)),
         ],
       ),
     );
@@ -163,11 +169,11 @@ double get _caret => 3.r;
 
 double _widthOf(
   String text,
-  double size,
+  TextStyle style,
   TextScaler scaler,
   TextDirection direction,
 ) => (TextPainter(
-  text: TextSpan(text: text, style: AppTextStyles.hero(size)),
+  text: TextSpan(text: text, style: style),
   textDirection: direction,
   textScaler: scaler,
   maxLines: 1,
@@ -186,6 +192,7 @@ double _widthOf(
 /// catálogo —320 dp con el texto al 1.3×— se queda muy por encima.
 double _fittedSize(
   String text,
+  TextStyle Function(double size) styleOf,
   double maxWidth,
   TextScaler scaler,
   TextDirection direction,
@@ -195,7 +202,7 @@ double _fittedSize(
   // `hero` es el −2 % de él, también proporcional—, así que la primera acierta
   // y la segunda solo absorbe el redondeo de la tipografía.
   for (var i = 0; i < 2; i++) {
-    final width = _widthOf(text, size, scaler, direction);
+    final width = _widthOf(text, styleOf(size), scaler, direction);
     if (width <= maxWidth) break;
     size = math.max(AppFontSize.title, size * maxWidth / width);
   }

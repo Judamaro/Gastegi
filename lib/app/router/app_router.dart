@@ -1,7 +1,7 @@
 import 'package:gastegi/app/router/app_shell.dart';
 import 'package:gastegi/app/router/route_names.dart';
 import 'package:gastegi/features/accounts/presentation/pages/accounts_page.dart';
-import 'package:gastegi/features/budgets/presentation/pages/budgets_page.dart';
+import 'package:gastegi/features/categories/presentation/pages/budgets_page.dart';
 import 'package:gastegi/features/categories/presentation/pages/category_detail_page.dart';
 import 'package:gastegi/features/dashboard/presentation/pages/home_page.dart';
 import 'package:gastegi/features/expenses/presentation/pages/add_expense_page.dart';

@@ -258,8 +258,18 @@ addTearDown(tester.platformDispatcher.clearLocalesTestValue);
 
 **Las categorías se enlazan por nombre, no por id** en toda la presentación:
 `e.categoryName`, el filtro del historial, la ruta `/home/categories/:name`.
-Renombrar una categoría dejaría filtros huérfanos en silencio. No es un bug
-activo (no hay UI para renombrar), pero si trabajas en esa zona, tenlo presente.
+Desde que se pueden renombrar en Presupuestos, esto **sí es alcanzable**. Los
+tres sitios que dependen del nombre lo tratan, y hay que mantenerlo así al tocar
+esa zona:
+
+- El nombre de un gasto sale del `JOIN` de la consulta, así que se renombra solo.
+- El filtro del historial y el chip de «Nuevo gasto» se normalizan contra
+  `appDataProvider` y se limpian cuando el nombre deja de existir.
+- El detalle de categoría sale a Inicio si su categoría desaparece; el botón de
+  volver es parte de esa página, y quedarse en blanco dejaba la pestaña sin
+  salida.
+
+Cualquier sitio nuevo que guarde un nombre de categoría necesita lo mismo.
 
 ---
 
@@ -282,9 +292,10 @@ En este orden. Los pasos 5 y 8 son opcionales.
    );
    ```
 5. **Caso de uso** — `domain/usecases/`, **solo si hay lógica de negocio real**.
-   `SaveAccount` existe porque valida dos reglas; `SaveExpense`, porque decide la
-   descripción por defecto. `CategoryRepository.updateBudget` no tiene ninguno
-   porque sería reenviar una línea. Un caso de uso que solo reenvía es ceremonia.
+   `SaveAccount` y `SaveCategory` existen porque validan dos reglas; `SaveExpense`,
+   porque decide la descripción por defecto. `CategoryRepository.softDelete` no
+   tiene ninguno porque sería reenviar una línea, y quién puede borrarse lo decide
+   el notifier con `expenseCount`. Un caso de uso que solo reenvía es ceremonia.
 6. **Notifier** — `features/<x>/presentation/providers/`. Estado **inmutable**
    con `copyWith`. Para campos anulables usa el centinela `_keep` (ver
    `account_form_notifier.dart`), que distingue "no me pases este campo" de

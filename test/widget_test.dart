@@ -6,8 +6,16 @@ import 'package:gastegi/app/router/app_router.dart';
 import 'package:gastegi/app/router/app_tab_bar.dart';
 import 'package:gastegi/app/router/route_names.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
+import 'package:gastegi/app/theme/app_colors.dart';
+import 'package:gastegi/app/theme/app_icons.dart';
+import 'package:gastegi/app/theme/app_typography.dart';
 import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
+import 'package:gastegi/features/categories/presentation/pages/budgets_page.dart';
+import 'package:gastegi/features/categories/presentation/pages/category_detail_page.dart';
+import 'package:gastegi/features/categories/presentation/widgets/budget_card.dart';
+import 'package:gastegi/features/categories/presentation/widgets/category_form.dart';
+import 'package:gastegi/features/categories/presentation/widgets/delete_category_confirm.dart';
 import 'package:gastegi/features/dashboard/presentation/pages/home_page.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
 import 'package:gastegi/features/expenses/presentation/widgets/amount_field.dart';
@@ -141,17 +149,48 @@ void main() {
     // `takeException` no ve un texto encogido, así que la cifra se comprueba
     // aparte: en 390×844 la escala vale 1 y `displayXl` son 44 exactos. Que
     // haya bajado es lo que prueba la medición que sustituyó al `FittedBox`.
-    final size = tester
-        .widget<EditableText>(
-          find.descendant(
-            of: find.byKey(amountFieldKey),
-            matching: find.byType(EditableText),
-          ),
-        )
-        .style
-        .fontSize!;
-    expect(size, lessThan(44), reason: 'la cifra se ha encogido');
-    expect(size, greaterThanOrEqualTo(20), reason: 'sin llegar al suelo');
+    final editableFinder = find.descendant(
+      of: find.byKey(amountFieldKey),
+      matching: find.byType(EditableText),
+    );
+    final editable = tester.widget<EditableText>(editableFinder);
+    final style = editable.style;
+    expect(style.fontSize!, lessThan(44), reason: 'la cifra se ha encogido');
+    expect(
+      style.fontSize!,
+      greaterThanOrEqualTo(20),
+      reason: 'sin llegar al suelo',
+    );
+    // Y con la caja de línea del visor, no la apretada de `hero`: el
+    // `EditableText` recorta a su caja y con 1 em la cifra pierde la parte de
+    // arriba. Con la tipografía de repuesto de los tests no se ve, así que se
+    // comprueba el estilo.
+    expect(style.height, AppTextStyles.heroInputHeight);
+
+    // Y el campo cabe la cifra que pinta.
+    //
+    // El ajuste medía con un estilo sin familia tipográfica —la pone el tema y
+    // el `TextField` la hereda—, o sea con la del sistema. En Android es
+    // Roboto, más estrecha que Inter: la medida se quedaba corta, el ajuste
+    // creía que la cifra más larga cabía a cuerpo entero y el campo salía
+    // estrecho. Como el campo se desplaza por dentro para no perder de vista el
+    // cursor, que está al final, lo que desaparecía era el primer dígito.
+    //
+    // Aquí no se descarga ninguna tipografía, así que medir y pintar caen las
+    // dos en la de repuesto y esta aserción no reproduce el fallo por sí sola:
+    // lo que fija es la invariante y la familia con la que se mide.
+    expect(style.fontFamily, isNotNull, reason: 'mide con la del tema');
+    final pintada = (TextPainter(
+      text: TextSpan(text: editable.controller.text, style: style),
+      textDirection: TextDirection.ltr,
+      textScaler: MediaQuery.textScalerOf(tester.element(editableFinder)),
+      maxLines: 1,
+    )..layout()).width;
+    expect(
+      tester.getRect(editableFinder).width,
+      greaterThanOrEqualTo(pintada),
+      reason: 'la cifra no se desplaza por dentro',
+    );
 
     // `appRouter` es una instancia global y conserva la ruta entre tests: sin
     // volver a una pestaña, el siguiente arranca en /add y no encuentra la
@@ -346,6 +385,167 @@ void main() {
     expect(find.text('Efectivo'), findsOneWidget);
   });
 
+  testWidgets('crear una categoría y cambiar su presupuesto', (tester) async {
+    final container = await pumpApp(tester);
+
+    await tester.tap(find.text('Presupuesto').last);
+    await tester.pumpAndSettle();
+    // Los seis de la siembra: 500 + 180 + 400 + 200 + 120 + 240.
+    expect(container.read(appDataProvider).totalBudget, 1640);
+
+    // El «+» de la cabecera, no el de la pestaña «Agregar», que usa el mismo
+    // icono.
+    await tester.tap(
+      find.descendant(
+        of: find.byType(BudgetsPage),
+        matching: find.byIcon(AppIcons.plusCircle),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const ValueKey('cat-name-new')),
+      'Viajes',
+    );
+    await tester.enterText(find.byKey(const ValueKey('cat-budget-new')), '300');
+    // El formulario nace al final de la lista, fuera de pantalla.
+    await tester.ensureVisible(find.text('Guardar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+
+    expect(container.read(appDataProvider).totalBudget, 1940);
+    // El espacio antes del símbolo es duro (U+00A0).
+    expect(find.textContaining('1.940,00 €'), findsOneWidget);
+
+    // Y editar el presupuesto de una que ya existía: tocar su tarjeta abre el
+    // formulario con el importe puesto.
+    final comidaId = container.read(appDataProvider).categoryOf('Comida')!.id;
+    await tester.ensureVisible(find.text('Comida'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Comida'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(ValueKey('cat-budget-$comidaId')), '600');
+    await tester.ensureVisible(find.text('Guardar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+
+    expect(container.read(appDataProvider).categoryOf('Comida')!.budget, 600);
+    expect(container.read(appDataProvider).totalBudget, 2040);
+
+    appRouter.go(RouteNames.home);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('el formulario se abre bajo su categoría y a la vista', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await tester.tap(find.text('Presupuesto').last);
+    await tester.pumpAndSettle();
+
+    // El peor caso, y el recorrido de una persona: se baja la lista y se toca
+    // la última tarjeta donde haya quedado, al pie de la ventana.
+    await tester.drag(find.byType(BudgetCard).first, const Offset(0, -400));
+    await tester.pumpAndSettle();
+    // El nombre acotado a la tarjeta: las etiquetas de los iconos del
+    // formulario repiten los nombres de las categorías de la siembra.
+    final title = find.descendant(
+      of: find.byType(BudgetCard),
+      matching: find.text('Compras'),
+    );
+    expect(tester.getRect(title).center.dy, greaterThan(600), reason: 'al pie');
+
+    await tester.tap(title);
+    await tester.pumpAndSettle();
+
+    final card = tester.getRect(find.widgetWithText(BudgetCard, 'Compras'));
+    final form = tester.getRect(find.byType(CategoryForm));
+    expect(
+      form.top,
+      greaterThanOrEqualTo(card.bottom),
+      reason: 'debajo de su tarjeta',
+    );
+    expect(
+      form.top - card.bottom,
+      lessThanOrEqualTo(2),
+      reason: 'pegado a ella, solo el filete de separación',
+    );
+    // Y los dos dentro del mismo recuadro, con el borde en acento: es lo que
+    // dice cuál se está editando.
+    expect(find.byWidgetPredicate(_accentFramed), findsOneWidget);
+    // Y entero dentro de la ventana de 844: abrirlo desde el pie sin llevarlo
+    // a la vista lo dejaba casi todo por debajo del borde.
+    expect(form.top, greaterThanOrEqualTo(0));
+    expect(form.bottom, lessThanOrEqualTo(844), reason: 'sin desplazarse');
+
+    appRouter.go(RouteNames.home);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('pedir el borrado cierra el formulario de edición', (
+    tester,
+  ) async {
+    // `askDelete` apaga `open` pero conserva `editingId`: sin mirar los dos,
+    // la tarjeta enseñaba a la vez el formulario y la confirmación.
+    await pumpApp(tester);
+    await tester.tap(find.text('Presupuesto').last);
+    await tester.pumpAndSettle();
+
+    final card = find.widgetWithText(BudgetCard, 'Ocio');
+    await tester.tap(find.descendant(of: card, matching: find.text('Ocio')));
+    await tester.pumpAndSettle();
+    expect(find.byType(CategoryForm), findsOneWidget);
+
+    await tester.tap(
+      find.descendant(of: card, matching: find.byIcon(AppIcons.x)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CategoryForm), findsNothing);
+    expect(find.byType(DeleteCategoryConfirm), findsOneWidget);
+    expect(find.byWidgetPredicate(_accentFramed), findsNothing);
+
+    appRouter.go(RouteNames.home);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('renombrar una categoría saca de su detalle', (tester) async {
+    // El detalle vive en la rama de Inicio y se navega por nombre, así que
+    // sobrevive dentro del `IndexedStack` mientras se renombra desde la pestaña
+    // de Presupuesto. Sin la salida, la pestaña se quedaba en blanco y sin
+    // botón de volver, que es parte de esa misma página.
+    final container = await pumpApp(tester);
+    appRouter.go(RouteNames.categoryDetailOf('Ocio'));
+    await tester.pumpAndSettle();
+    expect(find.byType(CategoryDetailPage), findsOneWidget);
+
+    await tester.tap(find.text('Presupuesto').last);
+    await tester.pumpAndSettle();
+    final ocioId = container.read(appDataProvider).categoryOf('Ocio')!.id;
+    await tester.ensureVisible(find.text('Ocio'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ocio'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(ValueKey('cat-name-$ocioId')),
+      'Tiempo libre',
+    );
+    await tester.ensureVisible(find.text('Guardar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Inicio').last);
+    await tester.pumpAndSettle();
+    expect(find.byType(CategoryDetailPage), findsNothing);
+    expect(find.text('gastado este mes'), findsOneWidget);
+
+    appRouter.go(RouteNames.home);
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('el gasto se guarda, aparece bajo HOY y baja el saldo', (
     tester,
   ) async {
@@ -389,3 +589,11 @@ void main() {
     await tester.pumpAndSettle();
   });
 }
+
+/// El recuadro que agrupa la categoría en edición con su formulario, que es el
+/// único con el borde en acento.
+bool _accentFramed(Widget w) =>
+    w is Container &&
+    w.decoration is BoxDecoration &&
+    ((w.decoration! as BoxDecoration).border as Border?)?.top.color ==
+        AppColors.accent400;

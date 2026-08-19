@@ -32,8 +32,18 @@ class CategoryDetailPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     watchScreen(context);
     final cat = ref.watch(categoryByNameProvider(categoryName));
-    // La categoría puede haber desaparecido bajo los pies de la pantalla.
-    if (cat == null) return const SizedBox.shrink();
+    // La categoría puede haber desaparecido bajo los pies de la pantalla:
+    // renombrada o borrada desde Presupuestos mientras su detalle seguía vivo
+    // en la otra rama del shell. Hay que salir, no quedarse en blanco: el
+    // botón de volver es parte de esta página, así que un hueco vacío deja la
+    // pestaña de Inicio sin salida.
+    if (cat == null) {
+      // Después del frame: `go` durante el `build` reentra en el router.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) context.go(RouteNames.home);
+      });
+      return const SizedBox.shrink();
+    }
 
     final state = ref.watch(appDataProvider);
     final catTotal = ref.watch(categoryTotalProvider(categoryName));

@@ -74,4 +74,25 @@ abstract final class AppTextStyles {
     height: 1,
     color: color,
   );
+
+  /// [hero] para una cifra que además se teclea.
+  ///
+  /// Un `Text` con `height: 1` pinta el glifo aunque sobresalga de su caja de
+  /// línea, así que ahí el apretón no se nota. Un `EditableText` **recorta a la
+  /// suya**, y la cifra de «Nuevo gasto» salía sin la parte de arriba.
+  ///
+  /// Lo usan también los símbolos de moneda que van al lado, aunque sean
+  /// `Text`: compartir métrica es lo que mantiene las tres piezas cuadradas
+  /// dentro del `Row`.
+  static TextStyle heroInput(double size, {Color? color}) =>
+      hero(size, color: color).copyWith(height: heroInputHeight);
+
+  /// Caja de línea del visor, en múltiplos del cuerpo.
+  ///
+  /// Es una medida **de la tipografía**, no del diseño: Inter pide 1.205 em
+  /// —ascendente más descendente— y por debajo de eso recorta. El margen hasta
+  /// 1.3 es para que un cambio de tipografía no vuelva a cortar la cifra; si se
+  /// cambia por una de caja más alta, hay que volver a medirlo, porque quedarse
+  /// corto no rompe ningún test: solo se ve.
+  static const double heroInputHeight = 1.3;
 }
