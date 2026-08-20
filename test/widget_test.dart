@@ -1,3 +1,4 @@
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,6 +11,8 @@ import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/app/theme/app_typography.dart';
 import 'package:gastegi/core/utils/formatters.dart';
+import 'package:gastegi/core/utils/text_measure.dart';
+import 'package:gastegi/core/widgets/charts/donut_chart.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:gastegi/features/categories/presentation/pages/budgets_page.dart';
 import 'package:gastegi/features/categories/presentation/pages/category_detail_page.dart';
@@ -587,6 +590,104 @@ void main() {
 
     appRouter.go(RouteNames.home);
     await tester.pumpAndSettle();
+  });
+
+  testWidgets('la leyenda de categorías aprovecha todo el ancho', (
+    tester,
+  ) async {
+    // La tarjeta solo existe con gasto: sin total, Inicio saca la pantalla
+    // vacía.
+    final accountId = await AccountRepositoryImpl(db).create(
+      name: 'Efectivo',
+      kind: 'Dinero en mano',
+      iconKey: 'money',
+      initialBalance: 1000,
+    );
+    final categoryId =
+        (await db.query('categories', limit: 1)).single['id']! as String;
+    await ExpenseRepositoryImpl(db).create(
+      date: testNow,
+      description: 'Compra',
+      categoryId: categoryId,
+      accountId: accountId,
+      amount: 250,
+    );
+
+    // En tableta es donde más ancho se perdía, así que se comprueban las dos.
+    for (final size in [const Size(390, 844), const Size(768, 1024)]) {
+      final container = await pumpApp(tester, size: size);
+      final motivo = '${size.width.toInt()} dp';
+
+      // La dona y la leyenda iban las dos a `flex: 1`: la fila se partía por la
+      // mitad y lo que la dona no gastaba se quedaba muerto al final. Se mide
+      // por el borde derecho del porcentaje, que va pegado al final de su fila.
+      final fila = find
+          .ancestor(of: find.byType(DonutChart), matching: find.byType(Row))
+          .first;
+      expect(
+        tester.getRect(find.text('100%')).right,
+        closeTo(tester.getRect(fila).right, 0.01),
+        reason: 'hueco muerto a la derecha, $motivo',
+      );
+
+      // El nombre ocupa lo que pide el más largo, topado a la mitad de lo que
+      // comparte con el importe. Se comprueba la invariante y no «Transporte
+      // cabe»: aquí no se descarga ninguna tipografía y con la de repuesto los
+      // nombres miden otra cosa.
+      final nombres = container
+          .read(appDataProvider)
+          .categories
+          .map((c) => c.name)
+          .toList();
+      var ancho = 0.0;
+      for (final nombre in nombres) {
+        final finder = find.descendant(
+          of: find.byType(HomePage),
+          matching: find.text(nombre),
+        );
+        final caja = tester.getRect(finder).width;
+        if (ancho == 0) {
+          ancho = caja;
+        } else {
+          expect(
+            caja,
+            closeTo(ancho, 0.01),
+            reason: 'la columna del nombre no es una, $motivo',
+          );
+        }
+      }
+
+      // Y ninguno se corta salvo que haya topado con la mitad. `takeException`
+      // no ve una elisión: hay que preguntarle al párrafo.
+      for (final nombre in nombres) {
+        final finder = find.descendant(
+          of: find.byType(HomePage),
+          matching: find.text(nombre),
+        );
+        final texto = tester.widget<Text>(finder);
+        final estilo = DefaultTextStyle.of(
+          tester.element(finder),
+        ).style.merge(texto.style);
+        expect(
+          estilo.fontFamily,
+          isNotNull,
+          reason: 'se mide con la del tema, $motivo',
+        );
+        final pintado = textWidth(
+          nombre,
+          style: estilo,
+          scaler: MediaQuery.textScalerOf(tester.element(finder)),
+          direction: TextDirection.ltr,
+        );
+        if (pintado <= ancho) {
+          expect(
+            tester.renderObject<RenderParagraph>(finder).didExceedMaxLines,
+            isFalse,
+            reason: '«$nombre» se corta cabiendo, $motivo',
+          );
+        }
+      }
+    }
   });
 
   testWidgets('las 31 muestras de color caben en el formulario', (

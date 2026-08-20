@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
@@ -10,6 +12,7 @@ import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/core/utils/l10n_context.dart';
 import 'package:gastegi/core/utils/screen.dart';
+import 'package:gastegi/core/utils/text_measure.dart';
 import 'package:gastegi/core/widgets/app_card.dart';
 import 'package:gastegi/core/widgets/charts/bar_chart.dart';
 import 'package:gastegi/core/widgets/charts/compare_bar.dart';
@@ -160,44 +163,87 @@ class HomePage extends ConsumerWidget {
               gap: 10,
               children: [
                 Kicker(l10n.homeByCategory),
-                Row(
-                  spacing: 16.r,
-                  children: [
-                    Flexible(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: DonutChart(
-                          segments: [
-                            for (final c in state.categories)
-                              if ((catTotals[c.name] ?? 0) > 0)
-                                (catTotals[c.name]! / total, c.color),
-                          ],
-                          centerTitle: money.format(total),
-                          centerSubtitle: l10n.homeThisMonth,
+                // La fila se mide una vez y sirve para la dona y para todas
+                // las filas de la leyenda.
+                LayoutBuilder(
+                  builder: (context, fila) {
+                    // La dona pide lo suyo y la leyenda se queda con el resto.
+                    //
+                    // Antes las dos iban a `flex: 1`: la fila se partía por la
+                    // mitad, la dona gastaba sus 128 y lo que le sobraba de su
+                    // mitad no volvía a la leyenda —`mainAxisAlignment` es
+                    // `start`, así que se quedaba muerto al final—. Eran unos
+                    // 30 dp en un móvil de 390 y más de 200 en apaisado, justo
+                    // mientras los nombres se cortaban.
+                    //
+                    // El tope del 40 % conserva la red del `FittedBox`: en el
+                    // catálogo de pantallas la dona no se acerca, pero un
+                    // `SizedBox` a secas desbordaría el día que el diseño
+                    // cambie.
+                    final donut = math.min(128.r, fila.maxWidth * 0.4);
+                    final legend = fila.maxWidth - donut - 16.r;
+
+                    final labelStyle = DefaultTextStyle.of(
+                      context,
+                    ).style.merge(TextStyle(fontSize: AppFontSize.label));
+                    final scaler = MediaQuery.textScalerOf(context);
+                    final direction = Directionality.of(context);
+
+                    // Lo que ocupan el punto, los tres huecos y el porcentaje;
+                    // el resto se lo reparten el nombre y el importe.
+                    final fixed = 8.r + 21.r + 30.r;
+                    final shared = math.max(0.0, legend - fixed);
+                    // El nombre coge lo que pide el más largo, no una fracción
+                    // fija, y con un tope para que un nombre inventado muy
+                    // largo no ahogue la cifra. Por debajo del tope, lo que el
+                    // nombre no necesita se lo queda el importe.
+                    //
+                    // El tope pasa de la mitad porque los dos no degradan
+                    // igual: al importe le queda el `FittedBox`, que lo encoge
+                    // y lo sigue enseñando entero, y al nombre solo la
+                    // elisión, que se come letras. Con la mitad justa
+                    // «Transporte» se quedaba a 0,2 dp de caber.
+                    //
+                    // Se mide con el estilo que se pinta, familia incluida:
+                    // los estilos de la app no la llevan —la pone el tema— y
+                    // medir con uno suelto mide con la del sistema, que es más
+                    // estrecha. Ver `text_measure.dart`.
+                    final nameWidth = math.min(
+                      state.categories.fold(
+                        0.0,
+                        (w, c) => math.max(
+                          w,
+                          textWidth(
+                            c.name,
+                            style: labelStyle,
+                            scaler: scaler,
+                            direction: direction,
+                          ),
                         ),
                       ),
-                    ),
-                    Expanded(
-                      // El ancho de la leyenda se mide una vez y sirve para
-                      // todas las filas.
-                      child: LayoutBuilder(
-                        builder: (context, legend) {
-                          // Con sitio de sobra manda el nombre; apretados,
-                          // manda la cifra.
-                          //
-                          // El reparto era 2:3 fijo. La cifra es el dato y
-                          // tiene que caber —en un móvil estrecho, con moneda y
-                          // decimales, se come más de media fila—, pero con el
-                          // reparto rígido «Transporte» se cortaba también en
-                          // una pantalla ancha donde sobraba espacio. Los dos
-                          // siguen siendo `Expanded`, así que la fila no puede
-                          // desbordar por mucho que crezca el texto.
-                          // El umbral sale de lo que piden los tres trozos a
-                          // su tamaño natural: la fila fija (punto, huecos y
-                          // porcentaje) unos 59, el nombre más largo unos 62 y
-                          // el importe corriente unos 72, en dp de diseño.
-                          final holgada = legend.maxWidth > 195.r;
-                          return Column(
+                      shared * 0.55,
+                    );
+
+                    return Row(
+                      spacing: 16.r,
+                      children: [
+                        SizedBox(
+                          width: donut,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: DonutChart(
+                              segments: [
+                                for (final c in state.categories)
+                                  if ((catTotals[c.name] ?? 0) > 0)
+                                    (catTotals[c.name]! / total, c.color),
+                              ],
+                              centerTitle: money.format(total),
+                              centerSubtitle: l10n.homeThisMonth,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Column(
                             spacing: 7.r,
                             children: [
                               for (final c in state.categories)
@@ -209,8 +255,10 @@ class HomePage extends ConsumerWidget {
                                     spacing: 7.r,
                                     children: [
                                       ColorDot(c.color),
-                                      Expanded(
-                                        flex: holgada ? 1 : 2,
+                                      SizedBox(
+                                        width: nameWidth,
+                                        // La elisión solo entra cuando el
+                                        // nombre topa con la mitad.
                                         child: Text(
                                           c.name,
                                           maxLines: 1,
@@ -221,7 +269,6 @@ class HomePage extends ConsumerWidget {
                                         ),
                                       ),
                                       Expanded(
-                                        flex: holgada ? 1 : 3,
                                         child: FittedBox(
                                           fit: BoxFit.scaleDown,
                                           alignment: Alignment.centerRight,
@@ -258,11 +305,11 @@ class HomePage extends ConsumerWidget {
                                   ),
                                 ),
                             ],
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
