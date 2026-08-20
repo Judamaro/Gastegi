@@ -7,6 +7,7 @@ import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_typography.dart';
 import 'package:gastegi/core/utils/l10n_context.dart';
 import 'package:gastegi/core/utils/money_input_formatter.dart';
+import 'package:gastegi/core/utils/text_measure.dart';
 import 'package:gastegi/features/expenses/presentation/providers/add_expense_notifier.dart';
 
 /// La cifra grande de «Nuevo gasto», que además es donde se teclea.
@@ -102,8 +103,20 @@ class _AmountFieldState extends ConsumerState<AmountField> {
     // el `Row` desborda con las rayas amarillas; acotado, el campo se desplaza
     // por dentro, que es lo que hace cualquier campo de texto.
     final width = math.min(
-      _widthOf(shown, styleOf(size), scaler, direction) + _caret,
-      widget.maxWidth - _widthOf(symbols, styleOf(size), scaler, direction),
+      textWidth(
+            shown,
+            style: styleOf(size),
+            scaler: scaler,
+            direction: direction,
+          ) +
+          _caret,
+      widget.maxWidth -
+          textWidth(
+            symbols,
+            style: styleOf(size),
+            scaler: scaler,
+            direction: direction,
+          ),
     );
 
     return GestureDetector(
@@ -167,18 +180,6 @@ const Key amountFieldKey = ValueKey('expense-amount');
 /// el cursor del final se pinta medio fuera del recorte.
 double get _caret => 3.r;
 
-double _widthOf(
-  String text,
-  TextStyle style,
-  TextScaler scaler,
-  TextDirection direction,
-) => (TextPainter(
-  text: TextSpan(text: text, style: style),
-  textDirection: direction,
-  textScaler: scaler,
-  maxLines: 1,
-)..layout()).width;
-
 /// Cuerpo con el que [text] cabe en [maxWidth], sin pasar de
 /// [AppFontSize.displayXl].
 ///
@@ -202,7 +203,12 @@ double _fittedSize(
   // `hero` es el −2 % de él, también proporcional—, así que la primera acierta
   // y la segunda solo absorbe el redondeo de la tipografía.
   for (var i = 0; i < 2; i++) {
-    final width = _widthOf(text, styleOf(size), scaler, direction);
+    final width = textWidth(
+      text,
+      style: styleOf(size),
+      scaler: scaler,
+      direction: direction,
+    );
     if (width <= maxWidth) break;
     size = math.max(AppFontSize.title, size * maxWidth / width);
   }
