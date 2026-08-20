@@ -588,7 +588,74 @@ void main() {
     appRouter.go(RouteNames.home);
     await tester.pumpAndSettle();
   });
+
+  testWidgets('las 31 muestras de color caben en el formulario', (
+    tester,
+  ) async {
+    // La matriz de `responsive_test.dart` no vale para esto: `takeException()`
+    // ve un `RenderFlex` desbordado, pero el selector es un `Wrap` y un punto
+    // que no cabe se va a la fila siguiente o se sale sin quejarse.
+    await pumpApp(tester, size: const Size(320, 568));
+
+    await tester.tap(find.text('Presupuesto'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(BudgetsPage),
+        matching: find.byIcon(AppIcons.plusCircle),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final swatches = find.descendant(
+      of: find.byType(CategoryForm),
+      matching: find.byWidgetPredicate(_colorSwatch),
+    );
+    expect(swatches, findsNWidgets(AppColors.categoryPalette.length));
+
+    // Ninguna se sale del formulario por la derecha, que es por donde el `Wrap`
+    // desborda cuando el punto es demasiado grande para el ancho disponible.
+    final form = tester.getRect(find.byType(CategoryForm));
+    for (var i = 0; i < swatches.evaluate().length; i++) {
+      expect(
+        tester.getRect(swatches.at(i)).right,
+        lessThanOrEqualTo(form.right),
+        reason: 'muestra $i',
+      );
+    }
+
+    // El blanco cierra la paleta, y el anillo es casi blanco: si se pintara
+    // pegado a la muestra, elegirlo no se vería. Tiene que quedar hueco.
+    final white = swatches.at(AppColors.categoryPalette.length - 1);
+    await tester.tap(white);
+    await tester.pumpAndSettle();
+
+    final ring = find
+        .ancestor(of: white, matching: find.byType(Container))
+        .first;
+    final decoration =
+        tester.widget<Container>(ring).decoration! as BoxDecoration;
+    final stroke = (decoration.border! as Border).top;
+    expect(stroke.color, AppColors.text);
+    // Y el anillo sobresale más que su propio grosor: la diferencia de más es
+    // el hueco, y sin él el anillo casi blanco se fundiría con la muestra.
+    final margen =
+        (tester.getRect(ring).width - tester.getRect(white).width) / 2;
+    expect(margen, greaterThan(stroke.width));
+
+    appRouter.go(RouteNames.home);
+    await tester.pumpAndSettle();
+  });
 }
+
+/// Una muestra de color del selector: el único círculo **relleno** que hay
+/// dentro del formulario de categoría. Los chips de icono son píldoras, y el
+/// anillo de selección es otro círculo, pero sin color.
+bool _colorSwatch(Widget w) =>
+    w is Container &&
+    w.decoration is BoxDecoration &&
+    (w.decoration! as BoxDecoration).shape == BoxShape.circle &&
+    (w.decoration! as BoxDecoration).color != null;
 
 /// El recuadro que agrupa la categoría en edición con su formulario, que es el
 /// único con el borde en acento.
