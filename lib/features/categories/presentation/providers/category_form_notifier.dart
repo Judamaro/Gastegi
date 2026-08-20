@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
+import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/features/categories/data/repositories/category_repository_impl.dart';
 import 'package:gastegi/features/categories/domain/entities/category.dart';
@@ -13,7 +14,11 @@ const Object _keep = Object();
 
 /// Color e icono de partida de una categoría nueva. Los primeros de sus
 /// catálogos, para que el formulario abra con algo elegido y no en blanco.
-const int _defaultColorValue = 0xFFB5ABFC;
+///
+/// El color se toma de [AppColors] y no se copia aquí: un literal suelto se
+/// queda atrás en cuanto la paleta cambia, y el formulario abriría sin ninguna
+/// muestra marcada sin que nada fallara.
+const int _defaultColorValue = AppColors.defaultCategoryColorValue;
 const String _defaultIconKey = 'forkKnife';
 
 /// Formulario de alta y edición de categorías, y confirmación de borrado.

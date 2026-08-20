@@ -25,7 +25,7 @@ void main() {
 
     final comida = categories.firstWhere((c) => c.name == 'Comida');
     expect(comida.budget, 500);
-    expect(comida.color.toARGB32(), 0xFFB5ABFC);
+    expect(comida.color.toARGB32(), 0xFFCD3D3E);
 
     // El dinero lo pone el usuario: ni cuentas ni gastos de mentira.
     expect(

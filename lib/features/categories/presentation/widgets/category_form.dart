@@ -107,8 +107,8 @@ class _CategoryFormState extends ConsumerState<CategoryForm> {
         children: [
           FieldLabel(l10n.categoryFormColor),
           Wrap(
-            spacing: 10.r,
-            runSpacing: 10,
+            spacing: 6.r,
+            runSpacing: 6.r,
             children: [
               for (final color in AppColors.categoryPalette)
                 _ColorOption(
@@ -196,18 +196,26 @@ class _ColorOption extends StatelessWidget {
       onTap: onTap,
       customBorder: const CircleBorder(),
       child: Container(
-        width: 34.r,
-        height: 34.r,
+        // El anillo no toca la muestra: entre los dos queda un hueco del color
+        // de la tarjeta. Pegado se pierde sobre los tonos claros —la paleta
+        // termina en blanco y el anillo es casi blanco—, y el color elegido
+        // parecería sin elegir. Hueco y anillo ocupan sitio siempre, con el
+        // borde transparente cuando no toca, para que la muestra no dé un
+        // salto al elegirla.
+        padding: EdgeInsets.all(2.r),
         decoration: BoxDecoration(
-          color: color,
           shape: BoxShape.circle,
-          // El anillo va por fuera del círculo, con un hueco de por medio: un
-          // borde del mismo color se perdería sobre el propio relleno.
           border: Border.all(
             color: active ? AppColors.text : Colors.transparent,
             width: 2.r,
-            strokeAlign: BorderSide.strokeAlignOutside,
           ),
+        ),
+        child: Container(
+          // 26 y no 34: la paleta son treinta y una muestras, y con el punto
+          // grande el selector se comía media pantalla de formulario.
+          width: 26.r,
+          height: 26.r,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
       ),
     );

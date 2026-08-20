@@ -1,3 +1,4 @@
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,6 +11,8 @@ import 'package:gastegi/app/theme/app_colors.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/app/theme/app_typography.dart';
 import 'package:gastegi/core/utils/formatters.dart';
+import 'package:gastegi/core/utils/text_measure.dart';
+import 'package:gastegi/core/widgets/charts/donut_chart.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:gastegi/features/categories/presentation/pages/budgets_page.dart';
 import 'package:gastegi/features/categories/presentation/pages/category_detail_page.dart';
@@ -588,7 +591,172 @@ void main() {
     appRouter.go(RouteNames.home);
     await tester.pumpAndSettle();
   });
+
+  testWidgets('la leyenda de categorías aprovecha todo el ancho', (
+    tester,
+  ) async {
+    // La tarjeta solo existe con gasto: sin total, Inicio saca la pantalla
+    // vacía.
+    final accountId = await AccountRepositoryImpl(db).create(
+      name: 'Efectivo',
+      kind: 'Dinero en mano',
+      iconKey: 'money',
+      initialBalance: 1000,
+    );
+    final categoryId =
+        (await db.query('categories', limit: 1)).single['id']! as String;
+    await ExpenseRepositoryImpl(db).create(
+      date: testNow,
+      description: 'Compra',
+      categoryId: categoryId,
+      accountId: accountId,
+      amount: 250,
+    );
+
+    // En tableta es donde más ancho se perdía, así que se comprueban las dos.
+    for (final size in [const Size(390, 844), const Size(768, 1024)]) {
+      final container = await pumpApp(tester, size: size);
+      final motivo = '${size.width.toInt()} dp';
+
+      // La dona y la leyenda iban las dos a `flex: 1`: la fila se partía por la
+      // mitad y lo que la dona no gastaba se quedaba muerto al final. Se mide
+      // por el borde derecho del porcentaje, que va pegado al final de su fila.
+      final fila = find
+          .ancestor(of: find.byType(DonutChart), matching: find.byType(Row))
+          .first;
+      expect(
+        tester.getRect(find.text('100%')).right,
+        closeTo(tester.getRect(fila).right, 0.01),
+        reason: 'hueco muerto a la derecha, $motivo',
+      );
+
+      // El nombre ocupa lo que pide el más largo, topado a la mitad de lo que
+      // comparte con el importe. Se comprueba la invariante y no «Transporte
+      // cabe»: aquí no se descarga ninguna tipografía y con la de repuesto los
+      // nombres miden otra cosa.
+      final nombres = container
+          .read(appDataProvider)
+          .categories
+          .map((c) => c.name)
+          .toList();
+      var ancho = 0.0;
+      for (final nombre in nombres) {
+        final finder = find.descendant(
+          of: find.byType(HomePage),
+          matching: find.text(nombre),
+        );
+        final caja = tester.getRect(finder).width;
+        if (ancho == 0) {
+          ancho = caja;
+        } else {
+          expect(
+            caja,
+            closeTo(ancho, 0.01),
+            reason: 'la columna del nombre no es una, $motivo',
+          );
+        }
+      }
+
+      // Y ninguno se corta salvo que haya topado con la mitad. `takeException`
+      // no ve una elisión: hay que preguntarle al párrafo.
+      for (final nombre in nombres) {
+        final finder = find.descendant(
+          of: find.byType(HomePage),
+          matching: find.text(nombre),
+        );
+        final texto = tester.widget<Text>(finder);
+        final estilo = DefaultTextStyle.of(
+          tester.element(finder),
+        ).style.merge(texto.style);
+        expect(
+          estilo.fontFamily,
+          isNotNull,
+          reason: 'se mide con la del tema, $motivo',
+        );
+        final pintado = textWidth(
+          nombre,
+          style: estilo,
+          scaler: MediaQuery.textScalerOf(tester.element(finder)),
+          direction: TextDirection.ltr,
+        );
+        if (pintado <= ancho) {
+          expect(
+            tester.renderObject<RenderParagraph>(finder).didExceedMaxLines,
+            isFalse,
+            reason: '«$nombre» se corta cabiendo, $motivo',
+          );
+        }
+      }
+    }
+  });
+
+  testWidgets('las 31 muestras de color caben en el formulario', (
+    tester,
+  ) async {
+    // La matriz de `responsive_test.dart` no vale para esto: `takeException()`
+    // ve un `RenderFlex` desbordado, pero el selector es un `Wrap` y un punto
+    // que no cabe se va a la fila siguiente o se sale sin quejarse.
+    await pumpApp(tester, size: const Size(320, 568));
+
+    await tester.tap(find.text('Presupuesto'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(BudgetsPage),
+        matching: find.byIcon(AppIcons.plusCircle),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final swatches = find.descendant(
+      of: find.byType(CategoryForm),
+      matching: find.byWidgetPredicate(_colorSwatch),
+    );
+    expect(swatches, findsNWidgets(AppColors.categoryPalette.length));
+
+    // Ninguna se sale del formulario por la derecha, que es por donde el `Wrap`
+    // desborda cuando el punto es demasiado grande para el ancho disponible.
+    final form = tester.getRect(find.byType(CategoryForm));
+    for (var i = 0; i < swatches.evaluate().length; i++) {
+      expect(
+        tester.getRect(swatches.at(i)).right,
+        lessThanOrEqualTo(form.right),
+        reason: 'muestra $i',
+      );
+    }
+
+    // El blanco cierra la paleta, y el anillo es casi blanco: si se pintara
+    // pegado a la muestra, elegirlo no se vería. Tiene que quedar hueco.
+    final white = swatches.at(AppColors.categoryPalette.length - 1);
+    await tester.tap(white);
+    await tester.pumpAndSettle();
+
+    final ring = find
+        .ancestor(of: white, matching: find.byType(Container))
+        .first;
+    final decoration =
+        tester.widget<Container>(ring).decoration! as BoxDecoration;
+    final stroke = (decoration.border! as Border).top;
+    expect(stroke.color, AppColors.text);
+    // Y el anillo sobresale más que su propio grosor: la diferencia de más es
+    // el hueco, y sin él el anillo casi blanco se fundiría con la muestra.
+    final margen =
+        (tester.getRect(ring).width - tester.getRect(white).width) / 2;
+    expect(margen, greaterThan(stroke.width));
+
+    appRouter.go(RouteNames.home);
+    await tester.pumpAndSettle();
+  });
 }
+
+/// Una muestra de color del selector: el único círculo **relleno** que hay
+/// dentro del formulario de categoría. Los chips de icono son píldoras, y el
+/// anillo de selección es otro círculo, pero sin color.
+bool _colorSwatch(Widget w) =>
+    w is Container &&
+    w.decoration is BoxDecoration &&
+    (w.decoration! as BoxDecoration).shape == BoxShape.circle &&
+    (w.decoration! as BoxDecoration).color != null;
 
 /// El recuadro que agrupa la categoría en edición con su formulario, que es el
 /// único con el borde en acento.

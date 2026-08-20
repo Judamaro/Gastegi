@@ -25,14 +25,14 @@ void main() {
     form.setName('Viajes');
     form.setBudget('300');
     form.pickIcon('bus');
-    form.pickColor(0xFF796CBF);
+    form.pickColor(0xFF419DDA);
     await form.submit();
 
     final data = container.read(appDataProvider);
     final viajes = data.categoryOf('Viajes')!;
     expect(viajes.budget, 300);
     expect(viajes.iconKey, 'bus');
-    expect(viajes.colorValue, 0xFF796CBF);
+    expect(viajes.colorValue, 0xFF419DDA);
     expect(data.totalBudget, budgetBefore + 300);
     // El formulario se cierra solo cuando ha guardado.
     expect(container.read(categoryFormProvider).open, isFalse);

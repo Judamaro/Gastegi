@@ -96,7 +96,8 @@ void main() {
         }
 
         // El formulario de categoría no se ve hasta que se abre, y es el
-        // layout nuevo más apretado: dos `Wrap` y un campo de importe.
+        // layout nuevo más apretado: dos `Wrap` —el de color ocupa varias
+        // filas, son 31 muestras— y un campo de importe.
         await tester.tap(find.text('Presupuesto').last);
         await tester.pumpAndSettle();
         await tester.tap(
@@ -111,12 +112,17 @@ void main() {
         // Y la edición, que mete la tarjeta y el formulario en un mismo
         // recuadro. El nombre acotado a la tarjeta: las etiquetas de los
         // iconos del formulario repiten los nombres de la siembra.
-        await tester.tap(
-          find.descendant(
-            of: find.byType(BudgetCard),
-            matching: find.text('Transporte'),
-          ),
+        final transporte = find.descendant(
+          of: find.byType(BudgetCard),
+          matching: find.text('Transporte'),
         );
+        // El alta abierta arriba empuja las tarjetas fuera de la ventana, y en
+        // casi todas estas resoluciones «Transporte» queda por debajo. Sin
+        // subirlo a la vista, `tap` avisa de que no acierta —solo avisa— y la
+        // edición no llegaba a abrirse: este bloque no comprobaba nada.
+        await tester.ensureVisible(transporte);
+        await tester.pumpAndSettle();
+        await tester.tap(transporte);
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull, reason: 'Editar categoría');
 

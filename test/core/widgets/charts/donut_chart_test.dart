@@ -45,7 +45,9 @@ void main() {
       final donut = tester.getRect(find.byType(DonutChart));
       final center = donut.center;
       // Radio interior del anillo: medio diámetro menos el grosor del trazo.
-      final holeRadius = donut.width * (0.5 - 0.125);
+      // El literal va a mano a propósito: si se leyera de `DonutChart`, el día
+      // que el trazo cambie el test se movería con él y no comprobaría nada.
+      final holeRadius = donut.width * (0.5 - 0.0625);
 
       for (final texto in [title, subtitle]) {
         final rect = tester.getRect(find.text(texto));
