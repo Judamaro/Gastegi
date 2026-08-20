@@ -6,10 +6,11 @@ import 'package:gastegi/app/theme/app_colors.dart';
 
 /// Dona de categorías, con el total en el hueco.
 ///
-/// Las proporciones son las del SVG del diseño (viewBox 160, trazo 20,
-/// separación de 0.02 rad por lado), pero el círculo **llena su caja**: el SVG
+/// Las proporciones son las del SVG del diseño (viewBox 160, separación de
+/// 0.02 rad por lado), con dos cambios. El círculo **llena su caja**: el SVG
 /// traía 15 % de margen incorporado, y aquí el hueco que sobra ya lo pone el
-/// `Row` que la coloca al lado de la leyenda.
+/// `Row` que la coloca al lado de la leyenda. Y el trazo es la mitad del que
+/// traía el diseño, que es lo que ensancha el hueco para el importe.
 class DonutChart extends StatelessWidget {
   const DonutChart({
     super.key,
@@ -19,8 +20,15 @@ class DonutChart extends StatelessWidget {
     this.size = 128,
   });
 
-  /// Grosor del anillo como fracción del diámetro (20 sobre 160 del diseño).
-  static const double _strokeRatio = 0.125;
+  /// Grosor del anillo como fracción del diámetro: la mitad del que traía el
+  /// diseño (20 sobre 160).
+  ///
+  /// Adelgazarlo no cambia el tamaño de la dona —el borde exterior sigue en el
+  /// borde de la caja—, sino el radio del hueco, y de ese radio sale el ancho
+  /// que le queda al importe del centro: pasa del 71 % del diámetro al 84 %.
+  /// Con la cifra larga, que va en un `FittedBox`, es la diferencia entre
+  /// enseñarla encogida y enseñarla a su cuerpo.
+  static const double _strokeRatio = 0.0625;
 
   /// Interlineado de los dos textos del centro. Explícito porque de él sale el
   /// alto del bloque, y de ese alto sale el ancho que cabe en el hueco.
@@ -43,9 +51,16 @@ class DonutChart extends StatelessWidget {
     // llevan `.sp`: ya escalan con la dona. Es el único sitio de la app que no
     // respeta el ajuste de tamaño de letra del sistema, y por eso lo desactiva
     // explícitamente: el hueco es geométrico y honrarlo sacaría el texto del
-    // círculo. Las proporciones son las del diseño: 19 y 9 sobre 128.
-    final titleFont = diameter * 19 / 128;
-    final subtitleFont = diameter * 9 / 128;
+    // círculo.
+    //
+    // El diseño traía 19 y 9 sobre 128, y los dos se mueven por motivos
+    // distintos. El título baja al 70 % porque con el de origen la cifra larga
+    // llegaba al hueco y el `FittedBox` la encogía; a 13.3 cabe entera y se
+    // pinta al tamaño que pide. El subtítulo no tenía ese problema: bajarlo
+    // igual lo dejaba en 6.3, que en apaisado —donde la dona baja a 106 dp—
+    // son 5,2 reales y no hay quien los lea.
+    final titleFont = diameter * 13.3 / 128;
+    final subtitleFont = diameter * 8.19 / 128;
 
     // El ancho que cabe no es el diámetro del hueco: el bloque de dos líneas
     // ocupa una banda, y en sus esquinas —lo más alejado del centro— la cuerda
