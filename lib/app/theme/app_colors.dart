@@ -30,15 +30,52 @@ abstract final class AppColors {
 
   /// Colores elegibles al crear o editar una categoría.
   ///
-  /// Son los seis de la siembra, y no la paleta entera: los tonos claros de la
-  /// serie 100–200 se pierden sobre la superficie de las tarjetas, y la app
-  /// pinta con ellos porciones de dona de pocos píxeles.
+  /// Una rueda de tono de treinta pasos más el blanco. No sale de la escala
+  /// `accent`/`neutral`: aquélla son tokens del sistema de diseño y cambia con
+  /// él, mientras que esto es un catálogo de elección del usuario, y el color
+  /// que elija queda guardado en su base de datos.
+  ///
+  /// La luminosidad va alta a propósito. Estos colores se pintan sobre `bg` y
+  /// `surface`, que son oscuros, y en porciones de dona de pocos píxeles: un
+  /// tono apagado ahí no se distingue del de al lado.
   static const List<Color> categoryPalette = [
-    accent400,
-    Color(0xFF9690C9),
-    accent300,
-    accent600,
-    neutral400,
-    neutral600,
+    Color(0xFFCD3D3E),
+    Color(0xFFCB593F),
+    Color(0xFFCD763D),
+    Color(0xFFCF933D),
+    Color(0xFFCFB23E),
+    Color(0xFFD1D040),
+    Color(0xFFB4D13E),
+    Color(0xFF96D13E),
+    Color(0xFF7BD140),
+    Color(0xFF5DD240),
+    Color(0xFF3FD53F),
+    Color(0xFF3FD55C),
+    Color(0xFF41D67D),
+    Color(0xFF40D799),
+    Color(0xFF41D6B9),
+    Color(0xFF42D8D8),
+    Color(0xFF41BBD8),
+    Color(0xFF419DDA),
+    Color(0xFF407EDC),
+    Color(0xFF4360DD),
+    Color(0xFF4241DE),
+    Color(0xFF6142DE),
+    Color(0xFF8242E0),
+    Color(0xFFA142DF),
+    Color(0xFFC142E0),
+    Color(0xFFE242E4),
+    Color(0xFFE242C2),
+    Color(0xFFE343A5),
+    Color(0xFFE34383),
+    Color(0xFFE54465),
+    Color(0xFFFFFFFF),
   ];
+
+  /// Color de partida de una categoría nueva.
+  ///
+  /// Un valor de [categoryPalette] y no uno cualquiera: el selector marca la
+  /// muestra comparando ARGB, así que un color de fuera abriría el formulario
+  /// sin nada elegido. Lo vigila `test/app/theme/category_palette_test.dart`.
+  static const int defaultCategoryColorValue = 0xFFCD3D3E;
 }
