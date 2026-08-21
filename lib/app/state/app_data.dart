@@ -192,14 +192,6 @@ class AppData {
     return null;
   }
 
-  Account? accountById(String? id) {
-    if (id == null) return null;
-    for (final a in accounts) {
-      if (a.id == id) return a;
-    }
-    return null;
-  }
-
   // ── Cuentas ────────────────────────────────────────────────────────────
 
   late final double patrimonio = accounts.fold(0, (a, c) => a + c.balance);

@@ -21,6 +21,4 @@ enum Environment {
     'staging' => Environment.staging,
     _ => Environment.development,
   };
-
-  bool get isProduction => this == Environment.production;
 }

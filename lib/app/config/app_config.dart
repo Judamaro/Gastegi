@@ -30,8 +30,4 @@ abstract final class AppConfig {
     Environment.staging => 'gastegi-staging.db',
     Environment.development => 'gastegi-dev.db',
   };
-
-  /// URL de la API de sincronización. Todavía no la usa nadie: la app es
-  /// local. Ver `core/network/README.md`.
-  static const String apiUrl = String.fromEnvironment('API_URL');
 }
