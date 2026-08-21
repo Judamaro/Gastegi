@@ -297,12 +297,17 @@ Lo que sí sigue viajando por nombre, y está bien así:
   volver es parte de esa página, y quedarse en blanco dejaba la pestaña sin
   salida. Renombrar ya no lo dispara.
 
-**La guardia que queda sola**: una categoría con gastos no se puede borrar, y
-eso lo decide `CategoryFormNotifier.confirmDelete` con `expenseCount` —una sola
-comprobación, y en presentación—. Si se saltara, sus gastos quedarían
-apuntando a una fila borrada que `categories.all()` ya no devuelve: aparecería
-una clave huérfana en `catTotals` que ninguna pantalla pinta, y la dona y las
+**La regla que sostiene todo esto**: una categoría con gastos no se puede
+borrar, y lo decide `DeleteCategory` (`categories/domain/usecases/`), que
+cuenta y borra en la misma llamada. Si se saltara, sus gastos quedarían
+apuntando a una fila que `categories.all()` ya no devuelve: aparecería una
+clave huérfana en `catTotals` que ninguna pantalla pinta, y la dona y las
 barras dejarían de sumar el total del mes sin lanzar nada.
+
+> Por qué junto y no en el notifier, que es donde estaba: el recuento que
+> enseña la confirmación es del momento en que se abrió, y entre eso y el toque
+> en «Eliminar» puede haber entrado un gasto. La pantalla sigue contando para
+> el aviso —eso es presentación—, pero quien decide cuenta al decidir.
 
 ---
 
@@ -325,10 +330,11 @@ En este orden. Los pasos 5 y 8 son opcionales.
    );
    ```
 5. **Caso de uso** — `domain/usecases/`, **solo si hay lógica de negocio real**.
-   `SaveAccount` y `SaveCategory` existen porque validan dos reglas; `SaveExpense`,
-   porque decide la descripción por defecto. `CategoryRepository.softDelete` no
-   tiene ninguno porque sería reenviar una línea, y quién puede borrarse lo decide
-   el notifier con `expenseCount`. Un caso de uso que solo reenvía es ceremonia.
+   `SaveAccount` y `SaveCategory` existen porque validan dos reglas;
+   `SaveExpense`, porque decide la descripción por defecto; `DeleteCategory`,
+   porque contar los gastos y decidir tienen que pasar juntos. En cambio
+   `CategoryRepository.softDelete` se llama a pelo desde `DeleteCategory`: un
+   caso de uso que solo reenvía es ceremonia.
 6. **Notifier** — `features/<x>/presentation/providers/`. Estado **inmutable**
    con `copyWith`. Para campos anulables usa el centinela `_keep` (ver
    `account_form_notifier.dart`), que distingue "no me pases este campo" de

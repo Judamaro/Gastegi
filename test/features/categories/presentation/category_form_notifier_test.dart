@@ -156,5 +156,36 @@ void main() {
     await form.confirmDelete();
 
     expect(container.read(appDataProvider).categoryNamed('Ocio'), isNotNull);
+    // Y la confirmación se queda abierta: el usuario tocó «Eliminar» y tiene
+    // que ver por qué no ha pasado nada.
+    expect(container.read(categoryFormProvider).pendingDeleteId, ocio.id);
+  });
+
+  test('un gasto registrado mientras se confirma corta el borrado', () async {
+    // La carrera que el recuento del estado no puede ver: se abre la
+    // confirmación con la categoría vacía y el gasto entra antes del toque en
+    // «Eliminar». Quien decide es el caso de uso, que cuenta en ese momento.
+    final ocio = (await CategoryRepositoryImpl(
+      db,
+    ).all()).firstWhere((c) => c.name == 'Ocio');
+    final container = await buildLoadedContainer(db);
+    final form = container.read(categoryFormProvider.notifier);
+
+    await form.askDelete(ocio.id);
+    expect(container.read(categoryFormProvider).pendingDeleteExpenses, 0);
+
+    await ExpenseRepositoryImpl(db).create(
+      date: testNow,
+      description: 'Cine',
+      categoryId: ocio.id,
+      accountId: null,
+      amount: 12,
+    );
+    await form.confirmDelete();
+
+    expect(container.read(appDataProvider).categoryNamed('Ocio'), isNotNull);
+    // Y el aviso se pone al día, para que la confirmación explique el motivo.
+    expect(container.read(categoryFormProvider).pendingDeleteExpenses, 1);
+    expect(container.read(categoryFormProvider).pendingDeleteId, ocio.id);
   });
 }

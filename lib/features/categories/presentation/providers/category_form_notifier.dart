@@ -6,6 +6,7 @@ import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/features/categories/data/repositories/category_repository_impl.dart';
 import 'package:gastegi/features/categories/domain/entities/category.dart';
 import 'package:gastegi/features/categories/domain/failures.dart';
+import 'package:gastegi/features/categories/domain/usecases/delete_category.dart';
 import 'package:gastegi/features/categories/domain/usecases/save_category.dart';
 
 /// Centinela para distinguir "no me pases este campo" de "ponlo a null" en
@@ -140,6 +141,8 @@ class CategoryFormNotifier extends Notifier<CategoryFormState> {
 
   // ── Borrado ────────────────────────────────────────────────────────────
 
+  /// Abre la confirmación. El recuento es solo para el aviso: quien decide si
+  /// se puede borrar es [DeleteCategory], al confirmar.
   Future<void> askDelete(String id) async {
     final count = await ref.read(categoryRepositoryProvider).expenseCount(id);
     state = state.copyWith(
@@ -152,17 +155,29 @@ class CategoryFormNotifier extends Notifier<CategoryFormState> {
   void cancelDelete() =>
       state = state.copyWith(pendingDeleteId: null, pendingDeleteExpenses: 0);
 
-  /// No hace nada si la categoría tiene gastos.
+  /// Pide el borrado y refleja lo que conteste el caso de uso.
   ///
-  /// La categoría de un gasto es obligatoria y la dona del inicio reparte el
-  /// total entre las categorías vivas: borrar una con gastos dejaría porciones
-  /// que ya no suman el total del mes, sin que fallara nada.
+  /// Aquí no se repite la regla: el recuento que trae el estado es del momento
+  /// en que se abrió la confirmación, y entre eso y el toque en «Eliminar»
+  /// puede haberse registrado un gasto. Si [DeleteCategory] dice que no, la
+  /// confirmación se queda abierta con el motivo puesto al día: el usuario ha
+  /// tocado el botón y tiene que ver por qué no ha pasado nada.
   Future<void> confirmDelete() async {
     final id = state.pendingDeleteId;
-    if (id == null || state.pendingDeleteExpenses > 0) return;
-    final repo = ref.read(categoryRepositoryProvider);
-    await ref.read(appDataProvider.notifier).write(() => repo.softDelete(id));
-    cancelDelete();
+    if (id == null) return;
+
+    final deleteCategory = DeleteCategory(ref.read(categoryRepositoryProvider));
+    CategoryFailure? failure;
+    await ref.read(appDataProvider.notifier).write(() async {
+      failure = await deleteCategory(id);
+    });
+
+    state = switch (failure) {
+      CategoryHasExpenses(:final count) => state.copyWith(
+        pendingDeleteExpenses: count,
+      ),
+      _ => state.copyWith(pendingDeleteId: null, pendingDeleteExpenses: 0),
+    };
   }
 }
 
