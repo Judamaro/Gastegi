@@ -6,6 +6,10 @@ import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:gastegi/features/accounts/domain/usecases/transfer_between_accounts.dart';
 
+/// Centinela para distinguir "no me pases este campo" de "ponlo a null" en
+/// [TransferFormState.copyWith].
+const Object _keep = Object();
+
 /// Formulario de transferencia entre cuentas.
 @immutable
 class TransferFormState {
@@ -23,8 +27,17 @@ class TransferFormState {
 
   double get amountValue => parseAmount(amount);
 
-  TransferFormState _withSelection(String? fromId, String? toId) =>
-      TransferFormState(open: open, fromId: fromId, toId: toId, amount: amount);
+  TransferFormState copyWith({
+    bool? open,
+    Object? fromId = _keep,
+    Object? toId = _keep,
+    String? amount,
+  }) => TransferFormState(
+    open: open ?? this.open,
+    fromId: identical(fromId, _keep) ? this.fromId : fromId as String?,
+    toId: identical(toId, _keep) ? this.toId : toId as String?,
+    amount: amount ?? this.amount,
+  );
 }
 
 class TransferFormNotifier extends Notifier<TransferFormState> {
@@ -52,35 +65,26 @@ class TransferFormNotifier extends Notifier<TransferFormState> {
               : null)
         : s.toId;
 
-    return s._withSelection(from, to);
+    return s.copyWith(fromId: from, toId: to);
   }
 
-  void open() => state = _normalized(
-    const TransferFormState(open: true),
-    ref.read(appDataProvider),
-  );
+  /// Todo cambio de estado pasa por aquí.
+  ///
+  /// Normalizar en un solo sitio es lo que impide que un mutador nuevo se
+  /// olvide de hacerlo: así fue como `pickTo` llegó a admitir la cuenta de
+  /// origen como destino, y el traspaso se quedaba sin hacer en silencio.
+  void _apply(TransferFormState next) =>
+      state = _normalized(next, ref.read(appDataProvider));
 
-  void close() =>
-      state = _normalized(const TransferFormState(), ref.read(appDataProvider));
+  void open() => _apply(const TransferFormState(open: true));
 
-  void pickFrom(String id) => state = _normalized(
-    TransferFormState(open: state.open, fromId: id, amount: state.amount),
-    ref.read(appDataProvider),
-  );
+  void close() => _apply(const TransferFormState());
 
-  void pickTo(String id) => state = TransferFormState(
-    open: state.open,
-    fromId: state.fromId,
-    toId: id,
-    amount: state.amount,
-  );
+  void pickFrom(String id) => _apply(state.copyWith(fromId: id));
 
-  void setAmount(String value) => state = TransferFormState(
-    open: state.open,
-    fromId: state.fromId,
-    toId: state.toId,
-    amount: value,
-  );
+  void pickTo(String id) => _apply(state.copyWith(toId: id));
+
+  void setAmount(String value) => _apply(state.copyWith(amount: value));
 
   Future<void> submit() async {
     final transfer = TransferBetweenAccounts(
