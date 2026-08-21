@@ -6,6 +6,10 @@ import 'package:gastegi/features/expenses/domain/entities/expense.dart';
 import 'package:gastegi/features/expenses/presentation/models/history_item.dart';
 import 'package:gastegi/features/expenses/presentation/models/history_range.dart';
 
+/// Centinela para distinguir "no me pases este campo" de "ponlo a null" en
+/// [HistoryFilter.copyWith].
+const Object _keep = Object();
+
 /// Filtros del historial.
 @immutable
 class HistoryFilter {
@@ -39,8 +43,6 @@ class HistoryFilter {
     range: range ?? this.range,
   );
 }
-
-const Object _keep = Object();
 
 class HistoryNotifier extends Notifier<HistoryFilter> {
   @override

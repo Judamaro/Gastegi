@@ -9,8 +9,12 @@ abstract final class RouteNames {
   /// barra de pestañas.
   static const String addExpense = '/add';
 
+  /// El segmento, una sola vez: escrito en los dos sitios, cambiar uno deja
+  /// el otro apuntando a una ruta que no existe **sin error de compilación**.
+  static const String _categories = 'categories';
+
   /// Detalle de una categoría, anidado bajo [home].
-  static const String categoryDetail = 'categories/:id';
+  static const String categoryDetail = '$_categories/:id';
 
   /// Ruta al detalle de la categoría [id].
   ///
@@ -18,5 +22,5 @@ abstract final class RouteNames {
   /// renombrar desde Presupuestos, y una ruta abierta en la otra rama del
   /// shell se quedaría apuntando a algo que ya no existe. El id además es un
   /// UUID, así que no hace falta escaparlo.
-  static String categoryDetailOf(String id) => '$home/categories/$id';
+  static String categoryDetailOf(String id) => '$home/$_categories/$id';
 }

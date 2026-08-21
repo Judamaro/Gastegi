@@ -1,12 +1,10 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gastegi/app/config/app_config.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/core/storage/app_database.dart';
 import 'package:gastegi/core/storage/database_provider.dart';
 import 'package:gastegi/l10n/generated/app_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:intl/intl.dart';
 
 /// Punto de composición: abre la base de datos, monta el ámbito de providers
 /// con ella dentro y carga los datos antes del primer frame.
@@ -24,7 +22,6 @@ Future<ProviderContainer> bootstrap() async {
   for (final locale in AppLocalizations.supportedLocales) {
     await initializeDateFormatting(locale.languageCode);
   }
-  Intl.defaultLocale = AppConfig.fallbackLocale.languageCode;
 
   final db = await AppDatabase.open();
   final container = ProviderContainer(
