@@ -49,21 +49,19 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
 
   /// Gasto por mes y categoría desde [from].
   ///
-  /// La categoría sale del `JOIN`, igual que en [since]: así el desglose de un
-  /// mes pasado se renombra solo cuando el usuario cambia el nombre de una
-  /// categoría, sin tocar ninguna fila de `expenses`.
+  /// Agrupa por `category_id` y no necesita el `JOIN` de [since]: quien pinta
+  /// el desglose ya tiene las categorías cargadas, y el id no se mueve cuando
+  /// el usuario renombra una.
   @override
   Future<Map<String, Map<String, double>>> monthlyTotalsByCategory({
     required DateTime from,
   }) async {
     final rows = await _db.rawQuery(
       '''
-      SELECT substr(e.spent_on, 1, 7) AS ym, c.name AS category,
-             SUM(e.amount) AS total
-      FROM expenses e
-      JOIN categories c ON c.id = e.category_id
-      WHERE e.spent_on >= ? AND e.deleted_at IS NULL
-      GROUP BY ym, c.name
+      SELECT substr(spent_on, 1, 7) AS ym, category_id, SUM(amount) AS total
+      FROM expenses
+      WHERE spent_on >= ? AND deleted_at IS NULL
+      GROUP BY ym, category_id
       ''',
       [dayKey(from)],
     );
@@ -72,7 +70,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       sums.putIfAbsent(
         r['ym']! as String,
         () => <String, double>{},
-      )[r['category']! as String] = (r['total'] as num?)?.toDouble() ?? 0;
+      )[r['category_id']! as String] = (r['total'] as num?)?.toDouble() ?? 0;
     }
     return sums;
   }

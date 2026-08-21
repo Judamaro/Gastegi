@@ -26,20 +26,21 @@ import 'package:go_router/go_router.dart';
 
 /// Detalle de una categoría: total, presupuesto, barras semanales y gastos.
 class CategoryDetailPage extends ConsumerWidget {
-  const CategoryDetailPage({super.key, required this.categoryName});
+  const CategoryDetailPage({super.key, required this.categoryId});
 
   /// Llega por la ruta.
-  final String categoryName;
+  final String categoryId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     watchScreen(context);
-    final cat = ref.watch(categoryByNameProvider(categoryName));
+    final cat = ref.watch(categoryByIdProvider(categoryId));
     // La categoría puede haber desaparecido bajo los pies de la pantalla:
-    // renombrada o borrada desde Presupuestos mientras su detalle seguía vivo
-    // en la otra rama del shell. Hay que salir, no quedarse en blanco: el
-    // botón de volver es parte de esta página, así que un hueco vacío deja la
-    // pestaña de Inicio sin salida.
+    // borrada desde Presupuestos mientras su detalle seguía vivo en la otra
+    // rama del shell. Hay que salir, no quedarse en blanco: el botón de volver
+    // es parte de esta página, así que un hueco vacío deja la pestaña de
+    // Inicio sin salida. Renombrarla ya no la hace desaparecer: la ruta guarda
+    // el id.
     if (cat == null) {
       // Después del frame: `go` durante el `build` reentra en el router.
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -49,8 +50,8 @@ class CategoryDetailPage extends ConsumerWidget {
     }
 
     final state = ref.watch(appDataProvider);
-    final catTotal = ref.watch(categoryTotalProvider(categoryName));
-    final expenses = ref.watch(categoryExpensesProvider(categoryName));
+    final catTotal = ref.watch(categoryTotalProvider(categoryId));
+    final expenses = ref.watch(categoryExpensesProvider(categoryId));
     final l10n = context.l10n;
     final dates = context.dates;
     final money = context.money;
@@ -147,7 +148,7 @@ class CategoryDetailPage extends ConsumerWidget {
               _WeekBars(
                 bars: [
                   for (final (i, value)
-                      in ref.watch(categoryWeeksProvider(categoryName)).indexed)
+                      in ref.watch(categoryWeeksProvider(categoryId)).indexed)
                     (l10n.categoryWeekLabel(i + 1), value),
                 ],
                 color: cat.color,

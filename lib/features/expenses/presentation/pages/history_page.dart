@@ -116,7 +116,7 @@ class HistoryPage extends ConsumerWidget {
               // icono y el color salían antes de dos búsquedas separadas.
               HistoryEntry(:final expense) => _ExpenseRow(
                 expense: expense,
-                category: data.categoryOf(expense.categoryName),
+                category: data.categoryById(expense.categoryId),
               ),
             },
           ),

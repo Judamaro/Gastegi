@@ -9,8 +9,8 @@ abstract interface class ExpenseRepository {
   /// de "no hay nada en el periodo que estás mirando".
   Future<int> count();
 
-  /// Gasto por mes y categoría desde [from]: `YYYY-MM` → nombre de la
-  /// categoría → importe.
+  /// Gasto por mes y categoría desde [from]: `YYYY-MM` → id de la categoría →
+  /// importe.
   ///
   /// Desglosado y no en total porque las barras de Inicio se componen con el
   /// color de cada categoría; el total del mes es la suma de su mapa.

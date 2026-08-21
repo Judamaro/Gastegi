@@ -94,7 +94,7 @@ void main() {
     expect(state.total, 150);
     expect(state.prevTotal, 999);
     expect(state.canCompare, isTrue);
-    expect(state.catTotals['Comida'], 150);
+    expect(state.catTotals[categoryId], 150);
     // La última barra de los 6 meses es el mes en curso.
     expect(state.monthTotals.last.$1, DateTime(2026, 8));
     expect(state.monthTotals.last.$2, 150.0);
@@ -110,7 +110,7 @@ void main() {
 
     // Febrero acaba el 28: el día 25 cae en la cuarta semana. Con un corte
     // fijo en el 28 se perdería.
-    expect(container.read(categoryWeeksProvider('Comida')).last, 60);
+    expect(container.read(categoryWeeksProvider(categoryId)).last, 60);
   });
 
   test('las alertas de presupuesto usan el umbral del 90 %', () async {

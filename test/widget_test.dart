@@ -514,19 +514,19 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('renombrar una categoría saca de su detalle', (tester) async {
-    // El detalle vive en la rama de Inicio y se navega por nombre, así que
-    // sobrevive dentro del `IndexedStack` mientras se renombra desde la pestaña
-    // de Presupuesto. Sin la salida, la pestaña se quedaba en blanco y sin
-    // botón de volver, que es parte de esa misma página.
+  testWidgets('renombrar una categoría no saca de su detalle', (tester) async {
+    // El detalle vive en la rama de Inicio y sobrevive dentro del
+    // `IndexedStack` mientras se renombra desde la pestaña de Presupuesto. La
+    // ruta guarda el id, así que el cambio de nombre lo atraviesa y la página
+    // se queda donde estaba, ya con el nombre nuevo.
     final container = await pumpApp(tester);
-    appRouter.go(RouteNames.categoryDetailOf('Ocio'));
+    final ocioId = container.read(appDataProvider).categoryOf('Ocio')!.id;
+    appRouter.go(RouteNames.categoryDetailOf(ocioId));
     await tester.pumpAndSettle();
     expect(find.byType(CategoryDetailPage), findsOneWidget);
 
     await tester.tap(find.text('Presupuesto').last);
     await tester.pumpAndSettle();
-    final ocioId = container.read(appDataProvider).categoryOf('Ocio')!.id;
     await tester.ensureVisible(find.text('Ocio'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Ocio'));
@@ -539,6 +539,46 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Inicio').last);
+    await tester.pumpAndSettle();
+    expect(find.byType(CategoryDetailPage), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(CategoryDetailPage),
+        matching: find.text('Tiempo libre'),
+      ),
+      findsWidgets,
+    );
+
+    appRouter.go(RouteNames.home);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('borrar una categoría sí saca de su detalle', (tester) async {
+    // Lo que el id no puede salvar: la categoría deja de existir. Sin la
+    // salida, la pestaña se quedaba en blanco y sin botón de volver, que es
+    // parte de esa misma página.
+    final container = await pumpApp(tester);
+    final ocioId = container.read(appDataProvider).categoryOf('Ocio')!.id;
+    appRouter.go(RouteNames.categoryDetailOf(ocioId));
+    await tester.pumpAndSettle();
+    expect(find.byType(CategoryDetailPage), findsOneWidget);
+
+    await tester.tap(find.text('Presupuesto').last);
+    await tester.pumpAndSettle();
+    final card = find.widgetWithText(BudgetCard, 'Ocio');
+    await tester.ensureVisible(card);
+    await tester.pumpAndSettle();
+    await tester.tap(find.descendant(of: card, matching: find.text('Ocio')));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(of: card, matching: find.byIcon(AppIcons.x)),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Eliminar'));
+    await tester.pumpAndSettle();
+    expect(container.read(appDataProvider).categoryOf('Ocio'), isNull);
 
     await tester.tap(find.text('Inicio').last);
     await tester.pumpAndSettle();

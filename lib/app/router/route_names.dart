@@ -10,10 +10,13 @@ abstract final class RouteNames {
   static const String addExpense = '/add';
 
   /// Detalle de una categoría, anidado bajo [home].
-  static const String categoryDetail = 'categories/:name';
+  static const String categoryDetail = 'categories/:id';
 
-  /// Ruta al detalle de [name], con el nombre escapado: las categorías las
-  /// nombra el usuario y pueden llevar espacios o barras.
-  static String categoryDetailOf(String name) =>
-      '$home/categories/${Uri.encodeComponent(name)}';
+  /// Ruta al detalle de la categoría [id].
+  ///
+  /// Por id y no por nombre: el nombre lo escribe el usuario, se puede
+  /// renombrar desde Presupuestos, y una ruta abierta en la otra rama del
+  /// shell se quedaría apuntando a algo que ya no existe. El id además es un
+  /// UUID, así que no hace falta escaparlo.
+  static String categoryDetailOf(String id) => '$home/categories/$id';
 }

@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gastegi/app/app.dart';
 import 'package:gastegi/app/router/app_router.dart';
 import 'package:gastegi/app/router/route_names.dart';
+import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:gastegi/features/categories/presentation/pages/budgets_page.dart';
@@ -131,8 +132,18 @@ void main() {
         expect(tester.takeException(), isNull, reason: 'Nuevo gasto');
 
         // El detalle de una categoría solo se alcanza desde la leyenda de la
-        // dona, así que se entra por la ruta.
-        appRouter.go(RouteNames.categoryDetailOf('Transporte'));
+        // dona, así que se entra por la ruta. Con el id, no con el nombre: la
+        // página se autoexpulsa a Inicio si no encuentra la categoría, y una
+        // ruta inventada dejaría este paso comprobando la pantalla equivocada.
+        appRouter.go(
+          RouteNames.categoryDetailOf(
+            container
+                .read(appDataProvider)
+                .categories
+                .firstWhere((c) => c.name == 'Transporte')
+                .id,
+          ),
+        );
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull, reason: 'Detalle de categoría');
 

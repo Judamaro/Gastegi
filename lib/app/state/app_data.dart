@@ -54,7 +54,7 @@ class AppData {
   /// a principios de mes.
   final List<Expense> window;
 
-  /// Gasto por mes y categoría, indexado por `YYYY-MM` y nombre de categoría.
+  /// Gasto por mes y categoría, indexado por `YYYY-MM` e **id** de categoría.
   ///
   /// Desglosado y no en total porque las barras de Inicio se componen con el
   /// color de cada categoría. El total de un mes es la suma de su mapa, y de
@@ -89,10 +89,15 @@ class AppData {
 
   late final double total = expenses.fold(0, (a, e) => a + e.val);
 
+  /// Gasto del mes por categoría, indexado por **id**.
+  ///
+  /// Por id y no por nombre: el nombre lo escribe el usuario y puede cambiar
+  /// bajo los pies de cualquier cosa que lo guarde. El nombre para pintar sale
+  /// de la propia [Category], que se busca con ese id.
   late final Map<String, double> catTotals = () {
-    final totals = {for (final c in categories) c.name: 0.0};
+    final totals = {for (final c in categories) c.id: 0.0};
     for (final e in expenses) {
-      totals[e.categoryName] = (totals[e.categoryName] ?? 0) + e.val;
+      totals[e.categoryId] = (totals[e.categoryId] ?? 0) + e.val;
     }
     return totals;
   }();
@@ -109,17 +114,18 @@ class AppData {
     return totals;
   }();
 
-  /// Lo mismo desglosado por categoría, en el orden de [categories].
+  /// Lo mismo desglosado por categoría, indexado por **id** y en el orden de
+  /// [categories].
   ///
   /// Otra pasada y no un derivado de [dailyTotals]: cada una sale en
   /// O(gastos) por su cuenta, y sumar el desglose costaría
   /// O(categorías × días) para llegar al mismo sitio.
   late final Map<String, List<double>> dailyCatTotals = () {
     final totals = {
-      for (final c in categories) c.name: List.filled(daysInCurrentMonth, 0.0),
+      for (final c in categories) c.id: List.filled(daysInCurrentMonth, 0.0),
     };
     for (final e in expenses) {
-      (totals[e.categoryName] ??= List.filled(
+      (totals[e.categoryId] ??= List.filled(
         daysInCurrentMonth,
         0.0,
       ))[e.day - 1] += e.val;
@@ -130,9 +136,9 @@ class AppData {
   /// Barras de los últimos 6 meses, desglosadas por categoría; el mes en curso
   /// usa el desglose en vivo.
   ///
-  /// Devuelve el mes y el nombre de cada categoría, no etiquetas ni colores:
-  /// poner aquí cualquiera de las dos cosas obligaría a este archivo a conocer
-  /// el idioma del usuario o a importar Flutter.
+  /// Devuelve el mes y el id de cada categoría, no etiquetas ni colores: poner
+  /// aquí cualquiera de las dos cosas obligaría a este archivo a conocer el
+  /// idioma del usuario o a importar Flutter.
   late final List<(DateTime, Map<String, double>)> monthCatTotals = [
     for (var i = monthsBack; i > 0; i--)
       () {
@@ -174,6 +180,15 @@ class AppData {
 
   // ── Búsquedas ──────────────────────────────────────────────────────────
 
+  /// La categoría con ese id, o `null` si ya no existe: puede haberse borrado
+  /// mientras alguien seguía apuntando a ella.
+  Category? categoryById(String id) {
+    for (final c in categories) {
+      if (c.id == id) return c;
+    }
+    return null;
+  }
+
   Category? categoryOf(String name) {
     for (final c in categories) {
       if (c.name == name) return c;
@@ -202,7 +217,7 @@ class AppData {
   late final List<BudgetRow> budgetRows = [
     for (final c in categories)
       () {
-        final spent = catTotals[c.name] ?? 0;
+        final spent = catTotals[c.id] ?? 0;
         final r = c.budget > 0 ? spent / c.budget : 0.0;
         return BudgetRow(
           category: c,

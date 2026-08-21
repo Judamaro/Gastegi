@@ -31,9 +31,7 @@ final GoRouter appRouter = GoRouter(
                 GoRoute(
                   path: RouteNames.categoryDetail,
                   builder: (context, state) => CategoryDetailPage(
-                    categoryName: Uri.decodeComponent(
-                      state.pathParameters['name']!,
-                    ),
+                    categoryId: state.pathParameters['id']!,
                   ),
                 ),
               ],

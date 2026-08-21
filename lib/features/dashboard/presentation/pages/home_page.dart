@@ -19,6 +19,7 @@ import 'package:gastegi/core/widgets/color_dot.dart';
 import 'package:gastegi/core/widgets/kicker.dart';
 import 'package:gastegi/core/widgets/meter_bar.dart';
 import 'package:gastegi/core/widgets/primary_button.dart';
+import 'package:gastegi/features/categories/domain/entities/category.dart';
 import 'package:go_router/go_router.dart';
 
 /// Inicio: total del mes, comparación con el mes anterior, dona por categoría,
@@ -235,8 +236,8 @@ class HomePage extends ConsumerWidget {
                           diameter: donut,
                           segments: [
                             for (final c in state.categories)
-                              if ((catTotals[c.name] ?? 0) > 0)
-                                (c.name, catTotals[c.name]!, c.color),
+                              if ((catTotals[c.id] ?? 0) > 0)
+                                (c, catTotals[c.id]!),
                           ],
                           total: total,
                           centerTitle: money.format(total),
@@ -249,7 +250,7 @@ class HomePage extends ConsumerWidget {
                               for (final c in state.categories)
                                 InkWell(
                                   onTap: () => context.go(
-                                    RouteNames.categoryDetailOf(c.name),
+                                    RouteNames.categoryDetailOf(c.id),
                                   ),
                                   child: Row(
                                     spacing: 7.r,
@@ -273,9 +274,7 @@ class HomePage extends ConsumerWidget {
                                           fit: BoxFit.scaleDown,
                                           alignment: Alignment.centerRight,
                                           child: Text(
-                                            money.format(
-                                              catTotals[c.name] ?? 0,
-                                            ),
+                                            money.format(catTotals[c.id] ?? 0),
                                             maxLines: 1,
                                             style: TextStyle(
                                               fontSize: AppFontSize.label,
@@ -293,7 +292,7 @@ class HomePage extends ConsumerWidget {
                                           minWidth: 30.r,
                                         ),
                                         child: Text(
-                                          '${percentOf(catTotals[c.name] ?? 0, total)}%',
+                                          '${percentOf(catTotals[c.id] ?? 0, total)}%',
                                           textAlign: TextAlign.right,
                                           style: TextStyle(
                                             fontSize: AppFontSize.label,
@@ -322,8 +321,8 @@ class HomePage extends ConsumerWidget {
                     // Mismo orden y mismos colores que la leyenda de la dona y
                     // que las barras de los meses.
                     for (final c in state.categories)
-                      if ((catTotals[c.name] ?? 0) > 0)
-                        (state.dailyCatTotals[c.name]!, c.color),
+                      if ((catTotals[c.id] ?? 0) > 0)
+                        (state.dailyCatTotals[c.id]!, c.color),
                   ],
                   monthAbbr: monthAbbr,
                 ),
@@ -357,8 +356,8 @@ class HomePage extends ConsumerWidget {
                         // siguiente.
                         [
                           for (final c in state.categories)
-                            if ((porCategoria[c.name] ?? 0) > 0)
-                              (porCategoria[c.name]!, c.color),
+                            if ((porCategoria[c.id] ?? 0) > 0)
+                              (porCategoria[c.id]!, c.color),
                         ],
                       ),
                   ],
@@ -409,8 +408,12 @@ class _CategoryDonut extends StatefulWidget {
   /// quien sabe lo que le deja la leyenda.
   final double diameter;
 
-  /// Ternas (categoría, importe, color); solo las que tienen gasto.
-  final List<(String, double, Color)> segments;
+  /// Pares (categoría, importe); solo las que tienen gasto.
+  ///
+  /// Viaja la entidad entera y no sus tres campos sueltos porque la dona los
+  /// necesita para tres cosas distintas: el id para navegar, el nombre para el
+  /// centro mientras se toca, y el color para el sector.
+  final List<(Category, double)> segments;
   final double total;
   final String centerTitle;
   final String centerSubtitle;
@@ -484,7 +487,7 @@ class _CategoryDonutState extends State<_CategoryDonut> {
     final subtitle = selected == null
         ? widget.centerSubtitle
         : context.l10n.chartCategoryShare(
-            selected.$1,
+            selected.$1.name,
             percentOf(selected.$2, widget.total),
           );
 
@@ -514,7 +517,9 @@ class _CategoryDonutState extends State<_CategoryDonut> {
                   // su fila en la leyenda.
                   if (event is FlTapUpEvent && valido) {
                     setState(() => _touched = null);
-                    context.go(RouteNames.categoryDetailOf(segments[index].$1));
+                    context.go(
+                      RouteNames.categoryDetailOf(segments[index].$1.id),
+                    );
                     return;
                   }
                   setState(
@@ -525,15 +530,15 @@ class _CategoryDonutState extends State<_CategoryDonut> {
                 },
               ),
               sections: [
-                for (final (i, (_, amount, color)) in segments.indexed)
+                for (final (i, (categoria, amount)) in segments.indexed)
                   PieChartSectionData(
                     value: amount,
                     // El sector tocado conserva su color y los demás se
                     // apagan. Crecer sería el gesto habitual, pero el borde
                     // exterior está en el borde de la caja y se recortaría.
                     color: touched == null || touched == i
-                        ? color
-                        : color.withValues(alpha: 0.35),
+                        ? categoria.color
+                        : categoria.color.withValues(alpha: 0.35),
                     radius: _entrado
                         ? diameter * _CategoryDonut._strokeRatio
                         : 0,
