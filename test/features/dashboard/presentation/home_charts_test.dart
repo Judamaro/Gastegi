@@ -134,6 +134,153 @@ void main() {
     );
   });
 
+  testWidgets('cada barra se compone con los colores de sus categorías', (
+    tester,
+  ) async {
+    final cats = await db.query('categories');
+    final accountId = await AccountRepositoryImpl(db).create(
+      name: 'Efectivo',
+      kind: 'Dinero en mano',
+      iconKey: 'money',
+      initialBalance: 10000,
+    );
+    // Dos categorías en el mes en curso y una sola el mes pasado: así se
+    // comprueba que el desglose sale de cada mes y no del mes en curso.
+    await ExpenseRepositoryImpl(db).create(
+      date: testNow,
+      description: 'A',
+      categoryId: cats[0]['id']! as String,
+      accountId: accountId,
+      amount: 100,
+    );
+    await ExpenseRepositoryImpl(db).create(
+      date: testNow,
+      description: 'B',
+      categoryId: cats[1]['id']! as String,
+      accountId: accountId,
+      amount: 60,
+    );
+    await ExpenseRepositoryImpl(db).create(
+      date: DateTime(testNow.year, testNow.month - 1, 10),
+      description: 'C',
+      categoryId: cats[1]['id']! as String,
+      accountId: accountId,
+      amount: 90,
+    );
+
+    tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    tester.platformDispatcher.localesTestValue = const [Locale('es')];
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+
+    final container = await buildLoadedContainer(db);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const GastegiApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final grupos = tester.widget<BarChart>(findMonthBars()).data.barGroups;
+    Color colorDe(int indice) => Color(cats[indice]['color']! as int);
+
+    // El mes en curso: dos tramos, en el orden de `state.categories`, que es el
+    // mismo de la leyenda de la dona.
+    final actual = grupos.last.barRods.single.rodStackItems;
+    expect(actual.map((t) => t.color), [colorDe(0), colorDe(1)]);
+    // Y proporcionales: 100 contra 60 sobre el alto total de la barra.
+    final alto = grupos.last.barRods.single.toY;
+    expect(actual.first.toY, closeTo(alto * 100 / 160, 0.001));
+    expect(actual.last.toY, closeTo(alto, 0.001));
+
+    // El mes anterior solo tuvo gasto de la segunda categoría.
+    final anterior = grupos[grupos.length - 2].barRods.single.rodStackItems;
+    expect(anterior.map((t) => t.color), [colorDe(1)]);
+
+    // Y los meses sin gasto no tienen tramos: los tapa el color de reposo.
+    expect(grupos.first.barRods.single.rodStackItems, isEmpty);
+  });
+
+  testWidgets('la tendencia diaria apila una banda por categoría', (
+    tester,
+  ) async {
+    final cats = await db.query('categories');
+    final accountId = await AccountRepositoryImpl(db).create(
+      name: 'Efectivo',
+      kind: 'Dinero en mano',
+      iconKey: 'money',
+      initialBalance: 10000,
+    );
+    // Dos categorías, y una de ellas dos días distintos.
+    await ExpenseRepositoryImpl(db).create(
+      date: testNow,
+      description: 'A',
+      categoryId: cats[0]['id']! as String,
+      accountId: accountId,
+      amount: 100,
+    );
+    await ExpenseRepositoryImpl(db).create(
+      date: testNow,
+      description: 'B',
+      categoryId: cats[1]['id']! as String,
+      accountId: accountId,
+      amount: 60,
+    );
+    await ExpenseRepositoryImpl(db).create(
+      date: DateTime(testNow.year, testNow.month, 3),
+      description: 'C',
+      categoryId: cats[1]['id']! as String,
+      accountId: accountId,
+      amount: 25,
+    );
+
+    tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    tester.platformDispatcher.localesTestValue = const [Locale('es')];
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+
+    final container = await buildLoadedContainer(db);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const GastegiApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final datos = tester.widget<LineChart>(find.byType(LineChart)).data;
+    Color colorDe(int indice) => Color(cats[indice]['color']! as int);
+
+    // Una línea por categoría con gasto, en el orden de la leyenda.
+    expect(datos.lineBarsData.map((l) => l.color), [colorDe(0), colorDe(1)]);
+    // Y una banda entre cada dos: la de abajo se rellena contra el eje.
+    expect(datos.lineBarsData.first.belowBarData.show, isTrue);
+    expect(datos.lineBarsData.last.belowBarData.show, isFalse);
+    expect(datos.betweenBarsData, hasLength(1));
+    expect(datos.betweenBarsData.single.fromIndex, 0);
+    expect(datos.betweenBarsData.single.toIndex, 1);
+
+    // Las líneas van acumuladas: la de arriba es el total de cada día. El
+    // día 12 son 100 + 60 y el día 3 solo los 25 de la segunda categoría.
+    final abajo = datos.lineBarsData.first.spots;
+    final arriba = datos.lineBarsData.last.spots;
+    expect(abajo[11].y, 100);
+    expect(arriba[11].y, 160);
+    expect(abajo[2].y, 0);
+    expect(arriba[2].y, 25);
+    // Nunca puede cruzarse una banda con la de debajo.
+    for (var d = 0; d < abajo.length; d++) {
+      expect(
+        arriba[d].y,
+        greaterThanOrEqualTo(abajo[d].y),
+        reason: 'el acumulado baja en el día ${d + 1}',
+      );
+    }
+  });
+
   testWidgets('tocar un sector de la dona abre el detalle', (tester) async {
     final categoria = await pumpHome(tester);
 

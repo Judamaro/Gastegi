@@ -317,7 +317,16 @@ class HomePage extends ConsumerWidget {
               gap: 8,
               children: [
                 Kicker(l10n.homeDailyTrend),
-                _DailyTrend(values: state.dailyTotals, monthAbbr: monthAbbr),
+                _DailyTrend(
+                  series: [
+                    // Mismo orden y mismos colores que la leyenda de la dona y
+                    // que las barras de los meses.
+                    for (final c in state.categories)
+                      if ((catTotals[c.name] ?? 0) > 0)
+                        (state.dailyCatTotals[c.name]!, c.color),
+                  ],
+                  monthAbbr: monthAbbr,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -339,14 +348,18 @@ class HomePage extends ConsumerWidget {
                 Kicker(l10n.homeLastSixMonths),
                 _MonthBars(
                   bars: [
-                    for (var i = 0; i < bars.length; i++)
+                    for (final (mes, porCategoria) in state.monthCatTotals)
                       (
-                        dates.monthAbbr(bars[i].$1),
-                        bars[i].$2,
-                        // La última barra es siempre el mes en curso.
-                        i == bars.length - 1
-                            ? AppColors.accent
-                            : AppColors.neutral800,
+                        dates.monthAbbr(mes),
+                        // El orden de las categorías es el mismo en los seis
+                        // meses y el mismo que en la leyenda de la dona: es lo
+                        // que deja seguir un color de una barra a la
+                        // siguiente.
+                        [
+                          for (final c in state.categories)
+                            if ((porCategoria[c.name] ?? 0) > 0)
+                              (porCategoria[c.name]!, c.color),
+                        ],
                       ),
                   ],
                 ),
@@ -570,7 +583,13 @@ class _CategoryDonutState extends State<_CategoryDonut> {
   }
 }
 
-/// Últimos seis meses, una barra por mes.
+/// Últimos seis meses, una barra por mes compuesta por categorías.
+///
+/// Cada barra se apila con el color de cada categoría, el mismo que usa la
+/// dona y su leyenda, para que las dos gráficas se lean con el mismo código de
+/// color. `fl_chart` recorta el `RRect` de la barra entera contra la banda de
+/// cada tramo, así que el redondeo de arriba y abajo se conserva y solo lo
+/// tocan el primer y el último tramo.
 ///
 /// Las proporciones son las del diseño —112 dp de alto, 78 para la barra más
 /// alta y 64 % del hueco de ancho—, pero `fl_chart` las pide en píxeles del
@@ -579,8 +598,9 @@ class _CategoryDonutState extends State<_CategoryDonut> {
 class _MonthBars extends StatefulWidget {
   const _MonthBars({required this.bars});
 
-  /// Ternas (etiqueta, importe, color).
-  final List<(String, double, Color)> bars;
+  /// Pares (etiqueta del mes, tramos). Cada tramo es un par (importe, color) y
+  /// solo vienen las categorías con gasto ese mes.
+  final List<(String, List<(double, Color)>)> bars;
 
   @override
   State<_MonthBars> createState() => _MonthBarsState();
@@ -629,8 +649,12 @@ class _MonthBarsState extends State<_MonthBars> {
     final plot = height - labelHeight;
     // La barra más alta nunca puede invadir la banda de la etiqueta.
     final maxBar = math.min(78.r, plot);
+    final totales = [
+      for (final (_, tramos) in widget.bars)
+        tramos.fold(0.0, (a, t) => a + t.$1),
+    ];
     // Suelo de 1: sin gastos, el eje se dividiría entre cero.
-    final max = widget.bars.fold(1.0, (m, b) => math.max(m, b.$2));
+    final max = totales.fold(1.0, math.max);
     // El eje se estira para que el importe mayor caiga justo en `maxBar`.
     final maxY = max * plot / maxBar;
     // `fl_chart` no dibuja una barra de valor cero y estira a `2·radio` la que
@@ -686,7 +710,7 @@ class _MonthBarsState extends State<_MonthBars> {
                       // El importe del globo es el de verdad, no el del suelo.
                       l10n.chartTooltip(
                         widget.bars[groupIndex].$1,
-                        money.format(widget.bars[groupIndex].$2),
+                        money.format(totales[groupIndex]),
                       ),
                       TextStyle(
                         fontSize: AppFontSize.caption,
@@ -697,21 +721,44 @@ class _MonthBarsState extends State<_MonthBars> {
             ),
             barGroups: [
               for (var i = 0; i < widget.bars.length; i++)
-                BarChartGroupData(
-                  x: i,
-                  barRods: [
-                    BarChartRodData(
-                      toY: _entrado
-                          ? math.max(minBar, widget.bars[i].$2)
-                          : minBar,
-                      color: widget.bars[i].$3,
-                      width: caja.maxWidth / widget.bars.length * 0.64,
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(AppRadius.sm),
+                () {
+                  final alto = _entrado ? math.max(minBar, totales[i]) : minBar;
+                  // Los tramos se apilan en unidades del eje, escalados al
+                  // alto que acaba teniendo la barra: cuando el suelo o la
+                  // entrada la encogen, el reparto se encoge con ella en vez
+                  // de desbordarla.
+                  final escala = totales[i] > 0 ? alto / totales[i] : 0.0;
+                  var acumulado = 0.0;
+
+                  return BarChartGroupData(
+                    x: i,
+                    barRods: [
+                      BarChartRodData(
+                        toY: alto,
+                        // Se ve solo cuando el mes no tiene ni un gasto y la
+                        // barra es el suelo: entonces no hay ningún tramo que
+                        // la tape.
+                        color: AppColors.neutral800,
+                        width: caja.maxWidth / widget.bars.length * 0.64,
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(AppRadius.sm),
+                        ),
+                        rodStackItems: [
+                          for (final (importe, color) in widget.bars[i].$2)
+                            () {
+                              final desde = acumulado;
+                              acumulado += importe * escala;
+                              return BarChartRodStackItem(
+                                desde,
+                                acumulado,
+                                color,
+                              );
+                            }(),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  );
+                }(),
             ],
           ),
           duration: const Duration(milliseconds: 220),
@@ -722,7 +769,13 @@ class _MonthBarsState extends State<_MonthBars> {
   }
 }
 
-/// Tendencia diaria: la polilínea sobre su área rellena.
+/// Tendencia diaria: áreas apiladas, una banda por categoría.
+///
+/// Cada línea es el **acumulado** de las categorías anteriores más la suya, así
+/// que la banda entre dos líneas consecutivas es lo que gastó una sola y la de
+/// arriba del todo es el total del día. Es lo que pide `betweenBarsData`, que
+/// rellena entre dos líneas y no entre una línea y el eje; la primera, que no
+/// tiene ninguna debajo, se rellena con su `belowBarData` contra el cero.
 ///
 /// Las proporciones son las del diseño de 90 dp de alto —línea base a 84,
 /// amplitud 72— y de ahí salen los límites del eje, no de los datos. Despejar
@@ -730,9 +783,19 @@ class _MonthBarsState extends State<_MonthBars> {
 /// mantiene el lienzo a todo el alto: `fl_chart` reparte los valores sobre lo
 /// que le queda, así que cualquier margen se lo come a la línea.
 class _DailyTrend extends StatefulWidget {
-  const _DailyTrend({required this.values, required this.monthAbbr});
+  const _DailyTrend({required this.series, required this.monthAbbr});
 
-  final List<double> values;
+  /// Opacidad del relleno de cada banda.
+  ///
+  /// Los colores de categoría son de luminosidad alta a propósito —están
+  /// pensados para porciones de dona de pocos píxeles— y a plena saturación
+  /// ocupando media tarjeta gritan. El trazo sí va al color entero: es lo que
+  /// separa una banda de la siguiente.
+  static const double _areaAlpha = 0.45;
+
+  /// Una serie por categoría con gasto, en el orden de la leyenda: sus
+  /// importes por día (índice 0 = día 1) y su color.
+  final List<(List<double>, Color)> series;
   final String monthAbbr;
 
   @override
@@ -759,14 +822,25 @@ class _DailyTrendState extends State<_DailyTrend> {
   @override
   Widget build(BuildContext context) {
     final height = 90.r;
+    final dias = widget.series.isEmpty ? 0 : widget.series.first.$1.length;
     // Con un solo punto no hay recta que trazar y el reparto horizontal
     // dividiría entre cero.
-    if (widget.values.length < 2) return SizedBox(height: height);
+    if (dias < 2) return SizedBox(height: height);
 
     final l10n = context.l10n;
     final money = context.money;
-    // Suelo de 1: un mes recién empezado son todo ceros y el eje saldría plano.
-    final max = widget.values.fold(1.0, math.max);
+
+    // Acumulado por categoría: la serie k lleva la suma de las k+1 primeras.
+    final acumulado = <List<double>>[];
+    for (final (valores, _) in widget.series) {
+      final previa = acumulado.isEmpty ? null : acumulado.last;
+      acumulado.add([
+        for (var d = 0; d < dias; d++) (previa?[d] ?? 0) + valores[d],
+      ]);
+    }
+    // La última acumula todas: es el total de cada día, y de ella sale el eje.
+    // Suelo de 1: un mes recién empezado son todo ceros y saldría plano.
+    final max = acumulado.last.fold(1.0, math.max);
     // El trazo hace también de margen lateral: arrancando en el borde, la
     // mitad de su grosor se cortaría contra la caja.
     final stroke = height / 45;
@@ -778,7 +852,7 @@ class _DailyTrendState extends State<_DailyTrend> {
         child: LineChart(
           LineChartData(
             minX: 0,
-            maxX: (widget.values.length - 1).toDouble(),
+            maxX: (dias - 1).toDouble(),
             // De 84/90 para la base y 72/90 de amplitud sale
             // `maxY - minY = 1.25·max` con `maxY` en los 7/6.
             minY: -max / 12,
@@ -795,39 +869,67 @@ class _DailyTrendState extends State<_DailyTrend> {
                 // globo de un pico alto se saldría por arriba.
                 fitInsideHorizontally: true,
                 fitInsideVertically: true,
+                // Un globo y no uno por banda: la lista tiene que medir lo
+                // mismo que la de puntos tocados, así que las demás van a
+                // `null`. La de arriba acumula todas las categorías, o sea que
+                // su `y` ya es el total de ese día.
                 getTooltipItems: (spots) => [
                   for (final spot in spots)
-                    LineTooltipItem(
-                      l10n.chartTooltip(
-                        // El índice 0 es el día 1.
-                        l10n.homeAxisDay(spot.x.round() + 1, widget.monthAbbr),
-                        money.format(spot.y),
-                      ),
-                      TextStyle(
-                        fontSize: AppFontSize.caption,
-                        color: AppColors.text,
-                      ),
-                    ),
+                    if (spot.barIndex == acumulado.length - 1)
+                      LineTooltipItem(
+                        l10n.chartTooltip(
+                          // El índice 0 es el día 1.
+                          l10n.homeAxisDay(
+                            spot.x.round() + 1,
+                            widget.monthAbbr,
+                          ),
+                          money.format(spot.y),
+                        ),
+                        TextStyle(
+                          fontSize: AppFontSize.caption,
+                          color: AppColors.text,
+                        ),
+                      )
+                    else
+                      null,
                 ],
               ),
             ),
             lineBarsData: [
-              LineChartBarData(
-                spots: [
-                  for (var i = 0; i < widget.values.length; i++)
-                    FlSpot(i.toDouble(), _entrado ? widget.values[i] : 0),
-                ],
-                color: AppColors.accent,
-                barWidth: stroke,
-                dotData: const FlDotData(show: false),
-                belowBarData: BarAreaData(
-                  show: true,
-                  color: AppColors.accent900.withValues(alpha: 0.6),
-                  // El relleno baja hasta el cero del eje, no hasta el borde:
-                  // por debajo de la línea base todavía queda caja.
-                  applyCutOffY: true,
+              for (final (i, serie) in acumulado.indexed)
+                LineChartBarData(
+                  spots: [
+                    for (var d = 0; d < dias; d++)
+                      FlSpot(d.toDouble(), _entrado ? serie[d] : 0),
+                  ],
+                  color: widget.series[i].$2,
+                  barWidth: stroke,
+                  dotData: const FlDotData(show: false),
+                  // Solo la de abajo rellena contra el eje; de ahí para arriba
+                  // lo hacen las bandas de `betweenBarsData`.
+                  belowBarData: i == 0
+                      ? BarAreaData(
+                          show: true,
+                          color: widget.series[i].$2.withValues(
+                            alpha: _DailyTrend._areaAlpha,
+                          ),
+                          // El relleno baja hasta el cero del eje, no hasta el
+                          // borde: por debajo de la línea base todavía queda
+                          // caja.
+                          applyCutOffY: true,
+                        )
+                      : null,
                 ),
-              ),
+            ],
+            betweenBarsData: [
+              for (var i = 1; i < acumulado.length; i++)
+                BetweenBarsData(
+                  fromIndex: i - 1,
+                  toIndex: i,
+                  color: widget.series[i].$2.withValues(
+                    alpha: _DailyTrend._areaAlpha,
+                  ),
+                ),
             ],
           ),
           duration: const Duration(milliseconds: 220),

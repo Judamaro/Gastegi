@@ -47,22 +47,34 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       ) ??
       0;
 
-  /// Total gastado por mes desde [from], indexado por `YYYY-MM`.
+  /// Gasto por mes y categoría desde [from].
+  ///
+  /// La categoría sale del `JOIN`, igual que en [since]: así el desglose de un
+  /// mes pasado se renombra solo cuando el usuario cambia el nombre de una
+  /// categoría, sin tocar ninguna fila de `expenses`.
   @override
-  Future<Map<String, double>> monthlyTotals({required DateTime from}) async {
+  Future<Map<String, Map<String, double>>> monthlyTotalsByCategory({
+    required DateTime from,
+  }) async {
     final rows = await _db.rawQuery(
       '''
-      SELECT substr(spent_on, 1, 7) AS ym, SUM(amount) AS total
-      FROM expenses
-      WHERE spent_on >= ? AND deleted_at IS NULL
-      GROUP BY ym
+      SELECT substr(e.spent_on, 1, 7) AS ym, c.name AS category,
+             SUM(e.amount) AS total
+      FROM expenses e
+      JOIN categories c ON c.id = e.category_id
+      WHERE e.spent_on >= ? AND e.deleted_at IS NULL
+      GROUP BY ym, c.name
       ''',
       [dayKey(from)],
     );
-    return {
-      for (final r in rows)
-        r['ym'] as String: (r['total'] as num?)?.toDouble() ?? 0,
-    };
+    final sums = <String, Map<String, double>>{};
+    for (final r in rows) {
+      sums.putIfAbsent(
+        r['ym']! as String,
+        () => <String, double>{},
+      )[r['category']! as String] = (r['total'] as num?)?.toDouble() ?? 0;
+    }
+    return sums;
   }
 
   /// Inserta el gasto y recalcula saldos en una sola transacción: si algo

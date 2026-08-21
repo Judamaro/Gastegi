@@ -169,6 +169,14 @@ paquete pide píxeles del eje, no fracciones—, así que la conversión la hace
 > en radianes. Y no hay animación de entrada: el paquete solo anima entre dos
 > fotos distintas, así que la de arranque es el `_entrado` de cada `State`.
 
+**Las tres gráficas de Inicio hablan el mismo código de color**: el de
+`entity_visuals.dart`, en el orden de `AppData.categories`, que es el de la
+leyenda de la dona. Las barras de los meses se apilan con `rodStackItems` y la
+tendencia diaria con `betweenBarsData`, que rellena **entre dos líneas**: por
+eso sus series van acumuladas —la línea k es la suma de las k+1 primeras
+categorías— y la de arriba acaba siendo el total del día. Si alguna vez dejan
+de compartir orden, las tres gráficas dejan de leerse juntas sin que nada falle.
+
 **`fontSizeResolver: FontSizeResolvers.radius` y `splitScreenMode: true` en
 `GastegiApp` son estructurales.** El primero porque `minTextAdapt` es
 configuración muerta —`setSp` delega en el resolver y nunca alcanza la rama que

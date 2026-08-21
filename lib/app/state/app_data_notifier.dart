@@ -38,7 +38,7 @@ class AppDataNotifier extends Notifier<AppData> {
       categories: await categoryRepo.all(),
       accounts: await accountRepo.all(),
       window: await expenseRepo.since(windowStart),
-      monthlySums: await expenseRepo.monthlyTotals(
+      monthlySums: await expenseRepo.monthlyTotalsByCategory(
         from: addMonths(monthAnchor, -AppData.monthsBack),
       ),
       expenseCount: await expenseRepo.count(),

@@ -54,8 +54,12 @@ class AppData {
   /// a principios de mes.
   final List<Expense> window;
 
-  /// Total gastado por mes, indexado por `YYYY-MM`.
-  final Map<String, double> monthlySums;
+  /// Gasto por mes y categoría, indexado por `YYYY-MM` y nombre de categoría.
+  ///
+  /// Desglosado y no en total porque las barras de Inicio se componen con el
+  /// color de cada categoría. El total de un mes es la suma de su mapa, y de
+  /// ahí salen [monthTotals] y [prevTotal].
+  final Map<String, Map<String, double>> monthlySums;
 
   /// Gastos registrados en total, en cualquier fecha.
   final int expenseCount;
@@ -105,21 +109,49 @@ class AppData {
     return totals;
   }();
 
-  /// Barras de los últimos 6 meses; el mes en curso usa el total en vivo.
+  /// Lo mismo desglosado por categoría, en el orden de [categories].
   ///
-  /// Devuelve el mes, no su nombre: poner aquí una etiqueta obligaría a este
-  /// archivo a conocer el idioma del usuario.
-  late final List<(DateTime, double)> monthTotals = [
+  /// Otra pasada y no un derivado de [dailyTotals]: cada una sale en
+  /// O(gastos) por su cuenta, y sumar el desglose costaría
+  /// O(categorías × días) para llegar al mismo sitio.
+  late final Map<String, List<double>> dailyCatTotals = () {
+    final totals = {
+      for (final c in categories) c.name: List.filled(daysInCurrentMonth, 0.0),
+    };
+    for (final e in expenses) {
+      (totals[e.categoryName] ??= List.filled(
+        daysInCurrentMonth,
+        0.0,
+      ))[e.day - 1] += e.val;
+    }
+    return totals;
+  }();
+
+  /// Barras de los últimos 6 meses, desglosadas por categoría; el mes en curso
+  /// usa el desglose en vivo.
+  ///
+  /// Devuelve el mes y el nombre de cada categoría, no etiquetas ni colores:
+  /// poner aquí cualquiera de las dos cosas obligaría a este archivo a conocer
+  /// el idioma del usuario o a importar Flutter.
+  late final List<(DateTime, Map<String, double>)> monthCatTotals = [
     for (var i = monthsBack; i > 0; i--)
       () {
         final m = addMonths(monthAnchor, -i);
-        return (m, monthlySums[monthKey(m)] ?? 0.0);
+        return (m, monthlySums[monthKey(m)] ?? const <String, double>{});
       }(),
-    (monthAnchor, total),
+    (monthAnchor, catTotals),
+  ];
+
+  /// El total de cada uno de esos meses.
+  late final List<(DateTime, double)> monthTotals = [
+    for (final (m, cats) in monthCatTotals) (m, _sum(cats)),
   ];
 
   /// Total del mes anterior, para la comparación del inicio.
-  double get prevTotal => monthlySums[monthKey(prevMonthAnchor)] ?? 0;
+  double get prevTotal => _sum(monthlySums[monthKey(prevMonthAnchor)]);
+
+  static double _sum(Map<String, double>? amounts) =>
+      amounts == null ? 0 : amounts.values.fold(0.0, (a, v) => a + v);
 
   /// Vacío cuando no hay mes anterior con el que comparar.
   String get deltaLabel {
