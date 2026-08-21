@@ -136,7 +136,7 @@ repetido vive en `AppSpacing`/`AppRadius` y `AppFontSize`/`AppTextStyles`
 queda en la banda 0.82–1.21 en todo el catálogo de pantallas.
 
 **`watchScreen(context)` es la primera línea del `build` de cada pantalla**
-(`lib/core/utils/screen.dart`), aunque no uses lo que devuelve.
+(`lib/core/utils/screen.dart`). No devuelve nada: se llama por el efecto.
 
 > Por qué: `.r` y `.sp` se resuelven durante el `build` y quedan congelados
 > dentro del widget. `StatefulNavigationShellState` guarda el `Navigator` de
