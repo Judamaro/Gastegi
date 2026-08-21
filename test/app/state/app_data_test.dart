@@ -57,7 +57,7 @@ void main() {
       expect(state.cmpNowFrac, 0);
       expect(state.cmpPrevFrac, 0);
       expect(state.canCompare, isFalse);
-      expect(state.deltaLabel, '');
+      expect(state.deltaFraction, 0);
       expect(state.hasNoExpensesAtAll, isTrue);
 
       // Todas las categorías a 0 y sin alertas, no "excedido" por dividir mal.
@@ -99,6 +99,9 @@ void main() {
     expect(state.monthTotals.last.$1, DateTime(2026, 8));
     expect(state.monthTotals.last.$2, 150.0);
     expect(state.monthTotals, hasLength(6));
+    // La variación sale en tanto por uno y con signo, sin formatear: 150
+    // frente a 999 es una caída del 85 %.
+    expect(state.deltaFraction, closeTo(-0.8498, 0.0001));
   });
 
   test('los cortes semanales llegan al último día real del mes', () async {

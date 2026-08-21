@@ -3,7 +3,7 @@ import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
 
-/// Importes escritos para el usuario.
+/// Importes y sus variaciones, escritos para el usuario.
 ///
 /// Siempre en la moneda de [AppConfig.currencyCode], con el patrón del idioma
 /// activo: `1.234,56 €` en español y `€1,234.56` en inglés. Separado de
@@ -38,6 +38,18 @@ class MoneyLabels {
   /// idiomas sin saber de qué lado cae el símbolo.
   String formatSigned(double n) =>
       n < 0 ? '$minusSign${format(-n)}' : format(n);
+
+  /// Una variación en tanto por uno, con signo explícito: `+12,5 %` en español
+  /// y `+12.5%` en inglés.
+  ///
+  /// El `+` va siempre porque sin él la cifra se leería como el peso del mes
+  /// sobre algo, y no como lo que ha subido o bajado. El menos es el
+  /// tipográfico, el mismo de [formatSigned].
+  ///
+  /// Ojo con el espacio: en español el patrón mete uno **duro** (U+00A0) antes
+  /// del `%`, igual que hace con el símbolo de la moneda.
+  String signedPercent(double fraction) =>
+      '${fraction < 0 ? minusSign : '+'}${_f.percent.format(fraction.abs())}';
 
   /// Separador decimal del idioma: lo que el usuario teclea y [canonical]
   /// traduce a punto.
@@ -120,7 +132,7 @@ class MoneyLabels {
   }
 }
 
-/// Los tres formatos que hacen falta por idioma, calculados una sola vez.
+/// Los formatos que hacen falta por idioma, calculados una sola vez.
 class _MoneyFormats {
   _MoneyFormats(String locale)
     : currency = NumberFormat.simpleCurrency(
@@ -128,7 +140,11 @@ class _MoneyFormats {
         name: AppConfig.currencyCode,
         decimalDigits: maxFractionDigits,
       ),
-      grouping = NumberFormat.decimalPattern(locale) {
+      grouping = NumberFormat.decimalPattern(locale),
+      percent = NumberFormat.decimalPercentPattern(
+        locale: locale,
+        decimalDigits: 1,
+      ) {
     // El símbolo y su sitio salen de partir un cero formateado por donde está
     // la cifra: detrás y con espacio duro en español, delante y pegado en
     // inglés. Deducirlo evita escribir el símbolo —o el espacio duro— a mano.
@@ -144,6 +160,7 @@ class _MoneyFormats {
 
   final NumberFormat currency;
   final NumberFormat grouping;
+  final NumberFormat percent;
   late final String prefix;
   late final String suffix;
 }

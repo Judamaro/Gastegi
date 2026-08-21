@@ -159,14 +159,17 @@ class AppData {
   static double _sum(Map<String, double>? amounts) =>
       amounts == null ? 0 : amounts.values.fold(0.0, (a, v) => a + v);
 
-  /// Vacío cuando no hay mes anterior con el que comparar.
-  String get deltaLabel {
-    if (prevTotal <= 0) return '';
-    final pctChange = ((total - prevTotal).abs() / prevTotal * 100)
-        .toStringAsFixed(1)
-        .replaceAll('.', ',');
-    return '${total < prevTotal ? '−' : '+'}$pctChange%';
-  }
+  /// Variación respecto del mes anterior, en tanto por uno y **con signo**.
+  ///
+  /// Un número y no una etiqueta: escribir aquí `+12,5%` es texto para el
+  /// usuario fuera de `lib/l10n/`, y además con la coma española clavada. Lo
+  /// formatea la página con el patrón del idioma activo.
+  ///
+  /// 0 cuando no hay mes anterior, por lo mismo que [_cmpFrac]: las divisiones
+  /// van defendidas. Quien pinta ya lo filtra con [canCompare], que es lo que
+  /// decide si la comparación se enseña siquiera.
+  double get deltaFraction =>
+      prevTotal <= 0 ? 0 : (total - prevTotal) / prevTotal;
 
   bool get canCompare => prevTotal > 0;
 

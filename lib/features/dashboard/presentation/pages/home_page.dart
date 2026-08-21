@@ -126,7 +126,7 @@ class HomePage extends ConsumerWidget {
                         Flexible(
                           child: Text(
                             l10n.homeDeltaVsPrevMonth(
-                              state.deltaLabel,
+                              money.signedPercent(state.deltaFraction),
                               prevMonthName.toLowerCase(),
                             ),
                             overflow: TextOverflow.ellipsis,

@@ -22,6 +22,26 @@ void main() {
     expect(en.format(1234.56), '€1,234.56');
   });
 
+  test('signedPercent usa el patrón del idioma, no la coma española', () {
+    // Lo que se rompía: `AppData` fabricaba la etiqueta con
+    // `toStringAsFixed(1).replaceAll('.', ',')`, así que en inglés salía
+    // «+12,5%». El espacio de la versión española es duro (U+00A0).
+    expect(es.signedPercent(0.125), '+12,5\u00A0%');
+    expect(en.signedPercent(0.125), '+12.5%');
+  });
+
+  test('signedPercent lleva el menos tipográfico, no el guion', () {
+    expect(es.signedPercent(-0.125).startsWith(minusSign), isTrue);
+    expect(es.signedPercent(-0.125).startsWith('-'), isFalse);
+    expect(en.signedPercent(-0.125), '${minusSign}12.5%');
+  });
+
+  test('signedPercent marca el cero con signo, no lo deja desnudo', () {
+    // Sin el `+`, la cifra se leería como el peso del mes sobre algo en vez de
+    // como lo que ha variado.
+    expect(es.signedPercent(0).startsWith('+'), isTrue);
+  });
+
   test('los decimales están siempre, aunque el importe sea redondo', () {
     expect(es.format(1234.5), '1.234,50 €');
     expect(es.format(480), '480,00 €');

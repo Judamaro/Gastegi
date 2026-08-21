@@ -115,6 +115,56 @@ void main() {
     });
   }
 
+  testWidgets('con el dispositivo en inglés la variación no lleva coma', (
+    tester,
+  ) async {
+    // El único test del repo que arranca la app en inglés, y existe por un
+    // motivo concreto: `AppData` fabricaba la etiqueta con
+    // `toStringAsFixed(1).replaceAll('.', ',')`, así que Inicio pintaba
+    // «+12,5% vs august». Ninguna aserción de las demás lo veía, porque todas
+    // fijan el idioma en español.
+    final accountId = await AccountRepositoryImpl(db).create(
+      name: 'Cash',
+      kind: 'On hand',
+      iconKey: 'money',
+      initialBalance: 10000,
+    );
+    final categoryId = (await db.query('categories', limit: 1)).single['id']!;
+    // 200 este mes contra 160 el pasado: una subida del 25 %.
+    await ExpenseRepositoryImpl(db).create(
+      date: testNow,
+      description: 'A',
+      categoryId: categoryId as String,
+      accountId: accountId,
+      amount: 200,
+    );
+    await ExpenseRepositoryImpl(db).create(
+      date: DateTime(testNow.year, testNow.month - 1, 10),
+      description: 'B',
+      categoryId: categoryId,
+      accountId: accountId,
+      amount: 160,
+    );
+
+    tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    tester.platformDispatcher.localesTestValue = const [Locale('en')];
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+
+    final container = await buildLoadedContainer(db);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const GastegiApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('+25.0%'), findsOneWidget);
+    expect(find.textContaining('+25,0'), findsNothing);
+  });
+
   testWidgets('un mes sin gastos conserva su barra', (tester) async {
     await pumpHome(tester);
 
