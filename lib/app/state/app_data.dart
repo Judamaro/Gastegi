@@ -189,13 +189,6 @@ class AppData {
     return null;
   }
 
-  Category? categoryOf(String name) {
-    for (final c in categories) {
-      if (c.name == name) return c;
-    }
-    return null;
-  }
-
   Account? accountById(String? id) {
     if (id == null) return null;
     for (final a in accounts) {

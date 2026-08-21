@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gastegi/app/state/app_data.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/core/storage/app_database.dart';
 import 'package:gastegi/core/storage/database_provider.dart';
 import 'package:gastegi/core/utils/clock.dart';
+import 'package:gastegi/features/categories/domain/entities/category.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -54,4 +56,18 @@ Future<ProviderContainer> buildLoadedContainer(
   final container = buildContainer(db, now: now);
   await container.read(appDataProvider.notifier).load();
   return container;
+}
+
+/// Búsqueda de una categoría por su nombre, para los tests.
+///
+/// No vive en `AppData` a propósito: la app enlaza las categorías por id, y
+/// dejar ahí una búsqueda por nombre invita a volver a enlazarlas por texto.
+/// En un test, en cambio, el nombre es lo que hace legible la siembra.
+extension CategoryByName on AppData {
+  Category? categoryNamed(String name) {
+    for (final c in categories) {
+      if (c.name == name) return c;
+    }
+    return null;
+  }
 }

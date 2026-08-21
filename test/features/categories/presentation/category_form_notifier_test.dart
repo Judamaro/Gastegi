@@ -29,7 +29,7 @@ void main() {
     await form.submit();
 
     final data = container.read(appDataProvider);
-    final viajes = data.categoryOf('Viajes')!;
+    final viajes = data.categoryNamed('Viajes')!;
     expect(viajes.budget, 300);
     expect(viajes.iconKey, 'bus');
     expect(viajes.colorValue, 0xFF419DDA);
@@ -76,7 +76,7 @@ void main() {
     // El prellenado y la lectura del campo tienen que hablar el mismo idioma;
     // es el mismo tropiezo que ya cazó el formulario de cuentas.
     final container = await buildLoadedContainer(db);
-    final ocio = container.read(appDataProvider).categoryOf('Ocio')!;
+    final ocio = container.read(appDataProvider).categoryNamed('Ocio')!;
     final form = container.read(categoryFormProvider.notifier);
 
     form.open(ocio);
@@ -86,8 +86,8 @@ void main() {
     await form.submit();
 
     final data = container.read(appDataProvider);
-    expect(data.categoryOf('Ocio y cultura')!.budget, 200);
-    expect(data.categoryOf('Ocio y cultura')!.id, ocio.id);
+    expect(data.categoryNamed('Ocio y cultura')!.budget, 200);
+    expect(data.categoryNamed('Ocio y cultura')!.id, ocio.id);
   });
 
   test('bajar el presupuesto por debajo del gasto marca el exceso', () async {
@@ -112,7 +112,7 @@ void main() {
     expect(row.alert, isTrue);
     expect(row.over, isFalse);
 
-    form.open(container.read(appDataProvider).categoryOf('Ocio')!);
+    form.open(container.read(appDataProvider).categoryNamed('Ocio')!);
     form.setBudget('150');
     await form.submit();
 
@@ -125,14 +125,14 @@ void main() {
 
   test('la categoría sin gastos se borra', () async {
     final container = await buildLoadedContainer(db);
-    final ocio = container.read(appDataProvider).categoryOf('Ocio')!;
+    final ocio = container.read(appDataProvider).categoryNamed('Ocio')!;
     final form = container.read(categoryFormProvider.notifier);
 
     await form.askDelete(ocio.id);
     expect(container.read(categoryFormProvider).pendingDeleteExpenses, 0);
     await form.confirmDelete();
 
-    expect(container.read(appDataProvider).categoryOf('Ocio'), isNull);
+    expect(container.read(appDataProvider).categoryNamed('Ocio'), isNull);
     expect(container.read(categoryFormProvider).pendingDeleteId, isNull);
   });
 
@@ -155,6 +155,6 @@ void main() {
 
     await form.confirmDelete();
 
-    expect(container.read(appDataProvider).categoryOf('Ocio'), isNotNull);
+    expect(container.read(appDataProvider).categoryNamed('Ocio'), isNotNull);
   });
 }

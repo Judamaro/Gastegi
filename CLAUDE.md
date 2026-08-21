@@ -272,22 +272,37 @@ addTearDown(tester.platformDispatcher.clearLocalesTestValue);
 > una descarga antes de que `setUpAll` desactive `allowRuntimeFetching`.
 > `pumpAndSettle` se cuelga esperando una petición que nunca resuelve.
 
-### Deuda conocida
+### Categorías: se enlazan por id
 
-**Las categorías se enlazan por nombre, no por id** en toda la presentación:
-`e.categoryName`, el filtro del historial, la ruta `/home/categories/:name`.
-Desde que se pueden renombrar en Presupuestos, esto **sí es alcanzable**. Los
-tres sitios que dependen del nombre lo tratan, y hay que mantenerlo así al tocar
-esa zona:
+**Nada guarda un nombre de categoría para volver a encontrarla.** La ruta es
+`/home/categories/:id`, `AppData.catTotals`, `dailyCatTotals` y el desglose
+mensual se indexan por id, y lo mismo hacen `HistoryFilter.categoryId` y
+`AddExpenseState.categoryId`. El nombre lo escribe el usuario y se puede
+cambiar desde Presupuestos: si algo lo guarda, se queda apuntando al vacío en
+cuanto lo cambian, y **nada falla**.
 
-- El nombre de un gasto sale del `JOIN` de la consulta, así que se renombra solo.
-- El filtro del historial y el chip de «Nuevo gasto» se normalizan contra
-  `appDataProvider` y se limpian cuando el nombre deja de existir.
+Buscar por nombre no existe en `lib/`: `categoryNamed` vive en
+`test/helpers/test_db.dart`, porque en un test el nombre es lo que hace legible
+la siembra. Si vuelve a aparecer una búsqueda por nombre en producción, es que
+alguien está reintroduciendo el enlace por texto.
+
+Lo que sí sigue viajando por nombre, y está bien así:
+
+- `Expense.categoryName`, que sale del `JOIN` y es **texto para pintar**: se
+  renombra solo y lo usa la búsqueda libre del historial, que mira lo que el
+  usuario está leyendo.
+- Las dos normalizaciones contra `appDataProvider` siguen puestas, ahora contra
+  el id: el id no cambia al renombrar, pero sí desaparece al borrar.
 - El detalle de categoría sale a Inicio si su categoría desaparece; el botón de
   volver es parte de esa página, y quedarse en blanco dejaba la pestaña sin
-  salida.
+  salida. Renombrar ya no lo dispara.
 
-Cualquier sitio nuevo que guarde un nombre de categoría necesita lo mismo.
+**La guardia que queda sola**: una categoría con gastos no se puede borrar, y
+eso lo decide `CategoryFormNotifier.confirmDelete` con `expenseCount` —una sola
+comprobación, y en presentación—. Si se saltara, sus gastos quedarían
+apuntando a una fila borrada que `categories.all()` ya no devuelve: aparecería
+una clave huérfana en `catTotals` que ninguna pantalla pinta, y la dona y las
+barras dejarían de sumar el total del mes sin lanzar nada.
 
 ---
 

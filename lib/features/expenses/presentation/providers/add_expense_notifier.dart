@@ -16,7 +16,7 @@ class AddExpenseState {
   const AddExpenseState({
     required this.date,
     this.amount = '',
-    this.categoryName,
+    this.categoryId,
     this.accountId,
     this.description = '',
   });
@@ -27,7 +27,11 @@ class AddExpenseState {
   /// `MoneyLabels.typed` en la página, que sí conoce el idioma.
   final String amount;
 
-  final String? categoryName;
+  /// Id de la categoría elegida.
+  ///
+  /// El id y no el nombre: el nombre lo escribe el usuario y renombrar una
+  /// categoría con el formulario abierto vaciaba el chip elegido.
+  final String? categoryId;
   final String? accountId;
   final String description;
   final DateTime date;
@@ -36,19 +40,19 @@ class AddExpenseState {
 
   /// Un gasto necesita importe, categoría y cuenta.
   bool get saveDisabled =>
-      !(amountValue > 0 && categoryName != null && accountId != null);
+      !(amountValue > 0 && categoryId != null && accountId != null);
 
   AddExpenseState copyWith({
     String? amount,
-    Object? categoryName = _keep,
+    Object? categoryId = _keep,
     Object? accountId = _keep,
     String? description,
     DateTime? date,
   }) => AddExpenseState(
     amount: amount ?? this.amount,
-    categoryName: identical(categoryName, _keep)
-        ? this.categoryName
-        : categoryName as String?,
+    categoryId: identical(categoryId, _keep)
+        ? this.categoryId
+        : categoryId as String?,
     accountId: identical(accountId, _keep)
         ? this.accountId
         : accountId as String?,
@@ -71,12 +75,12 @@ class AddExpenseNotifier extends Notifier<AddExpenseState> {
     final accountExists =
         s.accountId == null || data.accounts.any((a) => a.id == s.accountId);
     final categoryExists =
-        s.categoryName == null ||
-        data.categories.any((c) => c.name == s.categoryName);
+        s.categoryId == null ||
+        data.categories.any((c) => c.id == s.categoryId);
     if (accountExists && categoryExists) return s;
     return s.copyWith(
       accountId: accountExists ? _keep : null,
-      categoryName: categoryExists ? _keep : null,
+      categoryId: categoryExists ? _keep : null,
     );
   }
 
@@ -89,7 +93,7 @@ class AddExpenseNotifier extends Notifier<AddExpenseState> {
   /// sitios, y solo uno de los dos se acordaría de cambiarlas.
   void setAmount(String value) => state = state.copyWith(amount: value);
 
-  void pickCategory(String name) => state = state.copyWith(categoryName: name);
+  void pickCategory(String id) => state = state.copyWith(categoryId: id);
 
   void pickAccount(String id) => state = state.copyWith(accountId: id);
 
@@ -104,7 +108,7 @@ class AddExpenseNotifier extends Notifier<AddExpenseState> {
   /// que es cosa de la pantalla y no del estado.
   Future<bool> save() async {
     if (state.saveDisabled) return false;
-    final category = ref.read(appDataProvider).categoryOf(state.categoryName!);
+    final category = ref.read(appDataProvider).categoryById(state.categoryId!);
     if (category == null) return false;
 
     final saveExpense = SaveExpense(ref.read(expenseRepositoryProvider));

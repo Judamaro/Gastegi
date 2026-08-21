@@ -423,7 +423,10 @@ void main() {
 
     // Y editar el presupuesto de una que ya existía: tocar su tarjeta abre el
     // formulario con el importe puesto.
-    final comidaId = container.read(appDataProvider).categoryOf('Comida')!.id;
+    final comidaId = container
+        .read(appDataProvider)
+        .categoryNamed('Comida')!
+        .id;
     await tester.ensureVisible(find.text('Comida'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Comida'));
@@ -434,7 +437,10 @@ void main() {
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
 
-    expect(container.read(appDataProvider).categoryOf('Comida')!.budget, 600);
+    expect(
+      container.read(appDataProvider).categoryNamed('Comida')!.budget,
+      600,
+    );
     expect(container.read(appDataProvider).totalBudget, 2040);
 
     appRouter.go(RouteNames.home);
@@ -520,7 +526,7 @@ void main() {
     // ruta guarda el id, así que el cambio de nombre lo atraviesa y la página
     // se queda donde estaba, ya con el nombre nuevo.
     final container = await pumpApp(tester);
-    final ocioId = container.read(appDataProvider).categoryOf('Ocio')!.id;
+    final ocioId = container.read(appDataProvider).categoryNamed('Ocio')!.id;
     appRouter.go(RouteNames.categoryDetailOf(ocioId));
     await tester.pumpAndSettle();
     expect(find.byType(CategoryDetailPage), findsOneWidget);
@@ -560,7 +566,7 @@ void main() {
     // salida, la pestaña se quedaba en blanco y sin botón de volver, que es
     // parte de esa misma página.
     final container = await pumpApp(tester);
-    final ocioId = container.read(appDataProvider).categoryOf('Ocio')!.id;
+    final ocioId = container.read(appDataProvider).categoryNamed('Ocio')!.id;
     appRouter.go(RouteNames.categoryDetailOf(ocioId));
     await tester.pumpAndSettle();
     expect(find.byType(CategoryDetailPage), findsOneWidget);
@@ -578,7 +584,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Eliminar'));
     await tester.pumpAndSettle();
-    expect(container.read(appDataProvider).categoryOf('Ocio'), isNull);
+    expect(container.read(appDataProvider).categoryNamed('Ocio'), isNull);
 
     await tester.tap(find.text('Inicio').last);
     await tester.pumpAndSettle();
