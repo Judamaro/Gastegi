@@ -170,7 +170,10 @@ void main() {
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull, reason: tab);
       }
-      expect(find.text('8.765.432,10\u00A0€'), findsWidgets);
+      // El saldo de la cuenta: 999.999.999,99 menos el gasto de 1.234.567,89.
+      // La aserción llevaba tres dígitos de menos y no casaba nunca, porque
+      // `find.text` compara la cadena entera.
+      expect(find.text('998.765.432,10\u00A0€'), findsWidgets);
 
       await tester.tap(find.text('Agregar'));
       await tester.pumpAndSettle();
