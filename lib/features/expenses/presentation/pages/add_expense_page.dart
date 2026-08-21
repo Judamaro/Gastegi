@@ -124,8 +124,8 @@ class _Fields extends ConsumerWidget {
     // La descripción no se pinta aquí, pero `setDescription` emite estado nuevo
     // en cada pulsación: sin el `select`, los trece chips se reconstruían por
     // tecla tecleada.
-    final (categoryName, accountId, date) = ref.watch(
-      addExpenseProvider.select((s) => (s.categoryName, s.accountId, s.date)),
+    final (categoryId, accountId, date) = ref.watch(
+      addExpenseProvider.select((s) => (s.categoryId, s.accountId, s.date)),
     );
     final form = ref.read(addExpenseProvider.notifier);
     final l10n = context.l10n;
@@ -153,8 +153,8 @@ class _Fields extends ConsumerWidget {
                     label: c.name,
                     icon: c.icon,
                     color: c.color,
-                    active: categoryName == c.name,
-                    onTap: () => form.pickCategory(c.name),
+                    active: categoryId == c.id,
+                    onTap: () => form.pickCategory(c.id),
                   ),
               ],
             ),

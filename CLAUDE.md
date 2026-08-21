@@ -95,6 +95,14 @@ No añadas uno por funcionalidad.
 > Por qué: es lo que evita que un doble toque en «Guardar» cree dos filas. Cinco
 > cerrojos independientes reabren el bug.
 
+**`write` devuelve `false` si el cerrojo estaba echado, y ese `false` hay que
+mirarlo** —lo obliga `@useResult`, así que ignorarlo no pasa el `analyze`.
+
+> Por qué: un `op` que no llega a correr deja intactas las variables que iba a
+> rellenar. Un `failure` que se queda a `null` **no** significa «ha ido bien»,
+> significa «no ha pasado nada». Darlo por bueno cierra el formulario
+> descartando lo tecleado sin haber guardado, y nada falla.
+
 **Un notifier que guarde ids o nombres de otra tabla tiene que normalizarse.**
 Dos cosas, no una:
 
@@ -128,7 +136,7 @@ repetido vive en `AppSpacing`/`AppRadius` y `AppFontSize`/`AppTextStyles`
 queda en la banda 0.82–1.21 en todo el catálogo de pantallas.
 
 **`watchScreen(context)` es la primera línea del `build` de cada pantalla**
-(`lib/core/utils/screen.dart`), aunque no uses lo que devuelve.
+(`lib/core/utils/screen.dart`). No devuelve nada: se llama por el efecto.
 
 > Por qué: `.r` y `.sp` se resuelven durante el `build` y quedan congelados
 > dentro del widget. `StatefulNavigationShellState` guarda el `Navigator` de
@@ -147,12 +155,35 @@ queda en la banda 0.82–1.21 en todo el catálogo de pantallas.
 
 **Los parámetros de tamaño de nuestros widgets viajan en unidades de diseño; los
 escala el widget en su `build`.** `Kicker.size`, `ColorDot.size`,
-`DonutChart.size`, `TrendChart.height`, `BarChart.height`… Quien llama escribe
-el número del diseño, sin `.r`.
+`MeterBar.height`… Quien llama escribe el número del diseño, sin `.r`.
 
 > Por qué: los valores por defecto tienen que ser constantes, así que no pueden
 > llevar `.r`. Si el sitio de llamada escalara y el defecto no, el mismo
 > parámetro admitiría dos unidades distintas sin que nada lo delate.
+
+**Las gráficas son `fl_chart` montado en la propia página**, no widgets
+compartidos: `_CategoryDonut`, `_MonthBars` y `_DailyTrend` en `home_page.dart`,
+`_WeekBars` en `category_detail_page.dart`. Ahí el número **sí** va escalado —el
+paquete pide píxeles del eje, no fracciones—, así que la conversión la hace el
+`build` de la página antes de construir el `…ChartData`. La única compartida es
+`MeterBar`, que sigue la regla de arriba.
+
+> Trampas de `fl_chart` que no fallan al compilar: `SideTitles.reservedSize`
+> recorta la etiqueta **en silencio** (mídelo con `textHeight`, no lo supongas);
+> `FlTitlesData` enseña los cuatro lados si no los apagas uno a uno; una barra
+> con `toY == fromY` no se dibuja y el resto mide como poco `2 × radio`;
+> `BarChartAlignment` por defecto es `spaceEvenly`, que reparte un hueco de más
+> y descoloca las etiquetas; y `sectionsSpace` de la dona va en **píxeles**, no
+> en radianes. Y no hay animación de entrada: el paquete solo anima entre dos
+> fotos distintas, así que la de arranque es el `_entrado` de cada `State`.
+
+**Las tres gráficas de Inicio hablan el mismo código de color**: el de
+`entity_visuals.dart`, en el orden de `AppData.categories`, que es el de la
+leyenda de la dona. Las barras de los meses se apilan con `rodStackItems` y la
+tendencia diaria con `betweenBarsData`, que rellena **entre dos líneas**: por
+eso sus series van acumuladas —la línea k es la suma de las k+1 primeras
+categorías— y la de arriba acaba siendo el total del día. Si alguna vez dejan
+de compartir orden, las tres gráficas dejan de leerse juntas sin que nada falle.
 
 **`fontSizeResolver: FontSizeResolvers.radius` y `splitScreenMode: true` en
 `GastegiApp` son estructurales.** El primero porque `minTextAdapt` es
@@ -160,14 +191,19 @@ configuración muerta —`setSp` delega en el resolver y nunca alcanza la rama q
 lo consulta—; el segundo porque acota la escala de alto a 700 dp y sin él en
 apaisado la app sale en miniatura. Los fija `test/app/screen_scale_test.dart`.
 
+**Las ramas inactivas del shell vuelven a `Offstage` al acabar la transición**
+(`app/router/branch_transition.dart`).
+
+> Por qué: `skipOffstage` viene a `true` en los buscadores de `flutter_test`,
+> así que el `Offstage` es lo que impide que un `find.text` vea las cuatro
+> pestañas a la vez. Hay textos que salen en dos —el nombre de una categoría
+> está en la leyenda de la dona y en su tarjeta de Presupuesto—, y dejarlas
+> visibles siempre vuelve ambiguos buscadores que no tienen nada que ver con la
+> navegación. Es lo que le pasa al ejemplo oficial de `go_router`.
+
 **Los puntos de ruptura no se escalan.** `kTabletBreakpoint` y el tope de
 `ContentWidth` van en dp reales: son límites del dispositivo y de legibilidad,
 no medidas del diseño, y escalarlos los movería justo donde deciden algo.
-
-**Dentro de un `CustomPainter` no hay escala.** Todo sale de la `size` que
-recibe, en fracciones. Si necesita texto, pásale el `TextScaler` del contexto
-—un painter no cuelga del árbol y no le llega solo— y **mete los campos nuevos
-en `shouldRepaint`**, o no repintará al girar.
 
 ### Fechas y números
 
@@ -254,22 +290,42 @@ addTearDown(tester.platformDispatcher.clearLocalesTestValue);
 > una descarga antes de que `setUpAll` desactive `allowRuntimeFetching`.
 > `pumpAndSettle` se cuelga esperando una petición que nunca resuelve.
 
-### Deuda conocida
+### Categorías: se enlazan por id
 
-**Las categorías se enlazan por nombre, no por id** en toda la presentación:
-`e.categoryName`, el filtro del historial, la ruta `/home/categories/:name`.
-Desde que se pueden renombrar en Presupuestos, esto **sí es alcanzable**. Los
-tres sitios que dependen del nombre lo tratan, y hay que mantenerlo así al tocar
-esa zona:
+**Nada guarda un nombre de categoría para volver a encontrarla.** La ruta es
+`/home/categories/:id`, `AppData.catTotals`, `dailyCatTotals` y el desglose
+mensual se indexan por id, y lo mismo hacen `HistoryFilter.categoryId` y
+`AddExpenseState.categoryId`. El nombre lo escribe el usuario y se puede
+cambiar desde Presupuestos: si algo lo guarda, se queda apuntando al vacío en
+cuanto lo cambian, y **nada falla**.
 
-- El nombre de un gasto sale del `JOIN` de la consulta, así que se renombra solo.
-- El filtro del historial y el chip de «Nuevo gasto» se normalizan contra
-  `appDataProvider` y se limpian cuando el nombre deja de existir.
+Buscar por nombre no existe en `lib/`: `categoryNamed` vive en
+`test/helpers/test_db.dart`, porque en un test el nombre es lo que hace legible
+la siembra. Si vuelve a aparecer una búsqueda por nombre en producción, es que
+alguien está reintroduciendo el enlace por texto.
+
+Lo que sí sigue viajando por nombre, y está bien así:
+
+- `Expense.categoryName`, que sale del `JOIN` y es **texto para pintar**: se
+  renombra solo y lo usa la búsqueda libre del historial, que mira lo que el
+  usuario está leyendo.
+- Las dos normalizaciones contra `appDataProvider` siguen puestas, ahora contra
+  el id: el id no cambia al renombrar, pero sí desaparece al borrar.
 - El detalle de categoría sale a Inicio si su categoría desaparece; el botón de
   volver es parte de esa página, y quedarse en blanco dejaba la pestaña sin
-  salida.
+  salida. Renombrar ya no lo dispara.
 
-Cualquier sitio nuevo que guarde un nombre de categoría necesita lo mismo.
+**La regla que sostiene todo esto**: una categoría con gastos no se puede
+borrar, y lo decide `DeleteCategory` (`categories/domain/usecases/`), que
+cuenta y borra en la misma llamada. Si se saltara, sus gastos quedarían
+apuntando a una fila que `categories.all()` ya no devuelve: aparecería una
+clave huérfana en `catTotals` que ninguna pantalla pinta, y la dona y las
+barras dejarían de sumar el total del mes sin lanzar nada.
+
+> Por qué junto y no en el notifier, que es donde estaba: el recuento que
+> enseña la confirmación es del momento en que se abrió, y entre eso y el toque
+> en «Eliminar» puede haber entrado un gasto. La pantalla sigue contando para
+> el aviso —eso es presentación—, pero quien decide cuenta al decidir.
 
 ---
 
@@ -292,10 +348,11 @@ En este orden. Los pasos 5 y 8 son opcionales.
    );
    ```
 5. **Caso de uso** — `domain/usecases/`, **solo si hay lógica de negocio real**.
-   `SaveAccount` y `SaveCategory` existen porque validan dos reglas; `SaveExpense`,
-   porque decide la descripción por defecto. `CategoryRepository.softDelete` no
-   tiene ninguno porque sería reenviar una línea, y quién puede borrarse lo decide
-   el notifier con `expenseCount`. Un caso de uso que solo reenvía es ceremonia.
+   `SaveAccount` y `SaveCategory` existen porque validan dos reglas;
+   `SaveExpense`, porque decide la descripción por defecto; `DeleteCategory`,
+   porque contar los gastos y decidir tienen que pasar juntos. En cambio
+   `CategoryRepository.softDelete` se llama a pelo desde `DeleteCategory`: un
+   caso de uso que solo reenvía es ceremonia.
 6. **Notifier** — `features/<x>/presentation/providers/`. Estado **inmutable**
    con `copyWith`. Para campos anulables usa el centinela `_keep` (ver
    `account_form_notifier.dart`), que distingue "no me pases este campo" de

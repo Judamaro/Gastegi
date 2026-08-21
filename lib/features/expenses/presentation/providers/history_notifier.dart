@@ -6,40 +6,43 @@ import 'package:gastegi/features/expenses/domain/entities/expense.dart';
 import 'package:gastegi/features/expenses/presentation/models/history_item.dart';
 import 'package:gastegi/features/expenses/presentation/models/history_range.dart';
 
+/// Centinela para distinguir "no me pases este campo" de "ponlo a null" en
+/// [HistoryFilter.copyWith].
+const Object _keep = Object();
+
 /// Filtros del historial.
 @immutable
 class HistoryFilter {
   const HistoryFilter({
     this.search = '',
-    this.categoryName,
+    this.categoryId,
     this.range = HistoryRange.month,
   });
 
   final String search;
 
-  /// Categoría por la que se filtra; `null` es "todas".
+  /// Id de la categoría por la que se filtra; `null` es "todas".
   ///
-  /// Antes esto era el literal `'Todas'`, que hacía de etiqueta y de valor de
-  /// control a la vez: en cuanto ese texto se traduzca, dejaría de coincidir
-  /// consigo mismo.
-  final String? categoryName;
+  /// El id y no el nombre: el nombre lo escribe el usuario y renombrar una
+  /// categoría vaciaba el historial sin decir por qué. Antes de eso era el
+  /// literal `'Todas'`, que hacía de etiqueta y de valor de control a la vez:
+  /// en cuanto ese texto se traduzca, deja de coincidir consigo mismo.
+  final String? categoryId;
 
   final HistoryRange range;
 
   HistoryFilter copyWith({
     String? search,
-    Object? categoryName = _keep,
+    Object? categoryId = _keep,
     HistoryRange? range,
   }) => HistoryFilter(
     search: search ?? this.search,
-    categoryName: identical(categoryName, _keep)
-        ? this.categoryName
-        : categoryName as String?,
+    categoryId: identical(categoryId, _keep)
+        ? this.categoryId
+        : categoryId as String?,
     range: range ?? this.range,
   );
 }
-
-const Object _keep = Object();
 
 class HistoryNotifier extends Notifier<HistoryFilter> {
   @override
@@ -47,9 +50,9 @@ class HistoryNotifier extends Notifier<HistoryFilter> {
     // Si la categoría filtrada desaparece, el historial se quedaría mostrando
     // una lista vacía sin explicación.
     ref.listen(appDataProvider, (_, data) {
-      final name = state.categoryName;
-      if (name != null && !data.categories.any((c) => c.name == name)) {
-        state = state.copyWith(categoryName: null);
+      final id = state.categoryId;
+      if (id != null && !data.categories.any((c) => c.id == id)) {
+        state = state.copyWith(categoryId: null);
       }
     });
     return const HistoryFilter();
@@ -57,8 +60,8 @@ class HistoryNotifier extends Notifier<HistoryFilter> {
 
   void setSearch(String value) => state = state.copyWith(search: value);
 
-  /// [name] nulo significa "todas las categorías".
-  void setCategory(String? name) => state = state.copyWith(categoryName: name);
+  /// [id] nulo significa "todas las categorías".
+  void setCategory(String? id) => state = state.copyWith(categoryId: id);
 
   void setRange(HistoryRange range) => state = state.copyWith(range: range);
 }
@@ -80,8 +83,9 @@ final filteredExpensesProvider = Provider<List<Expense>>((ref) {
       .where(
         (e) =>
             filter.range.includes(e.date, data.today, data.monthAnchor) &&
-            (filter.categoryName == null ||
-                e.categoryName == filter.categoryName) &&
+            (filter.categoryId == null || e.categoryId == filter.categoryId) &&
+            // La búsqueda libre sí va contra el nombre: es texto que el
+            // usuario está leyendo en pantalla, no un enlace entre tablas.
             (q.isEmpty ||
                 e.desc.toLowerCase().contains(q) ||
                 e.categoryName.toLowerCase().contains(q)),

@@ -35,6 +35,9 @@
   "monthAbbr11": "Nov",
   "monthAbbr12": "Dec",
 
+  "chartTooltip": "{label}\n{amount}",
+  "chartCategoryShare": "{category} · {percent}%",
+
   "homeSpentThisMonth": "spent this month",
   "homeThisMonth": "this month",
   "homeNoExpensesKicker": "No expenses",

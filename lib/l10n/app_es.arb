@@ -23,6 +23,7 @@
     "description": "Cabecera de grupo del historial: 12 de agosto.",
     "placeholders": { "day": { "type": "int" }, "month": { "type": "String" } }
   },
+
   "dayAndMonthShort": "{day} {month}",
   "@dayAndMonthShort": {
     "description": "Versión corta en listas: 12 ago.",
@@ -48,6 +49,23 @@
   "monthAbbr12": "Dic",
   "@monthAbbr1": {
     "description": "Abreviaturas de mes de tres letras. Están escritas a mano y no salen de DateFormat('MMM') porque el CLDR español devuelve 'ago.' y 'sept.', con punto y hasta cuatro letras, que desbordan las etiquetas estrechas de las gráficas."
+  },
+
+  "chartTooltip": "{label}\n{amount}",
+  "@chartTooltip": {
+    "description": "Globo que sale al tocar una barra o un punto de una gráfica: la etiqueta arriba y el importe debajo.",
+    "placeholders": {
+      "label": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
+  "chartCategoryShare": "{category} · {percent}%",
+  "@chartCategoryShare": {
+    "description": "Pie del centro de la dona mientras se toca un sector: sustituye a «este mes» y dice de qué categoría es el importe y cuánto pesa.",
+    "placeholders": {
+      "category": { "type": "String" },
+      "percent": { "type": "int" }
+    }
   },
 
   "homeSpentThisMonth": "gastado este mes",

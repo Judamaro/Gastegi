@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,7 +13,6 @@ import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/app/theme/app_typography.dart';
 import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/core/utils/text_measure.dart';
-import 'package:gastegi/core/widgets/charts/donut_chart.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:gastegi/features/categories/presentation/pages/budgets_page.dart';
 import 'package:gastegi/features/categories/presentation/pages/category_detail_page.dart';
@@ -423,7 +423,10 @@ void main() {
 
     // Y editar el presupuesto de una que ya existía: tocar su tarjeta abre el
     // formulario con el importe puesto.
-    final comidaId = container.read(appDataProvider).categoryOf('Comida')!.id;
+    final comidaId = container
+        .read(appDataProvider)
+        .categoryNamed('Comida')!
+        .id;
     await tester.ensureVisible(find.text('Comida'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Comida'));
@@ -434,7 +437,10 @@ void main() {
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
 
-    expect(container.read(appDataProvider).categoryOf('Comida')!.budget, 600);
+    expect(
+      container.read(appDataProvider).categoryNamed('Comida')!.budget,
+      600,
+    );
     expect(container.read(appDataProvider).totalBudget, 2040);
 
     appRouter.go(RouteNames.home);
@@ -514,19 +520,19 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('renombrar una categoría saca de su detalle', (tester) async {
-    // El detalle vive en la rama de Inicio y se navega por nombre, así que
-    // sobrevive dentro del `IndexedStack` mientras se renombra desde la pestaña
-    // de Presupuesto. Sin la salida, la pestaña se quedaba en blanco y sin
-    // botón de volver, que es parte de esa misma página.
+  testWidgets('renombrar una categoría no saca de su detalle', (tester) async {
+    // El detalle vive en la rama de Inicio y sobrevive dentro del
+    // `IndexedStack` mientras se renombra desde la pestaña de Presupuesto. La
+    // ruta guarda el id, así que el cambio de nombre lo atraviesa y la página
+    // se queda donde estaba, ya con el nombre nuevo.
     final container = await pumpApp(tester);
-    appRouter.go(RouteNames.categoryDetailOf('Ocio'));
+    final ocioId = container.read(appDataProvider).categoryNamed('Ocio')!.id;
+    appRouter.go(RouteNames.categoryDetailOf(ocioId));
     await tester.pumpAndSettle();
     expect(find.byType(CategoryDetailPage), findsOneWidget);
 
     await tester.tap(find.text('Presupuesto').last);
     await tester.pumpAndSettle();
-    final ocioId = container.read(appDataProvider).categoryOf('Ocio')!.id;
     await tester.ensureVisible(find.text('Ocio'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Ocio'));
@@ -539,6 +545,46 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Inicio').last);
+    await tester.pumpAndSettle();
+    expect(find.byType(CategoryDetailPage), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(CategoryDetailPage),
+        matching: find.text('Tiempo libre'),
+      ),
+      findsWidgets,
+    );
+
+    appRouter.go(RouteNames.home);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('borrar una categoría sí saca de su detalle', (tester) async {
+    // Lo que el id no puede salvar: la categoría deja de existir. Sin la
+    // salida, la pestaña se quedaba en blanco y sin botón de volver, que es
+    // parte de esa misma página.
+    final container = await pumpApp(tester);
+    final ocioId = container.read(appDataProvider).categoryNamed('Ocio')!.id;
+    appRouter.go(RouteNames.categoryDetailOf(ocioId));
+    await tester.pumpAndSettle();
+    expect(find.byType(CategoryDetailPage), findsOneWidget);
+
+    await tester.tap(find.text('Presupuesto').last);
+    await tester.pumpAndSettle();
+    final card = find.widgetWithText(BudgetCard, 'Ocio');
+    await tester.ensureVisible(card);
+    await tester.pumpAndSettle();
+    await tester.tap(find.descendant(of: card, matching: find.text('Ocio')));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(of: card, matching: find.byIcon(AppIcons.x)),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Eliminar'));
+    await tester.pumpAndSettle();
+    expect(container.read(appDataProvider).categoryNamed('Ocio'), isNull);
 
     await tester.tap(find.text('Inicio').last);
     await tester.pumpAndSettle();
@@ -622,7 +668,7 @@ void main() {
       // mitad y lo que la dona no gastaba se quedaba muerto al final. Se mide
       // por el borde derecho del porcentaje, que va pegado al final de su fila.
       final fila = find
-          .ancestor(of: find.byType(DonutChart), matching: find.byType(Row))
+          .ancestor(of: find.byType(PieChart), matching: find.byType(Row))
           .first;
       expect(
         tester.getRect(find.text('100%')).right,

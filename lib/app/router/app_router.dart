@@ -1,4 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:gastegi/app/router/app_shell.dart';
+import 'package:gastegi/app/router/branch_transition.dart';
 import 'package:gastegi/app/router/route_names.dart';
 import 'package:gastegi/features/accounts/presentation/pages/accounts_page.dart';
 import 'package:gastegi/features/categories/presentation/pages/budgets_page.dart';
@@ -16,9 +18,14 @@ import 'package:go_router/go_router.dart';
 final GoRouter appRouter = GoRouter(
   initialLocation: RouteNames.home,
   routes: [
-    StatefulShellRoute.indexedStack(
+    StatefulShellRoute(
       builder: (context, state, navigationShell) =>
           AppShell(navigationShell: navigationShell),
+      navigatorContainerBuilder: (context, navigationShell, children) =>
+          BranchTransition(
+            currentIndex: navigationShell.currentIndex,
+            children: children,
+          ),
       branches: [
         StatefulShellBranch(
           routes: [
@@ -31,9 +38,7 @@ final GoRouter appRouter = GoRouter(
                 GoRoute(
                   path: RouteNames.categoryDetail,
                   builder: (context, state) => CategoryDetailPage(
-                    categoryName: Uri.decodeComponent(
-                      state.pathParameters['name']!,
-                    ),
+                    categoryId: state.pathParameters['id']!,
                   ),
                 ),
               ],
@@ -68,7 +73,32 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: RouteNames.addExpense,
-      builder: (context, state) => const AddExpensePage(),
+      // Entra desde abajo y no con la transición de la plataforma, que es la
+      // de «he ido a otro sitio». Esto no es otro sitio: es una hoja que se
+      // levanta sobre las pestañas y las tapa, y la dirección lo dice sin
+      // necesidad de explicarlo. Sale por donde entró.
+      pageBuilder: (context, state) => CustomTransitionPage<void>(
+        key: state.pageKey,
+        child: const AddExpensePage(),
+        transitionDuration: BranchTransition.duration,
+        reverseTransitionDuration: BranchTransition.duration,
+        transitionsBuilder: (context, animation, secondary, child) {
+          // Con el ajuste de accesibilidad puesto, aparece y ya está.
+          if (MediaQuery.disableAnimationsOf(context)) return child;
+          final curva = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+            reverseCurve: Curves.easeInCubic,
+          );
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.06),
+              end: Offset.zero,
+            ).animate(curva),
+            child: FadeTransition(opacity: curva, child: child),
+          );
+        },
+      ),
     ),
   ],
 );

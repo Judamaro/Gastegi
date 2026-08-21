@@ -80,16 +80,18 @@ class HistoryPage extends ConsumerWidget {
                 spacing: 6.r,
                 runSpacing: 6.r,
                 children: [
-                  // `null` es "todas": el chip lleva etiqueta, pero el filtro no
-                  // guarda texto de interfaz.
-                  for (final name in <String?>[
-                    null,
-                    ...data.categories.map((c) => c.name),
-                  ])
+                  // `null` es "todas": el chip lleva etiqueta, pero el filtro
+                  // guarda el id, no texto de interfaz ni nombres.
+                  AppChip(
+                    label: l10n.commonAll,
+                    active: filter.categoryId == null,
+                    onTap: () => filters.setCategory(null),
+                  ),
+                  for (final c in data.categories)
                     AppChip(
-                      label: name ?? l10n.commonAll,
-                      active: filter.categoryName == name,
-                      onTap: () => filters.setCategory(name),
+                      label: c.name,
+                      active: filter.categoryId == c.id,
+                      onTap: () => filters.setCategory(c.id),
                     ),
                 ],
               ),
@@ -116,7 +118,7 @@ class HistoryPage extends ConsumerWidget {
               // icono y el color salían antes de dos búsquedas separadas.
               HistoryEntry(:final expense) => _ExpenseRow(
                 expense: expense,
-                category: data.categoryOf(expense.categoryName),
+                category: data.categoryById(expense.categoryId),
               ),
             },
           ),

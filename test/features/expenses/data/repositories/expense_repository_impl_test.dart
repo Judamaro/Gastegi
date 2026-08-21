@@ -95,25 +95,33 @@ void main() {
     expect(await balanceOf(accountId), once);
   });
 
-  test('monthlyTotals agrupa por mes e ignora los borrados', () async {
+  test('monthlyTotalsByCategory agrupa por mes e id de categoría e ignora los '
+      'borrados', () async {
     final accountId = await newAccount();
-    Future<String> add(DateTime date, double amount) => expenses.create(
-      date: date,
-      description: 'Gasto',
-      categoryId: categoryId,
-      accountId: accountId,
-      amount: amount,
-    );
+    final otra = (await CategoryRepositoryImpl(db).all())[1];
+    Future<String> add(DateTime date, double amount, [String? cat]) =>
+        expenses.create(
+          date: date,
+          description: 'Gasto',
+          categoryId: cat ?? categoryId,
+          accountId: accountId,
+          amount: amount,
+        );
 
     await add(DateTime(2026, 7, 3), 100);
     await add(DateTime(2026, 8), 20);
     await add(DateTime(2026, 8, 9), 30);
+    await add(DateTime(2026, 8, 9), 7, otra.id);
     final removed = await add(DateTime(2026, 8, 10), 999);
     await expenses.softDelete(removed);
 
-    final totals = await expenses.monthlyTotals(from: DateTime(2026, 3));
-    expect(totals['2026-07'], 100);
-    expect(totals['2026-08'], 50);
+    final totals = await expenses.monthlyTotalsByCategory(
+      from: DateTime(2026, 3),
+    );
+
+    expect(totals['2026-07'], {categoryId: 100.0});
+    // Dos categorías el mismo mes: cada una con lo suyo, no la suma.
+    expect(totals['2026-08'], {categoryId: 50.0, otra.id: 7.0});
   });
 
   test('un gasto sin cuenta se lee como "Sin cuenta"', () async {

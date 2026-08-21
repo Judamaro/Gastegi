@@ -1,8 +1,8 @@
-/// Derivados del detalle de una categoría, indexados por su nombre.
+/// Derivados del detalle de una categoría, indexados por su id.
 ///
-/// El nombre viene de la ruta y no de un provider de "categoría seleccionada":
-/// con el router, la URL es la única fuente de verdad, y así no hay dos sitios
-/// que puedan discrepar sobre qué se está mirando.
+/// El id viene de la ruta y no de un provider de "categoría seleccionada": con
+/// el router, la URL es la única fuente de verdad, y así no hay dos sitios que
+/// puedan discrepar sobre qué se está mirando.
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,25 +12,25 @@ import 'package:gastegi/features/expenses/domain/entities/expense.dart';
 
 /// La categoría, o `null` si ya no existe: puede haberse borrado mientras se
 /// miraba su detalle.
-final categoryByNameProvider = Provider.family<Category?, String>(
-  (ref, name) => ref.watch(appDataProvider).categoryOf(name),
+final categoryByIdProvider = Provider.family<Category?, String>(
+  (ref, id) => ref.watch(appDataProvider).categoryById(id),
 );
 
 /// Gastos del mes de esa categoría, del más reciente al más antiguo.
 final categoryExpensesProvider = Provider.family<List<Expense>, String>((
   ref,
-  name,
+  id,
 ) {
   return ref
       .watch(appDataProvider)
       .expenses
-      .where((e) => e.categoryName == name)
+      .where((e) => e.categoryId == id)
       .toList()
     ..sort((a, b) => b.date.compareTo(a.date));
 });
 
 final categoryTotalProvider = Provider.family<double, String>(
-  (ref, name) => ref.watch(appDataProvider).catTotals[name] ?? 0,
+  (ref, id) => ref.watch(appDataProvider).catTotals[id] ?? 0,
 );
 
 /// Gasto de la categoría por semana del mes, en cuatro tramos.
@@ -39,12 +39,9 @@ final categoryTotalProvider = Provider.family<double, String>(
 /// corte fijo en el 28, los gastos de fin de mes desaparecerían del gráfico.
 ///
 /// Devuelve importes y no etiquetas: "Sem 1" es texto de pantalla.
-final categoryWeeksProvider = Provider.family<List<double>, String>((
-  ref,
-  name,
-) {
+final categoryWeeksProvider = Provider.family<List<double>, String>((ref, id) {
   final last = ref.watch(appDataProvider).daysInCurrentMonth;
-  final items = ref.watch(categoryExpensesProvider(name));
+  final items = ref.watch(categoryExpensesProvider(id));
   final ranges = [(1, 7), (8, 14), (15, 21), (22, last)];
 
   return [

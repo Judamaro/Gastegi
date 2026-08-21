@@ -19,7 +19,8 @@ const int maxFractionDigits = 2;
 /// Menos tipográfico (U+2212).
 ///
 /// El CLDR devuelve el guion ASCII, más corto y más alto que las cifras: en un
-/// importe grande se lee como un tropiezo. `AppData.deltaLabel` ya usa este.
+/// importe grande se lee como un tropiezo. Lo usan `MoneyLabels.formatSigned`
+/// y `MoneyLabels.signedPercent`.
 const String minusSign = '−';
 
 /// Separador decimal del texto *canónico*: el que guardan los notifiers.

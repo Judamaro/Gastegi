@@ -109,7 +109,7 @@ class AccountFormNotifier extends Notifier<AccountFormState> {
   Future<void> submit() async {
     final saveAccount = SaveAccount(ref.read(accountRepositoryProvider));
     AccountFailure? failure;
-    await ref.read(appDataProvider.notifier).write(() async {
+    final ran = await ref.read(appDataProvider.notifier).write(() async {
       failure = await saveAccount(
         id: state.editingId,
         name: state.name,
@@ -118,6 +118,10 @@ class AccountFormNotifier extends Notifier<AccountFormState> {
         balance: parseAmount(state.balance),
       );
     });
+    // El cerrojo estaba echado y `saveAccount` no llegó a correr: `failure`
+    // sigue a `null` porque nadie lo tocó, no porque haya ido bien. Cerrar
+    // aquí tiraría lo tecleado sin haber guardado nada.
+    if (!ran) return;
 
     state = failure == null
         ? const AccountFormState()
@@ -142,18 +146,23 @@ class AccountFormNotifier extends Notifier<AccountFormState> {
     final id = state.pendingDeleteId;
     if (id == null) return;
     final repo = ref.read(accountRepositoryProvider);
-    await ref.read(appDataProvider.notifier).write(() => repo.softDelete(id));
-    cancelDelete();
+    // La confirmación solo se cierra si el borrado se hizo de verdad.
+    if (await ref
+        .read(appDataProvider.notifier)
+        .write(() => repo.softDelete(id))) {
+      cancelDelete();
+    }
   }
 
   Future<void> archivePending() async {
     final id = state.pendingDeleteId;
     if (id == null) return;
     final repo = ref.read(accountRepositoryProvider);
-    await ref
+    if (await ref
         .read(appDataProvider.notifier)
-        .write(() => repo.setArchived(id, true));
-    cancelDelete();
+        .write(() => repo.setArchived(id, true))) {
+      cancelDelete();
+    }
   }
 }
 

@@ -11,7 +11,7 @@ import 'package:gastegi/app/theme/entity_visuals.dart';
 import 'package:gastegi/core/utils/l10n_context.dart';
 import 'package:gastegi/core/widgets/app_icon_button.dart';
 import 'package:gastegi/core/widgets/color_dot.dart';
-import 'package:gastegi/core/widgets/progress_bar.dart';
+import 'package:gastegi/core/widgets/meter_bar.dart';
 import 'package:gastegi/features/categories/presentation/providers/category_form_notifier.dart';
 
 /// Tarjeta de una categoría en Presupuestos: progreso del mes, aviso de umbral
@@ -117,7 +117,7 @@ class BudgetCard extends ConsumerWidget {
                 ),
               ],
             ),
-            ProgressBar(fraction: row.ratio, color: row.barColor),
+            MeterBar(fraction: row.ratio, color: row.barColor),
             // El botón de borrar va en la línea de abajo y no arriba: esa fila
             // ya reparte el nombre, el aviso y el importe, y en apaisado con el
             // texto del sistema crecido no le cabe nada más.

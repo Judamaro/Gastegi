@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/features/categories/data/repositories/category_repository_impl.dart';
@@ -16,6 +18,37 @@ void main() {
   setUp(() async => db = await openTestDb());
   tearDown(() async => db.close());
 
+  test('con el cerrojo echado el formulario no se da por guardado', () async {
+    // El cerrojo es de toda la app, así que la escritura en vuelo puede venir
+    // de cualquier pantalla. Antes, `submit` leía el `failure` a `null` —que
+    // nadie había tocado— como éxito, y cerraba el formulario tirando lo
+    // tecleado sin haber guardado nada.
+    final container = await buildLoadedContainer(db);
+    final gate = Completer<void>();
+    final retenida = container
+        .read(appDataProvider.notifier)
+        .write(() => gate.future);
+
+    final form = container.read(categoryFormProvider.notifier);
+    form
+      ..open()
+      ..setName('Viajes')
+      ..setBudget('300');
+    await form.submit();
+
+    final state = container.read(categoryFormProvider);
+    expect(state.open, isTrue, reason: 'el formulario sigue abierto');
+    expect(state.name, 'Viajes', reason: 'con lo tecleado dentro');
+    expect(
+      container.read(appDataProvider).categoryNamed('Viajes'),
+      isNull,
+      reason: 'y no se ha guardado nada',
+    );
+
+    gate.complete();
+    await retenida;
+  });
+
   test('crear una categoría la añade y suma en el presupuesto', () async {
     final container = await buildLoadedContainer(db);
     final budgetBefore = container.read(appDataProvider).totalBudget;
@@ -29,7 +62,7 @@ void main() {
     await form.submit();
 
     final data = container.read(appDataProvider);
-    final viajes = data.categoryOf('Viajes')!;
+    final viajes = data.categoryNamed('Viajes')!;
     expect(viajes.budget, 300);
     expect(viajes.iconKey, 'bus');
     expect(viajes.colorValue, 0xFF419DDA);
@@ -76,7 +109,7 @@ void main() {
     // El prellenado y la lectura del campo tienen que hablar el mismo idioma;
     // es el mismo tropiezo que ya cazó el formulario de cuentas.
     final container = await buildLoadedContainer(db);
-    final ocio = container.read(appDataProvider).categoryOf('Ocio')!;
+    final ocio = container.read(appDataProvider).categoryNamed('Ocio')!;
     final form = container.read(categoryFormProvider.notifier);
 
     form.open(ocio);
@@ -86,8 +119,8 @@ void main() {
     await form.submit();
 
     final data = container.read(appDataProvider);
-    expect(data.categoryOf('Ocio y cultura')!.budget, 200);
-    expect(data.categoryOf('Ocio y cultura')!.id, ocio.id);
+    expect(data.categoryNamed('Ocio y cultura')!.budget, 200);
+    expect(data.categoryNamed('Ocio y cultura')!.id, ocio.id);
   });
 
   test('bajar el presupuesto por debajo del gasto marca el exceso', () async {
@@ -112,7 +145,7 @@ void main() {
     expect(row.alert, isTrue);
     expect(row.over, isFalse);
 
-    form.open(container.read(appDataProvider).categoryOf('Ocio')!);
+    form.open(container.read(appDataProvider).categoryNamed('Ocio')!);
     form.setBudget('150');
     await form.submit();
 
@@ -125,14 +158,14 @@ void main() {
 
   test('la categoría sin gastos se borra', () async {
     final container = await buildLoadedContainer(db);
-    final ocio = container.read(appDataProvider).categoryOf('Ocio')!;
+    final ocio = container.read(appDataProvider).categoryNamed('Ocio')!;
     final form = container.read(categoryFormProvider.notifier);
 
     await form.askDelete(ocio.id);
     expect(container.read(categoryFormProvider).pendingDeleteExpenses, 0);
     await form.confirmDelete();
 
-    expect(container.read(appDataProvider).categoryOf('Ocio'), isNull);
+    expect(container.read(appDataProvider).categoryNamed('Ocio'), isNull);
     expect(container.read(categoryFormProvider).pendingDeleteId, isNull);
   });
 
@@ -155,6 +188,37 @@ void main() {
 
     await form.confirmDelete();
 
-    expect(container.read(appDataProvider).categoryOf('Ocio'), isNotNull);
+    expect(container.read(appDataProvider).categoryNamed('Ocio'), isNotNull);
+    // Y la confirmación se queda abierta: el usuario tocó «Eliminar» y tiene
+    // que ver por qué no ha pasado nada.
+    expect(container.read(categoryFormProvider).pendingDeleteId, ocio.id);
+  });
+
+  test('un gasto registrado mientras se confirma corta el borrado', () async {
+    // La carrera que el recuento del estado no puede ver: se abre la
+    // confirmación con la categoría vacía y el gasto entra antes del toque en
+    // «Eliminar». Quien decide es el caso de uso, que cuenta en ese momento.
+    final ocio = (await CategoryRepositoryImpl(
+      db,
+    ).all()).firstWhere((c) => c.name == 'Ocio');
+    final container = await buildLoadedContainer(db);
+    final form = container.read(categoryFormProvider.notifier);
+
+    await form.askDelete(ocio.id);
+    expect(container.read(categoryFormProvider).pendingDeleteExpenses, 0);
+
+    await ExpenseRepositoryImpl(db).create(
+      date: testNow,
+      description: 'Cine',
+      categoryId: ocio.id,
+      accountId: null,
+      amount: 12,
+    );
+    await form.confirmDelete();
+
+    expect(container.read(appDataProvider).categoryNamed('Ocio'), isNotNull);
+    // Y el aviso se pone al día, para que la confirmación explique el motivo.
+    expect(container.read(categoryFormProvider).pendingDeleteExpenses, 1);
+    expect(container.read(categoryFormProvider).pendingDeleteId, ocio.id);
   });
 }

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/features/categories/data/repositories/category_repository_impl.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
 import 'package:gastegi/features/expenses/presentation/models/history_range.dart';
@@ -72,11 +73,57 @@ void main() {
 
     expect(container.read(filteredExpensesProvider), hasLength(2));
 
-    filters.setCategory('Ocio');
+    filters.setCategory(ocio.id);
     expect(container.read(filteredExpensesProvider), hasLength(1));
 
     filters.setCategory(null);
     expect(container.read(filteredExpensesProvider), hasLength(2));
+  });
+
+  test('renombrar la categoría filtrada no vacía el filtro', () async {
+    // El filtro guarda el id, así que el cambio de nombre lo atraviesa. Con el
+    // nombre, la normalización lo daba por desaparecido y el historial saltaba
+    // a "todas" sin decir por qué.
+    final ocio = (await CategoryRepositoryImpl(
+      db,
+    ).all()).firstWhere((c) => c.name == 'Ocio');
+    await addExpense(testNow, 10);
+    await addExpense(testNow, 20, categoryId: ocio.id);
+
+    final container = await buildLoadedContainer(db);
+    container.read(historyFilterProvider.notifier).setCategory(ocio.id);
+    expect(container.read(filteredExpensesProvider), hasLength(1));
+
+    await CategoryRepositoryImpl(db).update(
+      ocio.id,
+      name: 'Tiempo libre',
+      colorValue: ocio.colorValue,
+      iconKey: ocio.iconKey,
+      budget: ocio.budget,
+    );
+    await container.read(appDataProvider.notifier).load();
+
+    expect(container.read(historyFilterProvider).categoryId, ocio.id);
+    expect(container.read(filteredExpensesProvider), hasLength(1));
+  });
+
+  test('borrar la categoría filtrada sí lo vacía', () async {
+    // Lo que el id no puede salvar: sin esto, el historial se quedaría
+    // enseñando una lista vacía sin explicación.
+    final ocio = (await CategoryRepositoryImpl(
+      db,
+    ).all()).firstWhere((c) => c.name == 'Ocio');
+    await addExpense(testNow, 10);
+
+    final container = await buildLoadedContainer(db);
+    container.read(historyFilterProvider.notifier).setCategory(ocio.id);
+    expect(container.read(filteredExpensesProvider), isEmpty);
+
+    await CategoryRepositoryImpl(db).softDelete(ocio.id);
+    await container.read(appDataProvider.notifier).load();
+
+    expect(container.read(historyFilterProvider).categoryId, isNull);
+    expect(container.read(filteredExpensesProvider), hasLength(1));
   });
 
   test('la búsqueda mira descripción y categoría', () async {

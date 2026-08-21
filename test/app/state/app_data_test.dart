@@ -46,6 +46,26 @@ void main() {
     );
   }
 
+  test('write no ejecuta ni miente cuando el cerrojo está echado', () async {
+    // El cerrojo es global y a propósito: es lo que evita que un doble toque
+    // en «Guardar» cree dos filas. Lo que no puede es callárselo — un `op` que
+    // no corre deja intactas las variables que iba a rellenar, y quien llama
+    // lee ese silencio como éxito.
+    final container = await buildLoadedContainer(db);
+    final notifier = container.read(appDataProvider.notifier);
+
+    var innerRan = false;
+    late Future<bool> nested;
+    final outer = notifier.write(() async {
+      nested = notifier.write(() async => innerRan = true);
+      await nested;
+    });
+
+    expect(await outer, isTrue);
+    expect(await nested, isFalse);
+    expect(innerRan, isFalse);
+  });
+
   group('app recién instalada', () {
     test('no produce NaN en ningún cálculo derivado', () async {
       final state = await loadData();
@@ -57,7 +77,7 @@ void main() {
       expect(state.cmpNowFrac, 0);
       expect(state.cmpPrevFrac, 0);
       expect(state.canCompare, isFalse);
-      expect(state.deltaLabel, '');
+      expect(state.deltaFraction, 0);
       expect(state.hasNoExpensesAtAll, isTrue);
 
       // Todas las categorías a 0 y sin alertas, no "excedido" por dividir mal.
@@ -76,12 +96,15 @@ void main() {
     });
   });
 
-  test('dailyTotals tiene tantas posiciones como días el mes', () async {
+  test('dailyCatTotals tiene tantas posiciones como días el mes', () async {
+    // Una columna por categoría, todas del largo del mes: la tendencia de
+    // Inicio indexa por día sin comprobar nada.
     final feb = await loadData(now: DateTime(2026, 2, 10));
-    expect(feb.dailyTotals, hasLength(28));
+    expect(feb.dailyCatTotals.values, everyElement(hasLength(28)));
 
     final ago = await loadData(now: DateTime(2026, 8, 12));
-    expect(ago.dailyTotals, hasLength(31));
+    expect(ago.dailyCatTotals.values, everyElement(hasLength(31)));
+    expect(ago.dailyCatTotals, hasLength(ago.categories.length));
   });
 
   test('el total solo cuenta el mes en curso', () async {
@@ -94,11 +117,14 @@ void main() {
     expect(state.total, 150);
     expect(state.prevTotal, 999);
     expect(state.canCompare, isTrue);
-    expect(state.catTotals['Comida'], 150);
+    expect(state.catTotals[categoryId], 150);
     // La última barra de los 6 meses es el mes en curso.
     expect(state.monthTotals.last.$1, DateTime(2026, 8));
     expect(state.monthTotals.last.$2, 150.0);
     expect(state.monthTotals, hasLength(6));
+    // La variación sale en tanto por uno y con signo, sin formatear: 150
+    // frente a 999 es una caída del 85 %.
+    expect(state.deltaFraction, closeTo(-0.8498, 0.0001));
   });
 
   test('los cortes semanales llegan al último día real del mes', () async {
@@ -110,7 +136,7 @@ void main() {
 
     // Febrero acaba el 28: el día 25 cae en la cuarta semana. Con un corte
     // fijo en el 28 se perdería.
-    expect(container.read(categoryWeeksProvider('Comida')).last, 60);
+    expect(container.read(categoryWeeksProvider(categoryId)).last, 60);
   });
 
   test('las alertas de presupuesto usan el umbral del 90 %', () async {

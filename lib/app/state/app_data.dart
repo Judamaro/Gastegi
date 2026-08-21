@@ -54,8 +54,12 @@ class AppData {
   /// a principios de mes.
   final List<Expense> window;
 
-  /// Total gastado por mes, indexado por `YYYY-MM`.
-  final Map<String, double> monthlySums;
+  /// Gasto por mes y categoría, indexado por `YYYY-MM` e **id** de categoría.
+  ///
+  /// Desglosado y no en total porque las barras de Inicio se componen con el
+  /// color de cada categoría. El total de un mes es la suma de su mapa, y de
+  /// ahí salen [monthTotals] y [prevTotal].
+  final Map<String, Map<String, double>> monthlySums;
 
   /// Gastos registrados en total, en cualquier fecha.
   final int expenseCount;
@@ -85,50 +89,78 @@ class AppData {
 
   late final double total = expenses.fold(0, (a, e) => a + e.val);
 
+  /// Gasto del mes por categoría, indexado por **id**.
+  ///
+  /// Por id y no por nombre: el nombre lo escribe el usuario y puede cambiar
+  /// bajo los pies de cualquier cosa que lo guarde. El nombre para pintar sale
+  /// de la propia [Category], que se busca con ese id.
   late final Map<String, double> catTotals = () {
-    final totals = {for (final c in categories) c.name: 0.0};
+    final totals = {for (final c in categories) c.id: 0.0};
     for (final e in expenses) {
-      totals[e.categoryName] = (totals[e.categoryName] ?? 0) + e.val;
+      totals[e.categoryId] = (totals[e.categoryId] ?? 0) + e.val;
     }
     return totals;
   }();
 
-  /// Gasto por día del mes (índice 0 = día 1).
+  /// Gasto por día del mes y categoría (índice 0 = día 1), indexado por **id**
+  /// y en el orden de [categories].
   ///
-  /// Una sola pasada acumulando: recorrer los gastos una vez por día era
+  /// Una sola pasada acumulando: recorrer los gastos una vez por día sería
   /// O(días × gastos) para un resultado que sale en O(gastos).
-  late final List<double> dailyTotals = () {
-    final totals = List.filled(daysInCurrentMonth, 0.0);
+  ///
+  /// Aquí no hay una versión sin desglosar porque nadie la pinta: la tendencia
+  /// de Inicio apila una banda por categoría, y el total de un día es la suma
+  /// de su columna.
+  late final Map<String, List<double>> dailyCatTotals = () {
+    final totals = {
+      for (final c in categories) c.id: List.filled(daysInCurrentMonth, 0.0),
+    };
     for (final e in expenses) {
-      totals[e.day - 1] += e.val;
+      (totals[e.categoryId] ??= List.filled(
+        daysInCurrentMonth,
+        0.0,
+      ))[e.day - 1] += e.val;
     }
     return totals;
   }();
 
-  /// Barras de los últimos 6 meses; el mes en curso usa el total en vivo.
+  /// Barras de los últimos 6 meses, desglosadas por categoría; el mes en curso
+  /// usa el desglose en vivo.
   ///
-  /// Devuelve el mes, no su nombre: poner aquí una etiqueta obligaría a este
-  /// archivo a conocer el idioma del usuario.
-  late final List<(DateTime, double)> monthTotals = [
+  /// Devuelve el mes y el id de cada categoría, no etiquetas ni colores: poner
+  /// aquí cualquiera de las dos cosas obligaría a este archivo a conocer el
+  /// idioma del usuario o a importar Flutter.
+  late final List<(DateTime, Map<String, double>)> monthCatTotals = [
     for (var i = monthsBack; i > 0; i--)
       () {
         final m = addMonths(monthAnchor, -i);
-        return (m, monthlySums[monthKey(m)] ?? 0.0);
+        return (m, monthlySums[monthKey(m)] ?? const <String, double>{});
       }(),
-    (monthAnchor, total),
+    (monthAnchor, catTotals),
+  ];
+
+  /// El total de cada uno de esos meses.
+  late final List<(DateTime, double)> monthTotals = [
+    for (final (m, cats) in monthCatTotals) (m, _sum(cats)),
   ];
 
   /// Total del mes anterior, para la comparación del inicio.
-  double get prevTotal => monthlySums[monthKey(prevMonthAnchor)] ?? 0;
+  double get prevTotal => _sum(monthlySums[monthKey(prevMonthAnchor)]);
 
-  /// Vacío cuando no hay mes anterior con el que comparar.
-  String get deltaLabel {
-    if (prevTotal <= 0) return '';
-    final pctChange = ((total - prevTotal).abs() / prevTotal * 100)
-        .toStringAsFixed(1)
-        .replaceAll('.', ',');
-    return '${total < prevTotal ? '−' : '+'}$pctChange%';
-  }
+  static double _sum(Map<String, double>? amounts) =>
+      amounts == null ? 0 : amounts.values.fold(0.0, (a, v) => a + v);
+
+  /// Variación respecto del mes anterior, en tanto por uno y **con signo**.
+  ///
+  /// Un número y no una etiqueta: escribir aquí `+12,5%` es texto para el
+  /// usuario fuera de `lib/l10n/`, y además con la coma española clavada. Lo
+  /// formatea la página con el patrón del idioma activo.
+  ///
+  /// 0 cuando no hay mes anterior, por lo mismo que [_cmpFrac]: las divisiones
+  /// van defendidas. Quien pinta ya lo filtra con [canCompare], que es lo que
+  /// decide si la comparación se enseña siquiera.
+  double get deltaFraction =>
+      prevTotal <= 0 ? 0 : (total - prevTotal) / prevTotal;
 
   bool get canCompare => prevTotal > 0;
 
@@ -142,17 +174,11 @@ class AppData {
 
   // ── Búsquedas ──────────────────────────────────────────────────────────
 
-  Category? categoryOf(String name) {
+  /// La categoría con ese id, o `null` si ya no existe: puede haberse borrado
+  /// mientras alguien seguía apuntando a ella.
+  Category? categoryById(String id) {
     for (final c in categories) {
-      if (c.name == name) return c;
-    }
-    return null;
-  }
-
-  Account? accountById(String? id) {
-    if (id == null) return null;
-    for (final a in accounts) {
-      if (a.id == id) return a;
+      if (c.id == id) return c;
     }
     return null;
   }
@@ -170,7 +196,7 @@ class AppData {
   late final List<BudgetRow> budgetRows = [
     for (final c in categories)
       () {
-        final spent = catTotals[c.name] ?? 0;
+        final spent = catTotals[c.id] ?? 0;
         final r = c.budget > 0 ? spent / c.budget : 0.0;
         return BudgetRow(
           category: c,

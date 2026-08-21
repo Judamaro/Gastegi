@@ -11,6 +11,11 @@ class DateLabels {
 
   final AppLocalizations _l10n;
 
+  /// El idioma va **siempre explícito** en cada `DateFormat`.
+  ///
+  /// A propósito no hay un `Intl.defaultLocale` en el que apoyarse: uno fijo
+  /// pinta el mes en español en un dispositivo en inglés **sin fallar nada**,
+  /// y el idioma del sistema puede cambiar con la app viva.
   String get _locale => _l10n.localeName;
 
   /// `Agosto 2026`.

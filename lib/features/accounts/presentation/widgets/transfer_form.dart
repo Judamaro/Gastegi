@@ -56,12 +56,18 @@ class TransferForm extends ConsumerWidget {
               spacing: 6.r,
               runSpacing: 6,
               children: [
+                // La cuenta de origen no se ofrece como destino: el traspaso a
+                // uno mismo no existe, y dejarlo elegir solo servía para que
+                // «Transferir» no hiciera nada sin decir por qué. Nunca deja
+                // la lista vacía: el formulario solo se monta con `canTransfer`
+                // —dos cuentas o más—.
                 for (final a in accounts)
-                  AppChip(
-                    label: a.name,
-                    active: state.toId == a.id,
-                    onTap: () => form.pickTo(a.id),
-                  ),
+                  if (a.id != state.fromId)
+                    AppChip(
+                      label: a.name,
+                      active: state.toId == a.id,
+                      onTap: () => form.pickTo(a.id),
+                    ),
               ],
             ),
           ],
@@ -89,6 +95,10 @@ class TransferForm extends ConsumerWidget {
               child: PrimaryButton(
                 label: l10n.transferSubmit,
                 onTap: form.submit,
+                // Lo único que queda para que el traspaso no se haga es un
+                // importe vacío o a cero, y eso se dice apagando el botón, no
+                // dejando que el usuario lo toque en balde.
+                disabled: state.amountValue <= 0 || state.toId == null,
               ),
             ),
           ],
