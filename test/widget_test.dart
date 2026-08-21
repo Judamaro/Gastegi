@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,7 +13,6 @@ import 'package:gastegi/app/theme/app_icons.dart';
 import 'package:gastegi/app/theme/app_typography.dart';
 import 'package:gastegi/core/utils/formatters.dart';
 import 'package:gastegi/core/utils/text_measure.dart';
-import 'package:gastegi/core/widgets/charts/donut_chart.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:gastegi/features/categories/presentation/pages/budgets_page.dart';
 import 'package:gastegi/features/categories/presentation/pages/category_detail_page.dart';
@@ -622,7 +622,7 @@ void main() {
       // mitad y lo que la dona no gastaba se quedaba muerto al final. Se mide
       // por el borde derecho del porcentaje, que va pegado al final de su fila.
       final fila = find
-          .ancestor(of: find.byType(DonutChart), matching: find.byType(Row))
+          .ancestor(of: find.byType(PieChart), matching: find.byType(Row))
           .first;
       expect(
         tester.getRect(find.text('100%')).right,

@@ -54,6 +54,7 @@ dependencies:
   # Escala las medidas del diseño (un marco de 390×844) al tamaño real de la
   # pantalla. Ver `GastegiApp`: la configuración que lleva no es decorativa.
   flutter_screenutil_plus: ^1.6.0
+  fl_chart: ^1.2.0
 
 dev_dependencies:
   flutter_test:

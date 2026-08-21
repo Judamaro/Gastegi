@@ -29,7 +29,7 @@ lib/
 │   ├── errors/            #   exceptions (técnicos) y failures (de dominio)
 │   ├── storage/           #   base de datos, esquema, siembra, saldos
 │   ├── utils/             #   fechas, formateadores, pantalla, providers
-│   ├── widgets/           #   componentes genéricos y gráficas
+│   ├── widgets/           #   componentes genéricos compartidos
 │   └── network/           #   reservado (ver su README)
 ├── features/              # una carpeta por funcionalidad
 │   ├── accounts/          #   cuentas y transferencias

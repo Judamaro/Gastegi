@@ -23,3 +23,24 @@ double textWidth(
   textScaler: scaler,
   maxLines: 1,
 )..layout()).width;
+
+/// Alto que ocupa [text] pintado en una línea con [style].
+///
+/// Mismas advertencias que en [textWidth]: [style] tiene que llevar la familia
+/// tipográfica dentro y [scaler] tiene que ser el del contexto.
+///
+/// Existe porque `SideTitles.reservedSize` de `fl_chart` fuerza el alto del
+/// hijo con un `tightFor`: si el texto escalado mide más, se recorta **sin
+/// lanzar nada**, así que la matriz de `responsive_test.dart` saldría verde con
+/// la etiqueta comida.
+double textHeight(
+  String text, {
+  required TextStyle style,
+  required TextScaler scaler,
+  required TextDirection direction,
+}) => (TextPainter(
+  text: TextSpan(text: text, style: style),
+  textDirection: direction,
+  textScaler: scaler,
+  maxLines: 1,
+)..layout()).height;

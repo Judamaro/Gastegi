@@ -147,12 +147,27 @@ queda en la banda 0.82–1.21 en todo el catálogo de pantallas.
 
 **Los parámetros de tamaño de nuestros widgets viajan en unidades de diseño; los
 escala el widget en su `build`.** `Kicker.size`, `ColorDot.size`,
-`DonutChart.size`, `TrendChart.height`, `BarChart.height`… Quien llama escribe
-el número del diseño, sin `.r`.
+`MeterBar.height`… Quien llama escribe el número del diseño, sin `.r`.
 
 > Por qué: los valores por defecto tienen que ser constantes, así que no pueden
 > llevar `.r`. Si el sitio de llamada escalara y el defecto no, el mismo
 > parámetro admitiría dos unidades distintas sin que nada lo delate.
+
+**Las gráficas son `fl_chart` montado en la propia página**, no widgets
+compartidos: `_CategoryDonut`, `_MonthBars` y `_DailyTrend` en `home_page.dart`,
+`_WeekBars` en `category_detail_page.dart`. Ahí el número **sí** va escalado —el
+paquete pide píxeles del eje, no fracciones—, así que la conversión la hace el
+`build` de la página antes de construir el `…ChartData`. La única compartida es
+`MeterBar`, que sigue la regla de arriba.
+
+> Trampas de `fl_chart` que no fallan al compilar: `SideTitles.reservedSize`
+> recorta la etiqueta **en silencio** (mídelo con `textHeight`, no lo supongas);
+> `FlTitlesData` enseña los cuatro lados si no los apagas uno a uno; una barra
+> con `toY == fromY` no se dibuja y el resto mide como poco `2 × radio`;
+> `BarChartAlignment` por defecto es `spaceEvenly`, que reparte un hueco de más
+> y descoloca las etiquetas; y `sectionsSpace` de la dona va en **píxeles**, no
+> en radianes. Y no hay animación de entrada: el paquete solo anima entre dos
+> fotos distintas, así que la de arranque es el `_entrado` de cada `State`.
 
 **`fontSizeResolver: FontSizeResolvers.radius` y `splitScreenMode: true` en
 `GastegiApp` son estructurales.** El primero porque `minTextAdapt` es
@@ -163,11 +178,6 @@ apaisado la app sale en miniatura. Los fija `test/app/screen_scale_test.dart`.
 **Los puntos de ruptura no se escalan.** `kTabletBreakpoint` y el tope de
 `ContentWidth` van en dp reales: son límites del dispositivo y de legibilidad,
 no medidas del diseño, y escalarlos los movería justo donde deciden algo.
-
-**Dentro de un `CustomPainter` no hay escala.** Todo sale de la `size` que
-recibe, en fracciones. Si necesita texto, pásale el `TextScaler` del contexto
-—un painter no cuelga del árbol y no le llega solo— y **mete los campos nuevos
-en `shouldRepaint`**, o no repintará al girar.
 
 ### Fechas y números
 
