@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
@@ -84,6 +86,36 @@ void main() {
     await container.read(appDataProvider.notifier).load();
 
     expect(container.read(addExpenseProvider).categoryId, isNull);
+  });
+
+  test('con el cerrojo echado save avisa de que no ha guardado', () async {
+    // El peor caso de los siete: `save` devolvía `true` pasara lo que pasara,
+    // así que la página limpiaba el formulario y navegaba a Inicio como si el
+    // gasto existiera.
+    final accountId = await AccountRepositoryImpl(db).create(
+      name: 'Efectivo',
+      kind: 'Dinero en mano',
+      iconKey: 'money',
+      initialBalance: 200,
+    );
+    final container = await buildLoadedContainer(db);
+    final gate = Completer<void>();
+    final retenida = container
+        .read(appDataProvider.notifier)
+        .write(() => gate.future);
+
+    final form = container.read(addExpenseProvider.notifier);
+    form
+      ..pickCategory(comidaId)
+      ..pickAccount(accountId)
+      ..setAmount('50');
+
+    expect(await form.save(), isFalse);
+    expect(container.read(addExpenseProvider).amount, '50');
+    expect(await ExpenseRepositoryImpl(db).count(), 0);
+
+    gate.complete();
+    await retenida;
   });
 
   test('sin cuenta o sin importe no se guarda nada', () async {

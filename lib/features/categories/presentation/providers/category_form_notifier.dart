@@ -124,7 +124,7 @@ class CategoryFormNotifier extends Notifier<CategoryFormState> {
   Future<void> submit() async {
     final saveCategory = SaveCategory(ref.read(categoryRepositoryProvider));
     CategoryFailure? failure;
-    await ref.read(appDataProvider.notifier).write(() async {
+    final ran = await ref.read(appDataProvider.notifier).write(() async {
       failure = await saveCategory(
         id: state.editingId,
         name: state.name,
@@ -133,6 +133,10 @@ class CategoryFormNotifier extends Notifier<CategoryFormState> {
         budget: parseAmount(state.budget),
       );
     });
+    // El cerrojo estaba echado y `saveCategory` no llegó a correr: `failure`
+    // sigue a `null` porque nadie lo tocó, no porque haya ido bien. Cerrar
+    // aquí tiraría lo tecleado sin haber guardado nada.
+    if (!ran) return;
 
     state = failure == null
         ? const CategoryFormState()
@@ -168,9 +172,12 @@ class CategoryFormNotifier extends Notifier<CategoryFormState> {
 
     final deleteCategory = DeleteCategory(ref.read(categoryRepositoryProvider));
     CategoryFailure? failure;
-    await ref.read(appDataProvider.notifier).write(() async {
+    final ran = await ref.read(appDataProvider.notifier).write(() async {
       failure = await deleteCategory(id);
     });
+    // Sin ejecutar no hay veredicto que reflejar: la confirmación se queda
+    // como estaba y el usuario puede volver a tocar.
+    if (!ran) return;
 
     state = switch (failure) {
       CategoryHasExpenses(:final count) => state.copyWith(

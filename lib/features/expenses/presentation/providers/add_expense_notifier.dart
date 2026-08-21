@@ -112,7 +112,7 @@ class AddExpenseNotifier extends Notifier<AddExpenseState> {
     if (category == null) return false;
 
     final saveExpense = SaveExpense(ref.read(expenseRepositoryProvider));
-    await ref
+    final ran = await ref
         .read(appDataProvider.notifier)
         .write(
           () => saveExpense(
@@ -123,6 +123,10 @@ class AddExpenseNotifier extends Notifier<AddExpenseState> {
             amount: state.amountValue,
           ),
         );
+    // Con el cerrojo echado no se ha guardado nada. Devolver `true` aquí
+    // limpiaba el formulario y mandaba a la página a navegar a Inicio como si
+    // el gasto existiera.
+    if (!ran) return false;
 
     state = AddExpenseState(date: ref.read(appDataProvider).today);
     return true;

@@ -5,6 +5,7 @@ import 'package:gastegi/core/utils/date_utils.dart';
 import 'package:gastegi/features/accounts/data/repositories/account_repository_impl.dart';
 import 'package:gastegi/features/categories/data/repositories/category_repository_impl.dart';
 import 'package:gastegi/features/expenses/data/repositories/expense_repository_impl.dart';
+import 'package:meta/meta.dart';
 
 /// Los datos de la app y el **único** punto de escritura.
 ///
@@ -47,17 +48,26 @@ class AppDataNotifier extends Notifier<AppData> {
     );
   }
 
-  /// Ejecuta [op] y recarga.
+  /// Ejecuta [op] y recarga. Devuelve `false` —sin tocar nada— si ya había
+  /// otra escritura en curso.
   ///
   /// El cerrojo es de toda la aplicación y tiene que seguir siéndolo: es lo
   /// que evita que un doble toque en "Guardar" cree dos filas. Si cada
   /// funcionalidad tuviera el suyo, el bug volvería.
-  Future<void> write(Future<void> Function() op) async {
-    if (_busy) return;
+  ///
+  /// El retorno es de mirada obligatoria, y por eso lleva `@useResult`. Un
+  /// `op` que no llega a correr deja intactas las variables que iba a
+  /// rellenar: un `failure` que se queda a `null` **no** significa "ha ido
+  /// bien", significa "no ha pasado nada". Darlo por bueno cierra el
+  /// formulario descartando lo tecleado sin haber guardado, y nada falla.
+  @useResult
+  Future<bool> write(Future<void> Function() op) async {
+    if (_busy) return false;
     _busy = true;
     try {
       await op();
       await load();
+      return true;
     } finally {
       _busy = false;
     }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gastegi/app/state/app_data_notifier.dart';
 import 'package:gastegi/features/categories/data/repositories/category_repository_impl.dart';
@@ -15,6 +17,37 @@ void main() {
 
   setUp(() async => db = await openTestDb());
   tearDown(() async => db.close());
+
+  test('con el cerrojo echado el formulario no se da por guardado', () async {
+    // El cerrojo es de toda la app, así que la escritura en vuelo puede venir
+    // de cualquier pantalla. Antes, `submit` leía el `failure` a `null` —que
+    // nadie había tocado— como éxito, y cerraba el formulario tirando lo
+    // tecleado sin haber guardado nada.
+    final container = await buildLoadedContainer(db);
+    final gate = Completer<void>();
+    final retenida = container
+        .read(appDataProvider.notifier)
+        .write(() => gate.future);
+
+    final form = container.read(categoryFormProvider.notifier);
+    form
+      ..open()
+      ..setName('Viajes')
+      ..setBudget('300');
+    await form.submit();
+
+    final state = container.read(categoryFormProvider);
+    expect(state.open, isTrue, reason: 'el formulario sigue abierto');
+    expect(state.name, 'Viajes', reason: 'con lo tecleado dentro');
+    expect(
+      container.read(appDataProvider).categoryNamed('Viajes'),
+      isNull,
+      reason: 'y no se ha guardado nada',
+    );
+
+    gate.complete();
+    await retenida;
+  });
 
   test('crear una categoría la añade y suma en el presupuesto', () async {
     final container = await buildLoadedContainer(db);

@@ -95,6 +95,14 @@ No añadas uno por funcionalidad.
 > Por qué: es lo que evita que un doble toque en «Guardar» cree dos filas. Cinco
 > cerrojos independientes reabren el bug.
 
+**`write` devuelve `false` si el cerrojo estaba echado, y ese `false` hay que
+mirarlo** —lo obliga `@useResult`, así que ignorarlo no pasa el `analyze`.
+
+> Por qué: un `op` que no llega a correr deja intactas las variables que iba a
+> rellenar. Un `failure` que se queda a `null` **no** significa «ha ido bien»,
+> significa «no ha pasado nada». Darlo por bueno cierra el formulario
+> descartando lo tecleado sin haber guardado, y nada falla.
+
 **Un notifier que guarde ids o nombres de otra tabla tiene que normalizarse.**
 Dos cosas, no una:
 

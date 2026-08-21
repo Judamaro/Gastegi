@@ -91,7 +91,7 @@ class TransferFormNotifier extends Notifier<TransferFormState> {
       ref.read(accountRepositoryProvider),
     );
     var done = false;
-    await ref.read(appDataProvider.notifier).write(() async {
+    final ran = await ref.read(appDataProvider.notifier).write(() async {
       done = await transfer(
         fromId: state.fromId,
         toId: state.toId,
@@ -100,8 +100,9 @@ class TransferFormNotifier extends Notifier<TransferFormState> {
       );
     });
     // Si no se hizo nada, el formulario se queda abierto con lo tecleado: el
-    // usuario tiene que poder corregir el importe o el destino.
-    if (done) close();
+    // usuario tiene que poder corregir el importe o el destino. Y si el
+    // cerrojo estaba echado, `done` ni siquiera se ha llegado a tocar.
+    if (ran && done) close();
   }
 }
 

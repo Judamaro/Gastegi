@@ -55,6 +55,10 @@ dependencies:
   # pantalla. Ver `GastegiApp`: la configuración que lleva no es decorativa.
   flutter_screenutil_plus: ^1.6.0
   fl_chart: ^1.2.0
+  # `@useResult` sobre `AppDataNotifier.write`. Ya estaba en el árbol como
+  # transitiva del SDK; se declara porque se usa, y con `any` por lo mismo que
+  # `intl`: la versión la fija Flutter.
+  meta: any
 
 dev_dependencies:
   flutter_test:

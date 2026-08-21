@@ -46,6 +46,26 @@ void main() {
     );
   }
 
+  test('write no ejecuta ni miente cuando el cerrojo está echado', () async {
+    // El cerrojo es global y a propósito: es lo que evita que un doble toque
+    // en «Guardar» cree dos filas. Lo que no puede es callárselo — un `op` que
+    // no corre deja intactas las variables que iba a rellenar, y quien llama
+    // lee ese silencio como éxito.
+    final container = await buildLoadedContainer(db);
+    final notifier = container.read(appDataProvider.notifier);
+
+    var innerRan = false;
+    late Future<bool> nested;
+    final outer = notifier.write(() async {
+      nested = notifier.write(() async => innerRan = true);
+      await nested;
+    });
+
+    expect(await outer, isTrue);
+    expect(await nested, isFalse);
+    expect(innerRan, isFalse);
+  });
+
   group('app recién instalada', () {
     test('no produce NaN en ningún cálculo derivado', () async {
       final state = await loadData();
