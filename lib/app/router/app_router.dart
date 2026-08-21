@@ -1,4 +1,5 @@
 import 'package:gastegi/app/router/app_shell.dart';
+import 'package:gastegi/app/router/branch_transition.dart';
 import 'package:gastegi/app/router/route_names.dart';
 import 'package:gastegi/features/accounts/presentation/pages/accounts_page.dart';
 import 'package:gastegi/features/categories/presentation/pages/budgets_page.dart';
@@ -16,9 +17,14 @@ import 'package:go_router/go_router.dart';
 final GoRouter appRouter = GoRouter(
   initialLocation: RouteNames.home,
   routes: [
-    StatefulShellRoute.indexedStack(
+    StatefulShellRoute(
       builder: (context, state, navigationShell) =>
           AppShell(navigationShell: navigationShell),
+      navigatorContainerBuilder: (context, navigationShell, children) =>
+          BranchTransition(
+            currentIndex: navigationShell.currentIndex,
+            children: children,
+          ),
       branches: [
         StatefulShellBranch(
           routes: [

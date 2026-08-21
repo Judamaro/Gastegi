@@ -191,6 +191,16 @@ configuración muerta —`setSp` delega en el resolver y nunca alcanza la rama q
 lo consulta—; el segundo porque acota la escala de alto a 700 dp y sin él en
 apaisado la app sale en miniatura. Los fija `test/app/screen_scale_test.dart`.
 
+**Las ramas inactivas del shell vuelven a `Offstage` al acabar la transición**
+(`app/router/branch_transition.dart`).
+
+> Por qué: `skipOffstage` viene a `true` en los buscadores de `flutter_test`,
+> así que el `Offstage` es lo que impide que un `find.text` vea las cuatro
+> pestañas a la vez. Hay textos que salen en dos —el nombre de una categoría
+> está en la leyenda de la dona y en su tarjeta de Presupuesto—, y dejarlas
+> visibles siempre vuelve ambiguos buscadores que no tienen nada que ver con la
+> navegación. Es lo que le pasa al ejemplo oficial de `go_router`.
+
 **Los puntos de ruptura no se escalan.** `kTabletBreakpoint` y el tope de
 `ContentWidth` van en dp reales: son límites del dispositivo y de legibilidad,
 no medidas del diseño, y escalarlos los movería justo donde deciden algo.
