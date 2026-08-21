@@ -96,12 +96,15 @@ void main() {
     });
   });
 
-  test('dailyTotals tiene tantas posiciones como días el mes', () async {
+  test('dailyCatTotals tiene tantas posiciones como días el mes', () async {
+    // Una columna por categoría, todas del largo del mes: la tendencia de
+    // Inicio indexa por día sin comprobar nada.
     final feb = await loadData(now: DateTime(2026, 2, 10));
-    expect(feb.dailyTotals, hasLength(28));
+    expect(feb.dailyCatTotals.values, everyElement(hasLength(28)));
 
     final ago = await loadData(now: DateTime(2026, 8, 12));
-    expect(ago.dailyTotals, hasLength(31));
+    expect(ago.dailyCatTotals.values, everyElement(hasLength(31)));
+    expect(ago.dailyCatTotals, hasLength(ago.categories.length));
   });
 
   test('el total solo cuenta el mes en curso', () async {

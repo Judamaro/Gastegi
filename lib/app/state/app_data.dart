@@ -102,24 +102,15 @@ class AppData {
     return totals;
   }();
 
-  /// Gasto por día del mes (índice 0 = día 1).
+  /// Gasto por día del mes y categoría (índice 0 = día 1), indexado por **id**
+  /// y en el orden de [categories].
   ///
-  /// Una sola pasada acumulando: recorrer los gastos una vez por día era
+  /// Una sola pasada acumulando: recorrer los gastos una vez por día sería
   /// O(días × gastos) para un resultado que sale en O(gastos).
-  late final List<double> dailyTotals = () {
-    final totals = List.filled(daysInCurrentMonth, 0.0);
-    for (final e in expenses) {
-      totals[e.day - 1] += e.val;
-    }
-    return totals;
-  }();
-
-  /// Lo mismo desglosado por categoría, indexado por **id** y en el orden de
-  /// [categories].
   ///
-  /// Otra pasada y no un derivado de [dailyTotals]: cada una sale en
-  /// O(gastos) por su cuenta, y sumar el desglose costaría
-  /// O(categorías × días) para llegar al mismo sitio.
+  /// Aquí no hay una versión sin desglosar porque nadie la pinta: la tendencia
+  /// de Inicio apila una banda por categoría, y el total de un día es la suma
+  /// de su columna.
   late final Map<String, List<double>> dailyCatTotals = () {
     final totals = {
       for (final c in categories) c.id: List.filled(daysInCurrentMonth, 0.0),

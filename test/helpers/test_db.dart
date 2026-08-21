@@ -9,7 +9,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 /// Reloj congelado: sin él, los rangos "últimos 7/15 días" y la longitud de
-/// `dailyTotals` dependerían del día real y los tests fallarían a ratos.
+/// `dailyCatTotals` dependerían del día real y los tests fallarían a ratos.
 final DateTime testNow = DateTime(2026, 8, 12);
 
 bool _factoryReady = false;
