@@ -1,0 +1,2 @@
+# Marcador para que git conserve la carpeta y Flutter no falle al
+# declararla vacía en pubspec.yaml.

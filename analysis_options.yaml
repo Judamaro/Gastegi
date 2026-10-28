@@ -1,0 +1,42 @@
+# Configuración del analizador estático.
+#
+# Reglas estrictas a propósito: la arquitectura de este proyecto (ver README)
+# separa dominio, datos y presentación, y el analizador es la primera línea de
+# defensa contra las erosiones más baratas de detectar.
+
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
+    # Código generado por gen-l10n.
+    - lib/l10n/generated/**
+  language:
+    strict-casts: true
+    strict-raw-types: true
+  errors:
+    # Un `await` olvidado en una escritura a la BD deja la caché desincronizada
+    # sin lanzar nada: que falle el análisis, no el usuario.
+    unawaited_futures: error
+
+linter:
+  rules:
+    # Los imports relativos se rompen en silencio al mover archivos entre
+    # capas, que es exactamente lo que hace esta reestructura.
+    - always_use_package_imports
+    - directives_ordering
+    - unawaited_futures
+    - require_trailing_commas
+    - avoid_print
+    - prefer_final_locals
+    - prefer_single_quotes
+    - unnecessary_parenthesis
+    - avoid_redundant_argument_values
+    - use_string_buffers
+    - sort_constructors_first
